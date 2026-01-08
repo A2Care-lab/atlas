@@ -216,7 +216,7 @@ export default function CompaniesManager() {
       .update({ is_active: false, updated_at: new Date().toISOString(), blocked_at: new Date().toISOString() })
       .eq('id', company.id);
     if (!error) {
-      const updated = companies.map(c => c.id === company.id ? { ...c, is_active: false, status: 'inactive' } : c);
+      const updated = companies.map(c => c.id === company.id ? { ...c, is_active: false, status: 'inactive' as const } : c);
       setCompanies(updated);
     }
   };
@@ -227,7 +227,7 @@ export default function CompaniesManager() {
       .update({ is_active: true, updated_at: new Date().toISOString(), blocked_at: null })
       .eq('id', company.id);
     if (!error) {
-      const updated = companies.map(c => c.id === company.id ? { ...c, is_active: true, status: 'active' } : c);
+      const updated = companies.map(c => c.id === company.id ? { ...c, is_active: true, status: 'active' as const } : c);
       setCompanies(updated);
     }
   };

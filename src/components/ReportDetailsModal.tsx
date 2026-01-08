@@ -122,15 +122,18 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
       if (report.user?.full_name) {
         setReporterName(report.user.full_name)
       } else if (report.user_id) {
-        supabase
-          .from('user_profiles')
-          .select('full_name,email')
-          .eq('id', report.user_id)
-          .single()
-          .then(({ data }) => {
+        (async () => {
+          try {
+            const { data } = await supabase
+              .from('user_profiles')
+              .select('full_name,email')
+              .eq('id', report.user_id)
+              .single()
             setReporterName((data?.full_name || data?.email || '').trim())
-          })
-          .catch(() => setReporterName(''))
+          } catch {
+            setReporterName('')
+          }
+        })()
       }
     } else {
       setReporterName('')

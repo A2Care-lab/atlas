@@ -18,7 +18,7 @@ export default function PoliticaNaoRetaliacaoPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    const success = await savePolitica(content);
+    const success = await savePolitica(content, 'Atualização da política', 'patch');
     setIsSaving(false);
     
     if (success) {

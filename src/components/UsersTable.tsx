@@ -538,12 +538,12 @@ function BulkInviteModal({ onClose, companies, onCreateMany }:{ onClose:()=>void
         { header: 'E-mail', key: 'email', width: 30 },
         { header: 'Empresa', key: 'company', width: 28 },
         { header: 'Perfil', key: 'role', width: 22 },
-      ]
-      const rolesSheet = workbook.addWorksheet('Perfis')
-      const allowed = roles.filter(r=>r!=='admin')
-      rolesSheet.getColumn(1).values = ['Perfil', ...allowed]
-      ws.addRow({ full_name: 'João da Silva', email: 'joao@empresa.com', company: companies[0]?.name || 'Empresa Exemplo LTDA', role: allowed[0] })
-      ws.dataValidations.add('D2:D1048576', { type: 'list', allowBlank: true, formulae: [`=Perfis!$A$2:$A$${allowed.length+1}`] })
+      ];
+      const rolesSheet = workbook.addWorksheet('Perfis');
+      const allowed: string[] = (roles.filter(r=>r!=='admin') as unknown as string[]);
+      (rolesSheet.getColumn(1) as any).values = ['Perfil', ...allowed] as any;
+      (ws as any).addRow({ full_name: 'João da Silva', email: 'joao@empresa.com', company: companies[0]?.name || 'Empresa Exemplo LTDA', role: allowed[0] })
+      (ws as any).dataValidations?.add('D2:D1048576', { type: 'list', allowBlank: true, formulae: [`=Perfis!$A$2:$A$${allowed.length+1}`] })
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
       const url = URL.createObjectURL(blob)
@@ -589,7 +589,7 @@ function BulkInviteModal({ onClose, companies, onCreateMany }:{ onClose:()=>void
         const mapNameToId = new Map(companies.map(c=>[c.name.toLowerCase(), c.id]))
         const allowedRoles = ['user','corporate_manager','approver_manager']
         const items: {fullName:string,email:string,companyId?:string,role:string}[] = []
-        ws.eachRow((row, rowNumber)=>{
+        ws.eachRow((row: any, rowNumber: number)=>{
           if (rowNumber === 1) return
           const get = (i:number)=> cellToString(row.getCell(i+1).value).trim()
           const fullName = get(idxFull)
