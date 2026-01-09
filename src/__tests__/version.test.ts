@@ -1,0 +1,8 @@
+import { describe, it, expect } from 'vitest'
+import packageJson from '../../package.json'
+
+describe('Versão do aplicativo', () => {
+  it('deve ser 2.0.0', () => {
+    expect(packageJson.version).toBe('2.0.0')
+  })
+})

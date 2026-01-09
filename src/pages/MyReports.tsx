@@ -54,12 +54,8 @@ export function MyReports() {
         `)
         .order('created_at', { ascending: false });
 
-      // Filtrar por permissões
-      if (profile.role === 'user') {
-        query = query.eq('user_id', profile.id);
-      } else if (profile.role !== 'admin') {
-        query = query.eq('company_id', profile.company_id);
-      }
+      // Sempre filtrar pelas denúncias abertas pelo usuário logado
+      query = query.eq('user_id', profile.id);
 
       // Filtros de busca
       if (protocolFilter) {
@@ -160,9 +156,7 @@ export function MyReports() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {profile?.role === 'user' ? 'Minhas Denúncias' : 'Minhas Ocorrências Registradas'}
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900">Minhas Ocorrências Registradas</h1>
         {profile?.role === 'user' && (
           <button
             onClick={() => navigate('/new-report')}
@@ -234,12 +228,7 @@ export function MyReports() {
         <div className="text-center py-12">
           <FileText className="mx-auto h-12 w-12 text-petroleo-600" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma denúncia encontrada</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {profile?.role === 'user' 
-              ? 'Você ainda não fez nenhuma denúncia.' 
-              : 'Nenhuma denúncia foi registrada para sua empresa.'
-            }
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Você ainda não fez nenhuma denúncia.</p>
           {profile?.role === 'user' && (
             <div className="mt-6">
               <button

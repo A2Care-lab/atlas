@@ -67,6 +67,7 @@ export function ManageReports() {
           *,
           attachments(*),
           comments(*),
+          status_history(*),
           company:companies(id,name,sla_days)
         `)
         .order('created_at', { ascending: false });
@@ -114,7 +115,25 @@ export function ManageReports() {
       filtered = filtered.filter((report) => {
         const slaDays = typeof report.company?.sla_days === 'number' ? (report.company?.sla_days || 0) : 0;
         if (!slaDays) return false; // sem SLA: não entra em filtros específicos
+
         const created = new Date(report.created_at);
+        const isFinalized = report.status === 'approved' || report.status === 'rejected';
+
+        if (isFinalized) {
+          let finalizedAt: Date | undefined;
+          const list = (report.status_history || []).filter((h) => h.new_status === 'approved' || h.new_status === 'rejected');
+          if (list.length > 0) {
+            const last = list[list.length - 1];
+            finalizedAt = new Date(last.created_at);
+          } else {
+            try { finalizedAt = new Date(report.updated_at); } catch { finalizedAt = undefined; }
+          }
+          if (!finalizedAt) return false;
+          const totalDays = Math.max(0, Math.ceil((finalizedAt.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)));
+          const within = totalDays <= slaDays;
+          return slaFilter === 'overdue' ? !within : within;
+        }
+
         const deadline = new Date(created);
         deadline.setDate(deadline.getDate() + slaDays);
         const now = new Date();
@@ -143,7 +162,7 @@ export function ManageReports() {
       under_analysis: 'bg-yellow-100 text-yellow-800',
       under_investigation: 'bg-red-100 text-red-800',
       waiting_info: 'bg-purple-100 text-purple-800',
-      corporate_approval: 'bg-green-100 text-green-800',
+      corporate_approval: 'bg-blue-100 text-blue-800',
       approved: 'bg-green-100 text-green-800',
       rejected: 'bg-gray-100 text-gray-800',
     };
@@ -162,12 +181,37 @@ export function ManageReports() {
 
   const renderSlaBadge = (report: Report) => {
     const slaDays = typeof report.company?.sla_days === 'number' ? (report.company?.sla_days || 0) : 0;
+    const created = new Date(report.created_at);
+
+    const isFinalized = report.status === 'approved' || report.status === 'rejected';
+    if (isFinalized) {
+      let finalizedAt: Date | undefined;
+      const list = (report.status_history || []).filter((h) => h.new_status === 'approved' || h.new_status === 'rejected');
+      if (list.length > 0) {
+        const last = list[list.length - 1];
+        finalizedAt = new Date(last.created_at);
+      } else {
+        try { finalizedAt = new Date(report.updated_at); } catch { finalizedAt = undefined; }
+      }
+      if (!finalizedAt) {
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">SLA não definido</span>;
+      }
+      const totalDays = Math.max(0, Math.ceil((finalizedAt.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)));
+      const over = slaDays ? Math.max(0, totalDays - slaDays) : 0;
+      const within = slaDays ? totalDays <= slaDays : true;
+      const color = within ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+      const label = `${totalDays} dia${totalDays === 1 ? '' : 's'}`;
+      const extra = slaDays ? (over > 0 ? `- Fora do SLA por ${over} dia${over === 1 ? '' : 's'}` : `- Dentro do SLA`) : '';
+      return (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>{label}{extra ? ` ${extra}` : ''}</span>
+      );
+    }
+
     if (!slaDays) {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">SLA não definido</span>
       );
     }
-    const created = new Date(report.created_at);
     const deadline = new Date(created);
     deadline.setDate(deadline.getDate() + slaDays);
     const now = new Date();
@@ -289,9 +333,12 @@ export function ManageReports() {
                     <div className="flex items-center">
                       <FileText className="h-5 w-5 text-petroleo-600 mr-3" />
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          Protocolo: {report.protocol}
-                        </p>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-semibold text-gray-900">Protocolo: {report.protocol}</span>
+                          {report.company?.name && (
+                            <span className="text-gray-800">— {report.company.name}</span>
+                          )}
+                        </div>
                         <p className="text-sm text-gray-500">
                           Criado em: {new Date(report.created_at).toLocaleDateString('pt-BR')}
                         </p>
@@ -391,7 +438,7 @@ export function ManageReports() {
             </button>
           </div>
         </div>
-      <ReportDetailsModal report={selectedReport} open={detailsOpen} onClose={() => setDetailsOpen(false)} />
+      <ReportDetailsModal report={selectedReport} open={detailsOpen} onClose={() => setDetailsOpen(false)} hideFinalStatusOptions />
     </div>
   );
 }

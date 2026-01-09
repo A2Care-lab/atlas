@@ -27,7 +27,7 @@ BEGIN
       ('Content-Type', 'application/json')
     ]::http_header[],
     ('{
-      "from": "noreply@seu-dominio.com",
+      "from": "ATLAS - Integridade Corporativa <atlas@a2care.com.br>",
       "to": "' || p_to || '",
       "subject": "' || p_subject || '",
       "html": "' || REPLACE(p_html, '"', '\"') || '",

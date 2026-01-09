@@ -27,6 +27,7 @@ export function UserProfileModal({ profile, open, onClose, onSave, anchorRef }: 
   const { areas } = useCorporateAreas()
   const containerRef = useRef<HTMLDivElement>(null)
   const [layout, setLayout] = useState<{ top: number; left: number; width: number; arrowLeft: number }>({ top: 80, left: 0, width: 440, arrowLeft: 24 })
+  const [companyName, setCompanyName] = useState('')
 
   useEffect(() => {
     setForm({
@@ -36,6 +37,19 @@ export function UserProfileModal({ profile, open, onClose, onSave, anchorRef }: 
       avatar_url: profile?.avatar_url || ''
     })
   }, [profile])
+
+  useEffect(() => {
+    const loadCompany = async () => {
+      if (!profile?.company_id) { setCompanyName(''); return }
+      const { data } = await supabase
+        .from('companies')
+        .select('name')
+        .eq('id', profile.company_id)
+        .maybeSingle()
+      setCompanyName((data as any)?.name || '')
+    }
+    loadCompany()
+  }, [profile?.company_id])
 
   useEffect(() => {
     const compute = () => {
@@ -187,6 +201,15 @@ export function UserProfileModal({ profile, open, onClose, onSave, anchorRef }: 
                 ))}
               </select>
             </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-gray-500">Empresa</label>
+            <input
+              type="text"
+              value={companyName || ''}
+              disabled
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-gray-50"
+            />
           </div>
           <div className="text-xs text-gray-500">Função: <span className="font-medium text-gray-700">{profile?.role || '—'}</span></div>
         </div>

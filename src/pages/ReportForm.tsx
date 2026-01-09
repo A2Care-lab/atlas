@@ -198,7 +198,7 @@ export function ReportForm() {
         if (user?.email) {
           try {
             await supabase.functions.invoke('send-denuncia-confirmation', {
-              body: { email: user.email, protocolo: protocol, nome: profile?.full_name || '' },
+              body: { email: user.email, protocolo: protocol, nome: profile?.full_name || '', fromEmail: 'ATLAS - Integridade Corporativa <atlas@a2care.com.br>' },
             });
           } catch (err) {
             await sendEmail({

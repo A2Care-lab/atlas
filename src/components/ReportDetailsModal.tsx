@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X, Download, Send, Paperclip, MessageSquare, FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { Report, Attachment, Comment, ReportStatus, UserProfile } from '../types/database'
+import { Report, Attachment, Comment, ReportStatus, UserProfile, StatusHistory } from '../types/database'
 import { useAuth } from '../hooks/useAuth'
 import MessageModal from '../components/MessageModal'
 
@@ -13,6 +13,9 @@ interface Props {
   hideRiskInfo?: boolean
   hideStatusControls?: boolean
   hideInternalCommentToggle?: boolean
+  hideCommentInput?: boolean
+  disableAttachmentUpload?: boolean
+  hideFinalStatusOptions?: boolean
 }
 
 const STATUS_COLORS: Record<ReportStatus, string> = {
@@ -46,11 +49,12 @@ const ROLE_BORDER_COLORS: Record<UserProfile['role'], string> = {
   user: 'border-gray-400'
 }
 
-export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideStatusControls, hideInternalCommentToggle }: Props) {
+export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideStatusControls, hideInternalCommentToggle, hideCommentInput, disableAttachmentUpload, hideFinalStatusOptions }: Props) {
   const { profile } = useAuth()
   const [attachmentsUrls, setAttachmentsUrls] = useState<Record<string, string>>({})
   const [localAttachments, setLocalAttachments] = useState<Attachment[]>([])
   const [comments, setComments] = useState<Comment[]>([])
+  const [history, setHistory] = useState<StatusHistory[]>([])
   const [newComment, setNewComment] = useState('')
   const [internal, setInternal] = useState(false)
   const canInternal = profile?.role && profile.role !== 'user'
@@ -114,6 +118,18 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
     setDisplayStatus(report.status)
     setStatusDraft(report.status)
     loadComments(report.id)
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('status_history')
+          .select('*')
+          .eq('report_id', report.id)
+          .order('created_at', { ascending: true })
+        setHistory((data || []) as StatusHistory[])
+      } catch {
+        setHistory([])
+      }
+    })()
     setNewComment('')
     setInternal(false)
     prepareAttachmentUrls(report.attachments || [])
@@ -171,6 +187,7 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
 
   const handleUpdateStatus = async () => {
     if (!report || !canManage) return
+    if (displayStatus === 'approved' || displayStatus === 'rejected') return
     const prev = displayStatus
     const { error } = await supabase
       .from('reports')
@@ -330,15 +347,46 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
   const isFinalized = displayStatus === 'approved' || displayStatus === 'rejected'
   const isAdmin = profile?.role === 'admin'
   const canComment = !isFinalized || !!isAdmin
-  const canAttachFiles = !isFinalized || !!isAdmin
+  const canAttachFiles = (!isFinalized || !!isAdmin) && !disableAttachmentUpload
+
+  const finalizedAt: Date | undefined = useMemo(() => {
+    if (!report || !isFinalized) return undefined
+    const list = (history || []).filter((h) => h.new_status === 'approved' || h.new_status === 'rejected')
+    if (list.length > 0) {
+      const last = list[list.length - 1]
+      return new Date(last.created_at)
+    }
+    try {
+      return new Date(report.updated_at)
+    } catch {
+      return undefined
+    }
+  }, [history, isFinalized, report])
+
+  const userCompanySlaDays = useMemo(() => {
+    const u = typeof profile?.company?.sla_days === 'number' ? (profile?.company?.sla_days || 0) : 0
+    const r = typeof report?.company?.sla_days === 'number' ? (report?.company?.sla_days || 0) : 0
+    return u > 0 ? u : (r > 0 ? r : 0)
+  }, [profile, report])
 
   const renderSlaBadge = () => {
     if (!report) return null
     const slaDays = typeof report.company?.sla_days === 'number' ? (report.company?.sla_days || 0) : 0
+    const created = new Date(report.created_at)
+
+    if (isFinalized && finalizedAt) {
+      const totalDays = Math.max(0, Math.ceil((finalizedAt.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)))
+      const over = slaDays ? Math.max(0, totalDays - slaDays) : 0
+      const within = slaDays ? totalDays <= slaDays : true
+      const color = within ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+      const label = `${totalDays} dia${totalDays === 1 ? '' : 's'}`
+      const extra = slaDays ? (over > 0 ? `- Fora do SLA por ${over} dia${over === 1 ? '' : 's'}` : `- Dentro do SLA`) : ''
+      return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>{label}{extra ? ` ${extra}` : ''}</span>
+    }
+
     if (!slaDays) {
       return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">SLA não definido</span>
     }
-    const created = new Date(report.created_at)
     const deadline = new Date(created)
     deadline.setDate(deadline.getDate() + slaDays)
     const now = new Date()
@@ -379,42 +427,57 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
         className="fixed inset-0 flex items-start justify-center p-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-full max-w-[48rem] max-h-[74vh] overflow-y-auto bg-white rounded-lg shadow-xl border-2 border-petroleo-500">
+        <div className="w-full max-w-[52rem] max-h-[74vh] overflow-y-auto bg-white rounded-lg shadow-xl border-2 border-petroleo-500">
           <div className="flex items-center justify-between p-4 border-b border-gray-300">
             <div>
               <h2 className="text-base font-semibold text-gray-900">Detalhes da Denúncia</h2>
-              <div className="text-xs text-gray-700">Protocolo: <span className="font-medium text-gray-900">{report.protocol}</span></div>
+              <div className="text-xs text-gray-700">
+                Protocolo: <span className="font-medium text-gray-900">{report.protocol}</span>
+                {report.company?.name && (
+                  <span className="ml-2 text-gray-800">— {report.company.name}</span>
+                )}
+              </div>
             </div>
             <button onClick={onClose} className="p-1 rounded hover:bg-gray-200">
               <X className="h-4 w-4 text-gray-800" />
             </button>
           </div>
           <div className="px-4 pt-4 pb-6 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <div className="text-xs text-gray-700">Criado em</div>
-                <div className="text-sm text-gray-900">{new Date(report.created_at).toLocaleString('pt-BR')}</div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div>
+                    <div className="text-xs text-gray-700 whitespace-nowrap">Criado em</div>
+                    <div className="text-sm text-gray-900">{new Date(report.created_at).toLocaleString('pt-BR')}</div>
+                  </div>
+                  {isFinalized && finalizedAt && (
+                    <div>
+                      <div className="text-xs text-gray-700 whitespace-nowrap">Encerrado em</div>
+                      <div className="text-sm text-gray-900">{finalizedAt.toLocaleString('pt-BR')}</div>
+                    </div>
+                  )}
+                  {!hideRiskInfo && (
+                    <div>
+                      <div className="text-xs text-gray-700 whitespace-nowrap">Grau de Risco</div>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${RISK_COLORS[report.risk_level]}`}>
+                        {getRiskLabel(report.risk_level)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex items-end gap-6">
+              <div className="flex flex-wrap items-start gap-2 sm:gap-3">
                 <div className="space-y-1">
-                  <div className="text-xs text-gray-700">Status</div>
+                  <div className="text-xs text-gray-700 whitespace-nowrap">Status</div>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[displayStatus]}`}>
                     {getIconForStatus(displayStatus)}
                     <span className="ml-1">{getStatusLabel(displayStatus)}</span>
                   </span>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs text-gray-700">SLA de Tratativa</div>
+                  <div className="text-xs text-gray-700 whitespace-nowrap">{`SLA de Tratativa${userCompanySlaDays ? ` - ${userCompanySlaDays} dia${userCompanySlaDays === 1 ? '' : 's'}` : ''}`}</div>
                   {renderSlaBadge()}
                 </div>
-                {!hideRiskInfo && (
-                  <div className="space-y-1">
-                    <div className="text-xs text-gray-700">Grau de Risco</div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${RISK_COLORS[report.risk_level]}`}>
-                      {getRiskLabel(report.risk_level)}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
             {!hideStatusControls && canManage && (
@@ -424,9 +487,10 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
                   <select
                     value={statusDraft}
                     onChange={(e) => setStatusDraft(e.target.value as ReportStatus)}
-                    className="mt-1 w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900"
+                    disabled={isFinalized}
+                    className={`mt-1 w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 ${isFinalized ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   >
-                    {(['received','under_analysis','under_investigation','waiting_info','corporate_approval','approved','rejected'] as ReportStatus[]).map((s) => (
+                    {(hideFinalStatusOptions ? (['received','under_analysis','under_investigation','waiting_info','corporate_approval'] as ReportStatus[]) : (['received','under_analysis','under_investigation','waiting_info','corporate_approval','approved','rejected'] as ReportStatus[])).map((s) => (
                       <option key={s} value={s}>{getStatusLabel(s)}</option>
                     ))}
                   </select>
@@ -436,12 +500,13 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
                   <input
                     value={statusComment}
                     onChange={(e) => setStatusComment(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900"
+                    disabled={isFinalized}
+                    className={`mt-1 w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 ${isFinalized ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     placeholder="Descreva a alteração"
                   />
                 </div>
-                <div className="sm:col-span-3 flex justify-end">
-                  <button onClick={handleUpdateStatus} className="inline-flex items-center px-3 py-2 rounded-md bg-petroleo-600 hover:bg-petroleo-700 text-white text-sm">Atualizar Status</button>
+            <div className="sm:col-span-3 flex justify-end">
+                  <button onClick={handleUpdateStatus} disabled={isFinalized} className={`inline-flex items-center px-3 py-2 rounded-md text-white text-sm ${isFinalized ? 'bg-gray-400 cursor-not-allowed' : 'bg-petroleo-600 hover:bg-petroleo-700'}`}>Atualizar Status</button>
                 </div>
               </div>
             )}
@@ -522,12 +587,13 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
             </div>
             <div>
               <div className="flex items-center gap-2 mb-2 text-gray-900"><Paperclip className="h-4 w-4" /><span className="text-sm font-medium">Anexos ({localAttachments.length})</span></div>
-              {canManage && canAttachFiles && (
+              {canManage && (
                 <div className="mb-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <input
                       type="file"
                       multiple
+                      disabled={!canAttachFiles}
                       onChange={(e) => setPendingFiles(Array.from(e.target.files || []))}
                     />
                     {uploading && <span className="text-xs text-gray-700">Enviando...</span>}
@@ -539,7 +605,8 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
                       </div>
                       <button
                         onClick={() => handleUploadAttachments(pendingFiles)}
-                        className="inline-flex items-center px-2 py-1 rounded-md text-white bg-petroleo-600 hover:bg-petroleo-700 text-xs"
+                        disabled={!canAttachFiles}
+                        className={`inline-flex items-center px-2 py-1 rounded-md text-white text-xs ${!canAttachFiles ? 'bg-gray-400 cursor-not-allowed' : 'bg-petroleo-600 hover:bg-petroleo-700'}`}
                       >
                         Enviar Anexos
                       </button>
@@ -592,35 +659,37 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
               ) : (
                 <div className="text-sm text-gray-700">Nenhum comentário</div>
               )}
-              <div className="mt-3 space-y-2">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  rows={3}
-                  placeholder="Escreva um comentário"
-                  disabled={!canComment}
-                  className={`w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-petroleo-400 ${!canComment ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                />
-                {!hideInternalCommentToggle && canInternal && (
-                  <label className={`flex items-center gap-2 text-xs text-gray-900 ${!canComment ? 'opacity-60' : ''}`}>
-                    <input type="checkbox" disabled={!canComment} checked={internal} onChange={(e) => setInternal(e.target.checked)} />
-                    Comentário interno
-                  </label>
-                )}
-                {!canComment && (
-                  <div className="text-xs text-gray-700">Comentários desabilitados para denúncias Concluídas/Rejeitadas (apenas Admin).</div>
-                )}
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleAddComment}
+              {!hideCommentInput && (
+                <div className="mt-3 space-y-2">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    rows={3}
+                    placeholder="Escreva um comentário"
                     disabled={!canComment}
-                    className={`inline-flex items-center px-3 py-2 rounded-md text-white text-sm ${!canComment ? 'bg-gray-400 cursor-not-allowed' : 'bg-petroleo-600 hover:bg-petroleo-700'}`}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    Enviar Comentário
-                  </button>
+                    className={`w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-petroleo-400 ${!canComment ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  />
+                  {!hideInternalCommentToggle && canInternal && (
+                    <label className={`flex items-center gap-2 text-xs text-gray-900 ${!canComment ? 'opacity-60' : ''}`}>
+                      <input type="checkbox" disabled={!canComment} checked={internal} onChange={(e) => setInternal(e.target.checked)} />
+                      Comentário interno
+                    </label>
+                  )}
+                  {!canComment && (
+                    <div className="text-xs text-gray-700">Comentários desabilitados para denúncias Concluídas/Rejeitadas (apenas Admin).</div>
+                  )}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleAddComment}
+                      disabled={!canComment}
+                      className={`inline-flex items-center px-3 py-2 rounded-md text-white text-sm ${!canComment ? 'bg-gray-400 cursor-not-allowed' : 'bg-petroleo-600 hover:bg-petroleo-700'}`}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Enviar Comentário
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
           <MessageModal open={errorOpen} title="Falha no upload" message={errorMsg} variant="error" onClose={() => setErrorOpen(false)} />
