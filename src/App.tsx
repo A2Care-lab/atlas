@@ -1,8 +1,10 @@
 import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
+import { supabase } from './lib/supabase';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
+import Onboarding from './pages/Onboarding';
 import { Dashboard } from './pages/DashboardFixed';
 import { MyReports } from './pages/MyReports';
 import { NewReport } from './pages/NewReport';
@@ -39,10 +41,74 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   const { user } = useAuth();
 
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search || '')
+    const access_token_q = searchParams.get('access_token') || undefined
+    const refresh_token_q = searchParams.get('refresh_token') || undefined
+    const h = window.location.hash || ''
+    const idx = h.indexOf('#access_token=')
+    const frag = idx !== -1 ? h.substring(idx + 1) : ''
+    const hashParams = new URLSearchParams(frag)
+    const access_token_h = hashParams.get('access_token') || undefined
+    const refresh_token_h = hashParams.get('refresh_token') || undefined
+
+    // Não sobrescrever fragmento quando ele contém tokens (#access_token, etc.)
+    // Apenas ajustar rota se NÃO houver tokens no fragmento atual
+    try {
+      const preQs = new URLSearchParams(window.location.search || '')
+      let preGo = preQs.get('go') || ''
+      const preType = preQs.get('type') || ''
+      try { preGo = decodeURIComponent(preGo) } catch {}
+      try { preGo = decodeURIComponent(preGo) } catch {}
+      const hasTokenFragment = /^#access_token=/.test(window.location.hash) || /(^#token=|[?&]token=)/.test(window.location.hash)
+      if (preType === 'recovery' && preGo && !/^#\/onboarding/.test(window.location.hash) && !hasTokenFragment) {
+        const prePath = preGo.startsWith('/') ? preGo : `/${preGo}`
+        window.location.hash = `${prePath}?type=recovery`
+      }
+    } catch {}
+
+    const access_token = access_token_q || access_token_h
+    const refresh_token = refresh_token_q || refresh_token_h
+
+    if (access_token && refresh_token) {
+      supabase.auth.setSession({ access_token, refresh_token }).then(() => {
+        const qs = new URLSearchParams(window.location.search || '')
+        let go = qs.get('go') || ''
+        const type = qs.get('type') || ''
+        // Decode once or twice to handle double-encoded values (e.g., %252Fonboarding)
+        try { go = decodeURIComponent(go) } catch {}
+        try { go = decodeURIComponent(go) } catch {}
+        if (go) {
+          const path = go.startsWith('/') ? go : `/${go}`
+          window.location.hash = `${path}${type ? `?type=${type}` : ''}`
+        } else if (!/^#\/onboarding/.test(window.location.hash)) {
+          window.location.hash = '#/onboarding?type=recovery'
+        }
+      }).catch(() => {
+        window.location.hash = '#/login'
+      })
+    }
+    const token = (new URLSearchParams(window.location.search || '')).get('token') || (new URLSearchParams(frag)).get('token') || ''
+    if (!access_token && token) {
+      supabase.auth.verifyOtp({ type: 'recovery', token_hash: token } as any).then(() => {
+        const qs = new URLSearchParams(window.location.search || '')
+        let go = qs.get('go') || ''
+        const type = qs.get('type') || ''
+        try { go = decodeURIComponent(go) } catch {}
+        try { go = decodeURIComponent(go) } catch {}
+        const path = (go && go.startsWith('/')) ? go : '/onboarding'
+        window.location.hash = `${path}${type ? `?type=${type}` : ''}`
+      }).catch(() => {
+        window.location.hash = '#/login'
+      })
+    }
+  }, [])
+
   return (
     <HashRouter>
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+        <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/report/:token" element={<ReportForm />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/success" element={<ReportSuccess />} />

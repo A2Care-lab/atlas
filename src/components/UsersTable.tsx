@@ -143,9 +143,13 @@ export default function UsersTable() {
           empresa: company?.name || '',
           perfil: role,
           fromEmail: import.meta.env.VITE_RESEND_FROM || undefined,
+          redirect_to: `${window.location.origin}/#/onboarding`,
         }
       })
-      if (fnErr) throw fnErr
+      if (fnErr) {
+        const details = (fnErr as any)?.context ? `: ${JSON.stringify((fnErr as any).context)}` : ''
+        throw new Error(fnErr.message + details)
+      }
 
       setInviteOpen(false)
       setMsgTitle('Convite criado')

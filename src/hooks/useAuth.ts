@@ -47,35 +47,32 @@ export function useAuth() {
 
   const loadProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      const sel = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        // Se não existir perfil, cria o próprio perfil do usuário
-        const session = (await supabase.auth.getSession()).data.session;
-        const email = session?.user?.email || '';
-        if (error.code === 'PGRST116' || (error.message || '').toLowerCase().includes('no rows')) {
-          const { error: insertError } = await supabase
-            .from('user_profiles')
-            .insert({ id: userId, email, role: 'user', is_active: true });
-          if (insertError) throw insertError;
-          // Tenta buscar novamente
-          const { data: data2, error: error2 } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', userId)
-            .single();
-          if (error2) throw error2;
-          setProfile(data2);
-        } else {
-          throw error;
-        }
-      } else {
-        setProfile(data);
+      if (!sel.error && sel.data) {
+        setProfile(sel.data as any);
+        return;
       }
+
+      const session = (await supabase.auth.getSession()).data.session;
+      const email = session?.user?.email || '';
+      const up = await supabase
+        .from('user_profiles')
+        .upsert({ id: userId, email, role: 'user', is_active: true }, { onConflict: 'id', ignoreDuplicates: true })
+        .select('*')
+        .maybeSingle();
+
+      if (up.error && !up.data) throw up.error;
+      const profileData = up.data || (await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle()).data;
+      if (profileData) setProfile(profileData as any);
     } catch (error) {
       console.error('Error loading profile:', error);
     }
@@ -96,13 +93,15 @@ export function useAuth() {
 
   const resetPassword = async (email: string) => {
     try {
-      const first = await supabase.functions.invoke('send-password-reset', { body: { email } });
+      const origin = typeof window !== 'undefined' ? window.location.origin : undefined
+      const first = await supabase.functions.invoke('send-password-reset', { body: { email, redirect_to: origin } });
       if (!first.error) return first as any;
-      const second = await supabase.functions.invoke('email-password-reset', { body: { email } });
+      const second = await supabase.functions.invoke('email-password-reset', { body: { email, redirect_to: origin } });
       return second as any;
     } catch (error) {
       try {
-        const second = await supabase.functions.invoke('email-password-reset', { body: { email } });
+        const origin = typeof window !== 'undefined' ? window.location.origin : undefined
+        const second = await supabase.functions.invoke('email-password-reset', { body: { email, redirect_to: origin } });
         return second as any;
       } catch (err) {
         return { data: null, error: err } as any;
