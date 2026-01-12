@@ -37,6 +37,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [activeCompanies, setActiveCompanies] = useState<number>(0);
   const [activeUsers, setActiveUsers] = useState<number>(0);
+  const [myCompanyStatus, setMyCompanyStatus] = useState<string | null>(null);
   const [periodo, setPeriodo] = useState<'geral' | '1ano' | '6meses' | '3meses' | '1mes'>('geral');
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
@@ -46,6 +47,7 @@ export function Dashboard() {
     loadReports();
     loadActiveCounts();
     loadCompanies();
+    loadMyCompanyStatus();
   }, [profile]);
 
   const loadReports = async () => {
@@ -116,6 +118,27 @@ export function Dashboard() {
         .eq('is_active', true);
       setCompanies((data as any[]) || []);
     } catch {}
+  };
+
+  const loadMyCompanyStatus = async () => {
+    if (!profile) return;
+    const isCorporate = profile.role === 'corporate_manager' || profile.role === 'approver_manager';
+    if (!isCorporate || !profile.company_id) {
+      setMyCompanyStatus(null);
+      return;
+    }
+    try {
+      const { data } = await supabase
+        .from('companies')
+        .select('id, is_active')
+        .eq('id', profile.company_id)
+        .limit(1)
+        .maybeSingle();
+      const active = (data as any)?.is_active as boolean | undefined;
+      setMyCompanyStatus(active ? 'Ativo' : 'Inativo');
+    } catch {
+      setMyCompanyStatus(null);
+    }
   };
 
   const filteredReports = useMemo(() => {
@@ -247,14 +270,12 @@ export function Dashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {profile?.role === 'user' ? 'Minhas Denúncias' : 'Painel Geral de Denúncias'}
-          </h1>
-          {profile?.role !== 'user' && (
-            <p className="mt-1 text-sm text-gray-600">
-              Visualize indicadores, status e tendências das denúncias registradas no sistema.
-            </p>
-          )}
+          <h1 className="text-2xl font-bold text-gray-900">Painel Geral de Denúncias</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            {profile?.role === 'user'
+              ? 'Visualize indicadores, status e tendências das denúncias registradas por você no nosso sistema.'
+              : 'Visualize indicadores, status e tendências das denúncias registradas no sistema.'}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           {profile?.role === 'admin' && (
@@ -329,6 +350,7 @@ export function Dashboard() {
         </div>
       </div>
 
+      {profile?.role !== 'user' && (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
@@ -430,6 +452,7 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -456,8 +479,16 @@ export function Dashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Empresas Ativas</dt>
-                  <dd className="text-lg font-medium text-gray-900">{activeCompanies}</dd>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    {profile?.role === 'corporate_manager' || profile?.role === 'approver_manager'
+                      ? 'Status Minha Empresa'
+                      : 'Empresas Ativas'}
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {profile?.role === 'corporate_manager' || profile?.role === 'approver_manager'
+                      ? (myCompanyStatus ?? '—')
+                      : activeCompanies}
+                  </dd>
                 </dl>
               </div>
             </div>

@@ -54,18 +54,18 @@ function AppRoutes() {
 
     // Não sobrescrever fragmento quando ele contém tokens (#access_token, etc.)
     // Apenas ajustar rota se NÃO houver tokens no fragmento atual
-    try {
-      const preQs = new URLSearchParams(window.location.search || '')
-      let preGo = preQs.get('go') || ''
-      const preType = preQs.get('type') || ''
-      try { preGo = decodeURIComponent(preGo) } catch {}
-      try { preGo = decodeURIComponent(preGo) } catch {}
-      const hasTokenFragment = /^#access_token=/.test(window.location.hash) || /(^#token=|[?&]token=)/.test(window.location.hash)
-      if (preType === 'recovery' && preGo && !/^#\/onboarding/.test(window.location.hash) && !hasTokenFragment) {
-        const prePath = preGo.startsWith('/') ? preGo : `/${preGo}`
-        window.location.hash = `${prePath}?type=recovery`
-      }
-    } catch {}
+      try {
+        const preQs = new URLSearchParams(window.location.search || '')
+        let preGo = preQs.get('go') || ''
+        const preType = preQs.get('type') || ''
+        try { preGo = decodeURIComponent(preGo) } catch {}
+        try { preGo = decodeURIComponent(preGo) } catch {}
+        const hasTokenFragment = /^#access_token=/.test(window.location.hash) || /(^#token=|[?&]token=)/.test(window.location.hash)
+        if (preType && preGo && !/^#\/onboarding/.test(window.location.hash) && !hasTokenFragment) {
+          const prePath = preGo.startsWith('/') ? preGo : `/${preGo}`
+          window.location.hash = `${prePath}?type=${preType}`
+        }
+      } catch {}
 
     const access_token = access_token_q || access_token_h
     const refresh_token = refresh_token_q || refresh_token_h
@@ -82,7 +82,7 @@ function AppRoutes() {
           const path = go.startsWith('/') ? go : `/${go}`
           window.location.hash = `${path}${type ? `?type=${type}` : ''}`
         } else if (!/^#\/onboarding/.test(window.location.hash)) {
-          window.location.hash = '#/onboarding?type=recovery'
+          window.location.hash = `#/onboarding?type=${type || 'invite'}`
         }
       }).catch(() => {
         window.location.hash = '#/login'

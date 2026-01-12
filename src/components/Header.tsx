@@ -1,8 +1,9 @@
 import { useAuth } from '../hooks/useAuth';
-import { LogOut, Bell, User } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { useState, useEffect, useRef } from 'react';
 import { Brand } from './Brand';
+import { getUserRoleLabel } from '../utils/labels';
 import { UserProfileModal } from './UserProfileModal';
 
 export function Header() {
@@ -63,11 +64,6 @@ export function Header() {
 
         {/* Área do usuário */}
         <div className="flex items-center space-x-4 mt-1 md:mt-2">
-          {/* Notificações */}
-          <button className="relative p-2 text-white/80 hover:text-white transition-colors">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full"></span>
-          </button>
 
         <div className="hidden sm:flex items-center">
           <div className="flex items-center gap-2">
@@ -84,7 +80,7 @@ export function Header() {
               )}
             </button>
             <div className="text-sm text-white/80">
-              {profile?.role}
+              {getUserRoleLabel(profile?.role || '')}
             </div>
           </div>
         </div>

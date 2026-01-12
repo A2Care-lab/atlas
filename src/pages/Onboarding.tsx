@@ -35,15 +35,16 @@ export default function Onboarding() {
     return lower && upper && digit && symbol
   }
   const readTypeFromHash = () => {
+    const searchParams = new URLSearchParams(window.location.search || '')
+    const typeParam = searchParams.get('type')
+    if (typeParam === 'recovery') return 'recovery'
+    if (typeParam === 'invite') return 'invite'
     const h = window.location.hash || ''
     const qStr = h.includes('?') ? h.substring(h.indexOf('?') + 1) : ''
     const params = new URLSearchParams(qStr)
     const t = params.get('type')
     if (t === 'recovery') return 'recovery'
-    const searchParams = new URLSearchParams(window.location.search || '')
-    if (searchParams.get('access_token')) return 'recovery'
-    if (searchParams.get('token')) return 'recovery'
-    if (/access_token=/.test(h)) return 'recovery'
+    if (t === 'invite') return 'invite'
     return 'invite'
   }
   const trySetSessionFromHash = async () => {
@@ -120,9 +121,37 @@ export default function Onboarding() {
       } else {
         throw new Error('A senha deve ter no mínimo 6 caracteres, com letras maiúsculas, minúsculas, números e símbolos.')
       }
-      if (type !== 'recovery' && fullName) {
-        const { error: profErr } = await updateProfile({ full_name: fullName })
-        if (profErr) throw profErr
+      if (type !== 'recovery') {
+        if (fullName) {
+          const { error: profErr } = await updateProfile({ full_name: fullName })
+          if (profErr) throw profErr
+        }
+        const now = new Date().toISOString()
+        const email = session?.user?.email || ''
+        const inv = await supabase
+          .from('invitations')
+          .select('id, role, company_id')
+          .eq('email', email)
+          .is('accepted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        const invited = (!inv.error && inv.data) ? (inv.data as any) : null
+        if (invited) {
+          const changes: any = { role: invited.role, company_id: invited.company_id, is_active: true }
+          if (agree) { changes.accepted_terms = true; changes.terms_accepted_at = now }
+          await supabase
+            .from('user_profiles')
+            .update(changes)
+            .eq('id', session.user.id)
+          try {
+            await supabase.auth.updateUser({ data: { role: invited.role, company_id: invited.company_id } } as any)
+          } catch (_) {}
+          await supabase
+            .from('invitations')
+            .update({ accepted_at: now })
+            .eq('id', invited.id)
+        }
       }
       navigate(type === 'recovery' ? '/login' : '/')
     } catch (e: any) {

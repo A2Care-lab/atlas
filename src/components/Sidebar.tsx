@@ -28,6 +28,7 @@ export function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const appVersion = packageJson.version ?? '0.0.0';
   const [lastUpdate, setLastUpdate] = useState<string>('');
+  const buildLastUpdate = typeof __LAST_UPDATE__ === 'string' && __LAST_UPDATE__ ? __LAST_UPDATE__ : ''
 
   useEffect(() => {
     const checkMobile = () => {
@@ -43,16 +44,16 @@ export function Sidebar() {
   }, []);
 
   useEffect(() => {
-    const now = new Date();
-    const formatted = now.toLocaleString('pt-BR', {
+    const date = buildLastUpdate ? new Date(buildLastUpdate) : new Date()
+    const formatted = date.toLocaleString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    });
-    setLastUpdate(formatted);
-  }, []);
+    })
+    setLastUpdate(formatted)
+  }, [buildLastUpdate])
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },

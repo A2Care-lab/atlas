@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 import { Company, UserProfile, UserRole, Invitation } from '../types/database'
+import { getUserRoleLabel } from '../utils/labels'
 import { Plus, Ban, Trash2, RefreshCw, Pencil } from 'lucide-react'
 import { ClearFiltersButton } from './ClearFiltersButton'
 import { useAuth } from '../hooks/useAuth'
@@ -115,11 +116,47 @@ export default function UsersTable() {
 
   const removeUser = async (user: UserProfile) => {
     if (!canAdmin) return
-    const { error } = await supabase
-      .from('user_profiles')
-      .delete()
-      .eq('id', user.id)
-    if (!error) load()
+    try {
+      const { error: fnErr } = await supabase.functions.invoke('delete-auth-user', {
+        body: { uid: user.id }
+      })
+      if (fnErr) {
+        const ctx = (fnErr as any)?.context || {}
+        const status = (ctx as any)?.response?.status || (ctx as any)?.status || ''
+        if (status === 401) {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session?.access_token) throw new Error('Sem sessão válida (401). Faça login novamente.')
+          const res = await fetch(`${supabaseUrl}/functions/v1/delete-auth-user`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${session.access_token}`, apikey: supabaseAnonKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid: user.id })
+          })
+          if (!res.ok) {
+            const txt = await res.text()
+            throw new Error(`Falha (HTTP ${res.status}) ${txt}`)
+          }
+        } else {
+          const details = ctx ? `: ${JSON.stringify(ctx)}` : ''
+          throw new Error(fnErr.message + details)
+        }
+      }
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('id', user.id)
+      if (error) throw error
+      setMsgTitle('Usuário excluído')
+      setMsgText('Usuário removido do Auth e do cadastro.')
+      setMsgVariant('success')
+      setMsgOpen(true)
+      await load()
+    } catch (e: any) {
+      setMsgTitle('Erro ao excluir usuário')
+      setMsgText(e?.message || 'Falha ao excluir no Auth')
+      setMsgVariant('error')
+      setMsgOpen(true)
+    }
   }
 
   const sendReset = async (email: string) => {
@@ -308,7 +345,7 @@ export default function UsersTable() {
               <tr key={`${row.kind}-${row.id}`}>
                 <td className="px-4 py-2 text-sm text-gray-900">{row.full_name || '-'}</td>
                 <td className="px-4 py-2 text-sm text-gray-900">{row.email}</td>
-                <td className="px-4 py-2 text-sm text-gray-900">{row.role}</td>
+                <td className="px-4 py-2 text-sm text-gray-900">{getUserRoleLabel(row.role)}</td>
                 <td className="px-4 py-2 text-sm text-gray-900">{companies.find(c=>c.id===row.company_id)?.name || '-'}</td>
                 <td className="px-4 py-2 text-sm text-gray-900">{row.created_at ? new Date(row.created_at).toLocaleDateString('pt-BR') : '-'}</td>
                 <td className="px-4 py-2 text-sm text-gray-900">{row.status}</td>
@@ -672,7 +709,7 @@ function BulkInviteModal({ onClose, companies, onCreateMany }:{ onClose:()=>void
                   <td className="px-3 py-2">{r.fullName}</td>
                   <td className="px-3 py-2">{r.email}</td>
                   <td className="px-3 py-2">{companies.find(c=>c.id===r.companyId)?.name || '-'}</td>
-                  <td className="px-3 py-2">{r.role}</td>
+                  <td className="px-3 py-2">{getUserRoleLabel(r.role)}</td>
                 </tr>
               ))}
               {parsed.length===0 && (

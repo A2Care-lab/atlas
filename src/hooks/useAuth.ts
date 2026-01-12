@@ -7,6 +7,20 @@ export function useAuth() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const ensureClaims = async (p: any) => {
+    try {
+      const session = (await supabase.auth.getSession()).data.session;
+      const currentRole = (session?.user?.user_metadata as any)?.role || null;
+      const currentCompany = (session?.user?.user_metadata as any)?.company_id || null;
+      const nextRole = p?.role || null;
+      const nextCompany = p?.company_id || null;
+      if (nextRole !== currentRole || (nextCompany || null) !== (currentCompany || null)) {
+        await supabase.auth.updateUser({ data: { role: nextRole, company_id: nextCompany || null } } as any);
+        await supabase.auth.refreshSession();
+      }
+    } catch {}
+  };
+
   useEffect(() => {
     const init = async () => {
       try {
@@ -55,14 +69,32 @@ export function useAuth() {
 
       if (!sel.error && sel.data) {
         setProfile(sel.data as any);
+        await ensureClaims(sel.data as any);
         return;
       }
 
       const session = (await supabase.auth.getSession()).data.session;
       const email = session?.user?.email || '';
+      const inv = await supabase
+        .from('invitations')
+        .select('id, role, company_id, full_name, expires_at, accepted_at, created_at')
+        .eq('email', email)
+        .is('accepted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const invited = (!inv.error && inv.data) ? (inv.data as any) : null;
+      const payload: any = {
+        id: userId,
+        email,
+        role: invited?.role || 'user',
+        is_active: true,
+      };
+      if (invited?.company_id) payload.company_id = invited.company_id;
+      if (invited?.full_name) payload.full_name = invited.full_name;
       const up = await supabase
         .from('user_profiles')
-        .upsert({ id: userId, email, role: 'user', is_active: true }, { onConflict: 'id', ignoreDuplicates: true })
+        .upsert(payload, { onConflict: 'id', ignoreDuplicates: true })
         .select('*')
         .maybeSingle();
 
@@ -72,7 +104,21 @@ export function useAuth() {
         .select('*')
         .eq('id', userId)
         .maybeSingle()).data;
-      if (profileData) setProfile(profileData as any);
+      if (profileData) {
+        setProfile(profileData as any);
+        await ensureClaims(profileData as any);
+      }
+      try {
+        await supabase.auth.updateUser({ data: { role: payload.role, company_id: payload.company_id || null } } as any)
+      } catch (_) {}
+      if (invited?.id) {
+        try {
+          await supabase
+            .from('invitations')
+            .update({ accepted_at: new Date().toISOString() })
+            .eq('id', invited.id)
+        } catch (_) {}
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
     }
@@ -93,15 +139,15 @@ export function useAuth() {
 
   const resetPassword = async (email: string) => {
     try {
-      const origin = typeof window !== 'undefined' ? window.location.origin : undefined
-      const first = await supabase.functions.invoke('send-password-reset', { body: { email, redirect_to: origin } });
+      const appUrl = (import.meta as any)?.env?.VITE_APP_URL || (typeof window !== 'undefined' ? window.location.origin : undefined)
+      const first = await supabase.functions.invoke('send-password-reset', { body: { email, redirect_to: appUrl } });
       if (!first.error) return first as any;
-      const second = await supabase.functions.invoke('email-password-reset', { body: { email, redirect_to: origin } });
+      const second = await supabase.functions.invoke('email-password-reset', { body: { email, redirect_to: appUrl } });
       return second as any;
     } catch (error) {
       try {
-        const origin = typeof window !== 'undefined' ? window.location.origin : undefined
-        const second = await supabase.functions.invoke('email-password-reset', { body: { email, redirect_to: origin } });
+        const appUrl = (import.meta as any)?.env?.VITE_APP_URL || (typeof window !== 'undefined' ? window.location.origin : undefined)
+        const second = await supabase.functions.invoke('email-password-reset', { body: { email, redirect_to: appUrl } });
         return second as any;
       } catch (err) {
         return { data: null, error: err } as any;
