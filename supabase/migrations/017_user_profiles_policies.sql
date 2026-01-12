@@ -1,0 +1,74 @@
+-- RLS de user_profiles para leitura/gestão por admin e gestores
+
+ALTER TABLE IF EXISTS public.user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Usuário pode ler seu próprio perfil
+CREATE POLICY "User can view own profile" ON public.user_profiles
+  FOR SELECT TO authenticated
+  USING (id = auth.uid());
+
+-- Admin pode ler todos perfis
+CREATE POLICY "Admin can view all profiles" ON public.user_profiles
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role = 'admin'
+    )
+  );
+
+-- Gestores podem ler perfis da própria empresa
+CREATE POLICY "Managers can view company profiles" ON public.user_profiles
+  FOR SELECT TO authenticated
+  USING (
+    company_id = (SELECT company_id FROM public.user_profiles WHERE id = auth.uid())
+    AND EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role IN ('admin','corporate_manager','approver_manager')
+    )
+  );
+
+-- Admin pode atualizar perfis
+CREATE POLICY "Admin can update profiles" ON public.user_profiles
+  FOR UPDATE TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role = 'admin'
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role = 'admin'
+    )
+  );
+
+-- Gestores podem atualizar perfis da própria empresa
+CREATE POLICY "Managers can update company profiles" ON public.user_profiles
+  FOR UPDATE TO authenticated
+  USING (
+    company_id = (SELECT company_id FROM public.user_profiles WHERE id = auth.uid())
+    AND EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role IN ('admin','corporate_manager','approver_manager')
+    )
+  )
+  WITH CHECK (
+    company_id = (SELECT company_id FROM public.user_profiles WHERE id = auth.uid())
+    AND EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role IN ('admin','corporate_manager','approver_manager')
+    )
+  );
+
+-- Admin pode excluir perfis
+CREATE POLICY "Admin can delete profiles" ON public.user_profiles
+  FOR DELETE TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role = 'admin'
+    )
+  );
+

@@ -1,0 +1,6 @@
+{
+  "config": {
+    "verify_jwt": false
+  }
+}
+
