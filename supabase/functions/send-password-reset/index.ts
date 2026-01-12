@@ -64,7 +64,19 @@ serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   const headerOrigin = req.headers.get('origin') || req.headers.get('referer') || ''
   const ENVIRONMENT = (Deno.env.get('ENVIRONMENT') || Deno.env.get('ENV') || '').toLowerCase();
-  let baseUrl: string | undefined = redirect_to || APP_URL || (headerOrigin ? (() => { try { const u = new URL(headerOrigin); return `${u.protocol}//${u.host}` } catch { return undefined } })() : undefined);
+  let baseUrl: string | undefined = APP_URL || undefined;
+  if (!baseUrl) {
+    if (ENVIRONMENT === 'production' || ENVIRONMENT === 'prod') {
+      baseUrl = 'https://atlas.a2care.com.br';
+    } else {
+      try {
+        const u = new URL(headerOrigin);
+        baseUrl = `${u.protocol}//${u.host}`;
+      } catch {
+        baseUrl = 'http://localhost:5173';
+      }
+    }
+  }
   if (!baseUrl) {
     if (ENVIRONMENT === 'production' || ENVIRONMENT === 'prod') {
       return new Response(JSON.stringify({ error: "APP_URL ausente em produção. Configure o segredo APP_URL com a URL do site." }), {
@@ -74,8 +86,7 @@ serve(async (req) => {
     }
     baseUrl = 'http://localhost:5173';
   }
-  const redirectTargetBase = `${String(baseUrl).replace(/\/+$/, '')}/?go=${encodeURIComponent('/onboarding')}&type=recovery`;
-  const linkRes = await admin.auth.admin.generateLink({ type: "recovery", email, options: { redirectTo: redirectTargetBase } } as any);
+  const linkRes = await admin.auth.admin.generateLink({ type: "recovery", email } as any);
   if (linkRes.error || !linkRes.data) {
     return new Response(JSON.stringify({ error: "Falha ao gerar link de recuperação", details: linkRes.error?.message || linkRes.error }), {
       status: 502,
@@ -92,15 +103,8 @@ serve(async (req) => {
   } catch {}
   const effectiveToken = rawToken || extractedToken;
   if (effectiveToken) {
-    const redirectWithToken = `${redirectTargetBase}&token=${encodeURIComponent(effectiveToken)}`;
-    const params = new URLSearchParams({ type: "recovery", token: effectiveToken });
-    params.set("redirect_to", redirectWithToken);
-    actionLink = `${SUPABASE_URL}/auth/v1/verify?${params.toString()}`;
-  }
-  // Se o action_link existir mas estiver sem redirect_to, acrescenta sem alterar o token
-  if (actionLink && !/redirect_to=/.test(actionLink)) {
-    const sep = actionLink.includes("?") ? "&" : "?";
-    actionLink = `${actionLink}${sep}redirect_to=${encodeURIComponent(redirectTargetBase)}`;
+    const directBase = `${String(baseUrl).replace(/\/+$/, '')}/#/onboarding?type=recovery`;
+    actionLink = `${directBase}&token=${encodeURIComponent(effectiveToken)}`;
   }
   if (!actionLink) {
     try {
@@ -111,20 +115,15 @@ serve(async (req) => {
           apikey: SUPABASE_SERVICE_ROLE_KEY,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ type: "recovery", email, redirect_to: redirectTargetBase }),
+        body: JSON.stringify({ type: "recovery", email }),
       });
       const json = await resp.json();
       if (resp.ok) {
         const tk = json?.email_otp || json?.oob_code || json?.token || json?.code || rawToken || "";
         actionLink = json?.action_link || json?.email_otp_link || actionLink;
-        if (!actionLink && tk) {
-          const redirectWithToken = `${redirectTargetBase}&token=${encodeURIComponent(tk)}`;
-          const params = new URLSearchParams({ type: "recovery", token: tk });
-          params.set("redirect_to", redirectWithToken);
-          actionLink = `${SUPABASE_URL}/auth/v1/verify?${params.toString()}`;
-        } else if (actionLink && !/redirect_to=/.test(actionLink)) {
-          const sep = actionLink.includes("?") ? "&" : "?";
-          actionLink = `${actionLink}${sep}redirect_to=${encodeURIComponent(redirectTargetBase)}`;
+        if (tk) {
+          const directBase = `${String(baseUrl).replace(/\/+$/, '')}/#/onboarding?type=recovery`;
+          actionLink = `${directBase}&token=${encodeURIComponent(tk)}`;
         }
       }
     } catch (_) {}
