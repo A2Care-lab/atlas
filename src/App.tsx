@@ -5,6 +5,8 @@ import { supabase } from './lib/supabase';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import Onboarding from './pages/Onboarding';
+import PasswordRecoveryRequest from './pages/PasswordRecoveryRequest';
+import PasswordRecoveryReset from './pages/PasswordRecoveryReset';
 import { Dashboard } from './pages/DashboardFixed';
 import { MyReports } from './pages/MyReports';
 import { NewReport } from './pages/NewReport';
@@ -108,6 +110,8 @@ function AppRoutes() {
     <HashRouter>
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+        <Route path="/recover" element={<PasswordRecoveryRequest />} />
+        <Route path="/recover/:token" element={<PasswordRecoveryReset />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/report/:token" element={<ReportForm />} />
         <Route path="/logout" element={<Logout />} />
