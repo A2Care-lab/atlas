@@ -140,18 +140,12 @@ export function useAuth() {
   const resetPassword = async (email: string) => {
     try {
       const appUrl = (import.meta as any)?.env?.VITE_APP_URL || (typeof window !== 'undefined' ? window.location.origin : undefined)
-      const first = await supabase.functions.invoke('send-password-reset', { body: { email, redirect_to: appUrl } });
-      if (!first.error) return first as any;
-      const second = await supabase.functions.invoke('email-password-reset', { body: { email, redirect_to: appUrl } });
-      return second as any;
-    } catch (error) {
-      try {
-        const appUrl = (import.meta as any)?.env?.VITE_APP_URL || (typeof window !== 'undefined' ? window.location.origin : undefined)
-        const second = await supabase.functions.invoke('email-password-reset', { body: { email, redirect_to: appUrl } });
-        return second as any;
-      } catch (err) {
-        return { data: null, error: err } as any;
-      }
+      const base = String(appUrl || '').replace(/\/+$/, '')
+      const redirectTo = `${base}/#/onboarding?type=recovery`
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+      return { data, error } as any
+    } catch (err) {
+      return { data: null, error: err } as any
     }
   };
 

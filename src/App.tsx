@@ -76,23 +76,50 @@ function AppRoutes() {
       supabase.auth.setSession({ access_token, refresh_token }).then(() => {
         const qs = new URLSearchParams(window.location.search || '')
         let go = qs.get('go') || ''
-        const type = qs.get('type') || ''
-        // Decode once or twice to handle double-encoded values (e.g., %252Fonboarding)
+        let type = qs.get('type') || ''
         try { go = decodeURIComponent(go) } catch {}
         try { go = decodeURIComponent(go) } catch {}
-        if (go) {
-          const path = go.startsWith('/') ? go : `/${go}`
-          window.location.hash = `${path}${type ? `?type=${type}` : ''}`
-        } else if (!/^#\/onboarding/.test(window.location.hash)) {
-          window.location.hash = `#/onboarding?type=${type || 'invite'}`
+        if (!type) {
+          const h = window.location.hash || ''
+          let qStr = h.includes('?') ? h.substring(h.indexOf('?') + 1) : ''
+          if (qStr.includes('#')) qStr = qStr.split('#')[0]
+          const hp = new URLSearchParams(qStr)
+          type = hp.get('type') || ''
         }
+        const path = go ? (go.startsWith('/') ? go : `/${go}`) : '/onboarding'
+        window.location.hash = `${path}${type ? `?type=${type}` : ''}`
       }).catch(() => {
         window.location.hash = '#/login'
       })
     }
     const token = (new URLSearchParams(window.location.search || '')).get('token') || (new URLSearchParams(frag)).get('token') || ''
+    const code = (new URLSearchParams(window.location.search || '')).get('code') || (new URLSearchParams(frag)).get('code') || ''
     if (!access_token && token) {
-      supabase.auth.verifyOtp({ type: 'recovery', token_hash: token } as any).then(() => {
+      supabase.auth.verifyOtp({ type: 'recovery', token_hash: token } as any).then(({ data }) => {
+        const s = data?.session
+        if (s?.access_token && s?.refresh_token) {
+          return supabase.auth.setSession({ access_token: s.access_token, refresh_token: s.refresh_token })
+        }
+        return Promise.resolve()
+      }).then(() => {
+        const qs = new URLSearchParams(window.location.search || '')
+        let go = qs.get('go') || ''
+        const type = qs.get('type') || ''
+        try { go = decodeURIComponent(go) } catch {}
+        try { go = decodeURIComponent(go) } catch {}
+        const path = (go && go.startsWith('/')) ? go : '/onboarding'
+        window.location.hash = `${path}${type ? `?type=${type}` : ''}`
+      }).catch(() => {
+        window.location.hash = '#/login'
+      })
+    } else if (!access_token && code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ data }) => {
+        const s = data?.session
+        if (s?.access_token && s?.refresh_token) {
+          return supabase.auth.setSession({ access_token: s.access_token, refresh_token: s.refresh_token })
+        }
+        return Promise.resolve()
+      }).then(() => {
         const qs = new URLSearchParams(window.location.search || '')
         let go = qs.get('go') || ''
         const type = qs.get('type') || ''

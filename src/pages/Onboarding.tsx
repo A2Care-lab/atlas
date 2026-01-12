@@ -40,7 +40,8 @@ export default function Onboarding() {
     if (typeParam === 'recovery') return 'recovery'
     if (typeParam === 'invite') return 'invite'
     const h = window.location.hash || ''
-    const qStr = h.includes('?') ? h.substring(h.indexOf('?') + 1) : ''
+    let qStr = h.includes('?') ? h.substring(h.indexOf('?') + 1) : ''
+    if (qStr.includes('#')) qStr = qStr.split('#')[0]
     const params = new URLSearchParams(qStr)
     const t = params.get('type')
     if (t === 'recovery') return 'recovery'
@@ -66,13 +67,26 @@ export default function Onboarding() {
   const tryVerifyTokenFromUrl = async () => {
     const searchParams = new URLSearchParams(window.location.search || '')
     const token_q = searchParams.get('token') || undefined
+    const code_q = searchParams.get('code') || undefined
     const h = window.location.hash || ''
     const qStr = h.includes('?') ? h.substring(h.indexOf('?') + 1) : ''
     const hashParams = new URLSearchParams(qStr)
     const token_h = hashParams.get('token') || undefined
+    const code_h = hashParams.get('code') || undefined
     const token = token_q || token_h
+    const code = code_q || code_h
     if (token) {
-      await supabase.auth.verifyOtp({ type: 'recovery', token_hash: token } as any)
+      const { data } = await supabase.auth.verifyOtp({ type: 'recovery', token_hash: token } as any)
+      const s = data?.session
+      if (s?.access_token && s?.refresh_token) {
+        await supabase.auth.setSession({ access_token: s.access_token, refresh_token: s.refresh_token })
+      }
+    } else if (code) {
+      const { data } = await supabase.auth.exchangeCodeForSession(code)
+      const s = data?.session
+      if (s?.access_token && s?.refresh_token) {
+        await supabase.auth.setSession({ access_token: s.access_token, refresh_token: s.refresh_token })
+      }
     }
   }
 
@@ -109,7 +123,7 @@ export default function Onboarding() {
         await tryVerifyTokenFromUrl()
         session = (await supabase.auth.getSession()).data.session
       }
-      const requireSession = type !== 'recovery'
+      const requireSession = true
       if (!session && requireSession) {
         throw new Error('Sessão de recuperação ausente. Abra o link enviado por e-mail para redefinir a senha. Se estiver em desenvolvimento, garanta que o domínio esteja configurado nas URLs de redirecionamento do Supabase.')
       }
