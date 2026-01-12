@@ -23,10 +23,15 @@
             caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
           }
         } else {
+          const qs = new URLSearchParams(location.search || '')
+          const disableSw = qs.get('no-sw') === '1'
           window.addEventListener('load', () => {
+            if (disableSw) return
             navigator.serviceWorker.register('/sw.js')
               .then((registration) => {
                 console.log('SW registered: ', registration);
+                if (registration.waiting) { registration.waiting.postMessage({ type: 'SKIP_WAITING' }) }
+                registration.update().catch(() => {})
               })
               .catch((registrationError) => {
                 console.log('SW registration failed: ', registrationError);

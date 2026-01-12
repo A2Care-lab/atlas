@@ -109,7 +109,8 @@ export default function Onboarding() {
         await tryVerifyTokenFromUrl()
         session = (await supabase.auth.getSession()).data.session
       }
-      if (!session) {
+      const requireSession = type !== 'recovery'
+      if (!session && requireSession) {
         throw new Error('Sessão de recuperação ausente. Abra o link enviado por e-mail para redefinir a senha. Se estiver em desenvolvimento, garanta que o domínio esteja configurado nas URLs de redirecionamento do Supabase.')
       }
       if (password && password.length >= 6 && isStrong(password)) {
