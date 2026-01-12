@@ -123,12 +123,13 @@ export default function Onboarding() {
         throw new Error('A senha deve ter no mínimo 6 caracteres, com letras maiúsculas, minúsculas, números e símbolos.')
       }
       if (type !== 'recovery') {
+        if (!session?.user) { throw new Error('Sessão ausente') }
         if (fullName) {
           const { error: profErr } = await updateProfile({ full_name: fullName })
           if (profErr) throw profErr
         }
         const now = new Date().toISOString()
-        const email = session?.user?.email || ''
+        const email = session.user.email || ''
         const inv = await supabase
           .from('invitations')
           .select('id, role, company_id')
