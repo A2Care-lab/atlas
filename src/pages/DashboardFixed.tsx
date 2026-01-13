@@ -10,7 +10,9 @@ import {
   BarChart3,
   TrendingUp,
   Users,
-  AlertOctagon
+  AlertOctagon,
+  MessageSquare,
+  BadgeCheck
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -33,6 +35,7 @@ const RISK_COLORS = {
 
 export function Dashboard() {
   const { profile, loading: authLoading } = useAuth();
+  const isUser = profile?.role === 'user';
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeCompanies, setActiveCompanies] = useState<number>(0);
@@ -60,8 +63,9 @@ export function Dashboard() {
       let query = supabase
         .from('reports')
         .select(`
-          id, status, risk_level, created_at, company_id, user_id,
-          company:companies(id,sla_days)
+          id, title, status, risk_level, created_at, company_id, user_id,
+          company:companies(id,sla_days),
+          comments(*)
         `)
         .order('created_at', { ascending: false });
 
@@ -229,6 +233,20 @@ export function Dashboard() {
   const pendingReports = filteredReports.filter(r => r.status === 'received' || r.status === 'under_analysis').length;
   const approvedReports = filteredReports.filter(r => r.status === 'approved').length;
   const rejectedReports = filteredReports.filter(r => r.status === 'rejected').length;
+  const commentedOpenReports = filteredReports.filter(r => {
+    const isOpen = r.status !== 'approved' && r.status !== 'rejected';
+    const all = ((r as any).comments || []) as any[];
+    const count = isUser ? all.filter((c: any) => !c.is_internal).length : (all.length || 0);
+    return isOpen && count > 0;
+  }).length;
+
+  const getLatestComments = () => {
+    const openReports = filteredReports.filter(r => r.status !== 'approved' && r.status !== 'rejected');
+    const all = openReports.flatMap((r: any) => (r.comments || []).map((c: any) => ({ ...c, report_id: r.id, report_title: r.title })));
+    const publicComments = all.filter((c: any) => !c.is_internal);
+    const sorted = publicComments.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return sorted.slice(0, 2);
+  };
 
   const calcSlaExceededPercent = () => {
     const now = new Date();
@@ -248,6 +266,26 @@ export function Dashboard() {
     });
     if (considered === 0) return 0;
     return Math.round((overdue / considered) * 100);
+  };
+
+  const calcUserSlaWithinPercent = () => {
+    const now = new Date();
+    let within = 0;
+    let considered = 0;
+    filteredReports.forEach((r) => {
+      const slaDays = (r.company?.sla_days ?? 0) as number;
+      if (slaDays > 0 && r.status !== 'approved' && r.status !== 'rejected') {
+        considered++;
+        const created = new Date(r.created_at);
+        const deadline = new Date(created);
+        deadline.setDate(deadline.getDate() + slaDays);
+        if (now.getTime() <= deadline.getTime()) {
+          within++;
+        }
+      }
+    });
+    if (considered === 0) return 0;
+    return Math.round((within / considered) * 100);
   };
 
   const rejectedPercent = totalReports ? Math.round((rejectedReports / totalReports) * 100) : 0;
@@ -374,15 +412,17 @@ export function Dashboard() {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+                {profile?.role === 'user' 
+                  ? <MessageSquare className="h-6 w-6 text-petroleo-600" /> 
+                  : <AlertTriangle className="h-6 w-6 text-red-600" />}
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Alto Risco
+                    {profile?.role === 'user' ? 'Denúncias Comentadas' : 'Alto Risco'}
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {highRiskReports}
+                    {profile?.role === 'user' ? commentedOpenReports : highRiskReports}
                   </dd>
                 </dl>
               </div>
@@ -394,15 +434,17 @@ export function Dashboard() {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <AlertOctagon className="h-6 w-6 text-red-700" />
+                {profile?.role === 'user' 
+                  ? <BadgeCheck className="h-6 w-6 text-green-600" /> 
+                  : <AlertOctagon className="h-6 w-6 text-red-700" />}
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Risco Crítico
+                    {profile?.role === 'user' ? '% Denúncias Dentro do SLA' : 'Risco Crítico'}
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {criticalRiskReports}
+                    {profile?.role === 'user' ? `${calcUserSlaWithinPercent()}%` : criticalRiskReports}
                   </dd>
                 </dl>
               </div>
@@ -569,28 +611,46 @@ export function Dashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Denúncias por Nível de Risco</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={getRiskCounts()}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="risk" />
-                <YAxis />
-                <Tooltip formatter={(value: any) => [value, 'TT']} />
-                <Bar dataKey="count" fill="#006D77">
-                  {getRiskCounts().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={RISK_COLORS[entry.riskKey as RiskLevel]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+        {isUser ? (
+          getMonthlyData().length > 0 && (
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Tendência Mensal</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={getMonthlyData()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip formatter={(value: any) => [value, 'TT']} />
+                    <Bar dataKey="count" fill="#10B981" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )
+        ) : (
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Denúncias por Nível de Risco</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={getRiskCounts()}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="risk" />
+                  <YAxis />
+                  <Tooltip formatter={(value: any) => [value, 'TT']} />
+                  <Bar dataKey="count" fill="#006D77">
+                    {getRiskCounts().map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={RISK_COLORS[entry.riskKey as RiskLevel]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {getMonthlyData().length > 0 && (
+      {!isUser && getMonthlyData().length > 0 && (
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Tendência Mensal</h3>
           <div className="h-64">
@@ -603,6 +663,26 @@ export function Dashboard() {
                 <Bar dataKey="count" fill="#10B981" />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {isUser && (
+        <div className="grid grid-cols-1 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Últimos Comentários</h3>
+            <ul className="space-y-3">
+              {getLatestComments().length > 0 ? (
+                getLatestComments().map((c: any, idx: number) => (
+                  <li key={idx} className="border border-gray-200 rounded-md p-3">
+                    <div className="text-xs text-gray-600">Denúncia “{c.report_title || c.report_id}” • {new Date(c.created_at).toLocaleString('pt-BR')}</div>
+                    <div className="text-sm text-gray-900 mt-1">{c.content}</div>
+                  </li>
+                ))
+              ) : (
+                <div className="text-sm text-gray-500">Sem comentários recentes</div>
+              )}
+            </ul>
           </div>
         </div>
       )}

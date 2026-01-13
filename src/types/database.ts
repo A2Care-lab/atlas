@@ -97,6 +97,7 @@ export interface Comment {
   content: string;
   is_internal: boolean;
   created_at: string;
+  author_role?: UserRole;
   user?: UserProfile;
 }
 

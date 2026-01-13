@@ -67,7 +67,8 @@ export default function ApproveReportModal({ open, report, action, onClose, onCo
             report_id: report.id,
             content: comment.trim(),
             is_internal: false,
-            user_id: profile?.id
+            user_id: profile?.id,
+            author_role: profile?.role
           })
       }
 

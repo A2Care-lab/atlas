@@ -378,7 +378,11 @@ export function ManageReports() {
                         {report.attachments?.length || 0} anexos
                       </span>
                       <span>
-                        {report.comments?.length || 0} comentários
+                        {(() => {
+                          const all = report.comments || [];
+                          const count = profile?.role === 'user' ? all.filter((c) => !c.is_internal).length : all.length;
+                          return count || 0;
+                        })()} comentários
                       </span>
                       {report.is_anonymous ? (
                         <span className="ml-4 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">

@@ -54,6 +54,7 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
   const [attachmentsUrls, setAttachmentsUrls] = useState<Record<string, string>>({})
   const [localAttachments, setLocalAttachments] = useState<Attachment[]>([])
   const [comments, setComments] = useState<Comment[]>([])
+  const [commentAuthors, setCommentAuthors] = useState<Record<string, { id: string; email?: string; full_name?: string; role?: UserProfile['role'] }>>({})
   const [history, setHistory] = useState<StatusHistory[]>([])
   const [newComment, setNewComment] = useState('')
   const [internal, setInternal] = useState(false)
@@ -95,9 +96,8 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
         .from('user_profiles')
         .select('id, email, full_name, role')
         .in('id', missingIds)
-      const roleMap: Record<string, UserProfile['role']> = {}
       const userMap: Record<string, { email?: string; full_name?: string; role?: UserProfile['role'] }> = {}
-      ;(profiles || []).forEach((p: any) => { roleMap[p.id] = p.role; userMap[p.id] = { email: p.email, full_name: p.full_name, role: p.role } })
+      ;(profiles || []).forEach((p: any) => { userMap[p.id] = { email: p.email, full_name: p.full_name, role: p.role } })
       list = list.map((c) => {
         if (c.user_id) {
           const info = userMap[c.user_id]
@@ -106,6 +106,11 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
           }
         }
         return c
+      })
+      setCommentAuthors((prev) => {
+        const next = { ...prev }
+        Object.keys(userMap).forEach((id) => { next[id] = { id, ...userMap[id] } })
+        return next
       })
     }
 
@@ -406,7 +411,8 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
         report_id: report.id,
         content: newComment.trim(),
         is_internal: canInternal ? internal : false,
-        user_id: profile?.id
+        user_id: profile?.id,
+        author_role: profile?.role
       })
       .select('*')
       .single()
@@ -645,16 +651,23 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
               <div className="flex items-center gap-2 mb-2 text-gray-900"><MessageSquare className="h-4 w-4" /><span className="text-sm font-medium">Comentários ({filteredComments.length})</span></div>
               {filteredComments.length > 0 ? (
                 <ul className="space-y-3">
-                  {filteredComments.map((c) => (
-                    <li key={c.id} className={`p-3 rounded-md border border-gray-200 border-l-4 ${ROLE_BORDER_COLORS[(c.user?.role || 'user')]}`}>
-                      <div className="text-xs text-gray-700 flex items-center justify-between">
-                        <span className={`font-medium ${ROLE_TEXT_COLORS[(c.user?.role || 'user')]}`}>{getRoleLabel(c.user?.role)}</span>
-                        <span className="text-petroleo-700">{new Date(c.created_at).toLocaleString('pt-BR')}</span>
-                      </div>
-                      <div className="mt-1 text-sm text-gray-900 whitespace-pre-line">{c.content}</div>
-                      {c.is_internal && (<div className="mt-1 text-[10px] inline-flex px-1.5 py-0.5 rounded bg-gray-200 text-gray-900">Interno</div>)}
-                    </li>
-                  ))}
+                  {filteredComments.map((c) => {
+                    const author = c.user || (c.user_id ? commentAuthors[c.user_id] : undefined)
+                    const roleKey = ((author?.role || c.author_role || 'user') as UserProfile['role'])
+                    const isInternal = !!c.is_internal
+                    const borderColor = isInternal ? 'border-gray-400' : ROLE_BORDER_COLORS[roleKey]
+                    const textColor = ROLE_TEXT_COLORS[roleKey]
+                    return (
+                      <li key={c.id} className={`p-3 rounded-md border border-gray-200 border-l-4 ${borderColor}`}>
+                        <div className="text-xs text-gray-700 flex items-center justify-between">
+                          <span className={`font-medium ${textColor}`}>{getRoleLabel(roleKey)}</span>
+                          <span className="text-petroleo-700">{new Date(c.created_at).toLocaleString('pt-BR')}</span>
+                        </div>
+                        <div className="mt-1 text-sm text-gray-900 whitespace-pre-line">{c.content}</div>
+                        {isInternal && (<div className="mt-1 text-[10px] inline-flex px-1.5 py-0.5 rounded bg-gray-200 text-gray-900">Interno</div>)}
+                      </li>
+                    )
+                  })}
                 </ul>
               ) : (
                 <div className="text-sm text-gray-700">Nenhum comentário</div>
