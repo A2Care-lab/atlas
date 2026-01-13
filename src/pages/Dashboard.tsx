@@ -35,7 +35,7 @@ const RISK_COLORS = {
 
 export function Dashboard() {
   const { profile, loading: authLoading } = useAuth();
-  const isUser = profile?.role === 'user';
+  const isUser = profile ? (profile.role !== 'admin' && profile.role !== 'corporate_manager' && profile.role !== 'approver_manager') : false;
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeCompanies, setActiveCompanies] = useState<number>(0);
@@ -70,7 +70,7 @@ export function Dashboard() {
         .order('created_at', { ascending: false });
 
       // Filtrar por empresa e permissões
-      if (profile.role === 'user') {
+      if (isUser) {
         query = query.eq('user_id', profile.id);
       } else if (profile.role !== 'admin') {
         query = query.eq('company_id', profile.company_id);
@@ -310,7 +310,7 @@ export function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Painel Geral de Denúncias</h1>
           <p className="mt-1 text-sm text-gray-600">
-            {profile?.role === 'user'
+            {isUser
               ? 'Visualize indicadores, status e tendências das denúncias registradas por você no nosso sistema.'
               : 'Visualize indicadores, status e tendências das denúncias registradas no sistema.'}
           </p>
@@ -388,7 +388,7 @@ export function Dashboard() {
         </div>
       </div>
 
-      {profile?.role !== 'user' && (
+      {!isUser && (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
@@ -414,17 +414,17 @@ export function Dashboard() {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                {profile?.role === 'user' 
+                {isUser 
                   ? <MessageSquare className="h-6 w-6 text-petroleo-600" /> 
                   : <AlertTriangle className="h-6 w-6 text-red-600" />}
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    {profile?.role === 'user' ? 'Denúncias Comentadas' : 'Alto Risco'}
+                    {isUser ? 'Denúncias Comentadas' : 'Alto Risco'}
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {profile?.role === 'user' ? commentedOpenReports : highRiskReports}
+                    {isUser ? commentedOpenReports : highRiskReports}
                   </dd>
                 </dl>
               </div>
@@ -436,17 +436,17 @@ export function Dashboard() {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                {profile?.role === 'user' 
+                {isUser 
                   ? <BadgeCheck className="h-6 w-6 text-green-600" /> 
                   : <AlertOctagon className="h-6 w-6 text-red-700" />}
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    {profile?.role === 'user' ? '% Denúncias Dentro do SLA' : 'Risco Crítico'}
+                    {isUser ? '% Denúncias Dentro do SLA' : 'Risco Crítico'}
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {profile?.role === 'user' ? `${calcUserSlaWithinPercent()}%` : criticalRiskReports}
+                    {isUser ? `${calcUserSlaWithinPercent()}%` : criticalRiskReports}
                   </dd>
                 </dl>
               </div>
