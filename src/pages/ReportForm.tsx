@@ -23,22 +23,34 @@ export function ReportForm() {
   const [errorMsg, setErrorMsg] = useState('');
 
   // Form data
-  const [identify, setIdentify] = useState(false);
-  const [informDepartment, setInformDepartment] = useState(false);
+  const [identify, setIdentify] = useState<boolean | null>(null);
+  const [informDepartment, setInformDepartment] = useState<boolean | null>(null);
   const [department, setDepartment] = useState('');
   const [corporateAreas, setCorporateAreas] = useState<{ id: string; name: string }[]>([]);
   const [mainReason, setMainReason] = useState('');
   const [subReason, setSubReason] = useState('');
-  const [situationType, setSituationType] = useState<SituationType>('other');
-  const [hasImmediateRisk, setHasImmediateRisk] = useState(false);
-  const [involvesLeadership, setInvolvesLeadership] = useState(false);
-  const [affectedScope, setAffectedScope] = useState<AffectedScope>('individual');
-  const [recurrence, setRecurrence] = useState<RecurrenceType>('first_time');
-  const [hasRetaliation, setHasRetaliation] = useState(false);
+  const [situationType, setSituationType] = useState<SituationType | ''>('');
+  const [hasImmediateRisk, setHasImmediateRisk] = useState<boolean | null>(null);
+  const [involvesLeadership, setInvolvesLeadership] = useState<boolean | null>(null);
+  const [affectedScope, setAffectedScope] = useState<AffectedScope | ''>('');
+  const [recurrence, setRecurrence] = useState<RecurrenceType | ''>('');
+  const [hasRetaliation, setHasRetaliation] = useState<boolean | null>(null);
   const [description, setDescription] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const TITLE_MAX = 120;
   const [title, setTitle] = useState('');
+  const isFormValid =
+    title.trim().length > 0 &&
+    description.trim().length > 0 &&
+    identify !== null &&
+    informDepartment !== null &&
+    hasImmediateRisk !== null &&
+    involvesLeadership !== null &&
+    hasRetaliation !== null &&
+    recurrence !== '' &&
+    situationType !== '' &&
+    affectedScope !== '' &&
+    (!informDepartment || (informDepartment && department.trim().length > 0));
 
   useEffect(() => {
     validateToken();
@@ -114,12 +126,12 @@ export function ReportForm() {
     try {
       // Calcular risco
       const riskCalculation = calculateRiskLevel({
-        situationType,
-        hasImmediateRisk,
-        involvesLeadership,
-        affectedScope,
-        recurrence,
-        hasRetaliation,
+        situationType: situationType as SituationType,
+        hasImmediateRisk: !!hasImmediateRisk,
+        involvesLeadership: !!involvesLeadership,
+        affectedScope: affectedScope as AffectedScope,
+        recurrence: recurrence as RecurrenceType,
+        hasRetaliation: !!hasRetaliation,
       });
 
       // Gerar protocolo
@@ -131,8 +143,8 @@ export function ReportForm() {
         company_id: profile?.company_id || '550e8400-e29b-41d4-a716-446655440001',
         title: title.trim(),
         description,
-        is_anonymous: !identify,
-        user_id: identify && user?.id ? user.id : null,
+        is_anonymous: !(identify as boolean),
+        user_id: user?.id || null,
         department: informDepartment ? department : null,
         main_reason: mainReason,
         sub_reason: subReason,
@@ -189,6 +201,7 @@ export function ReportForm() {
             file_path: uploaded?.path || fileName,
             file_size: file.size,
             mime_type: file.type,
+            uploaded_by: user?.id || null,
           });
         }
       }
@@ -323,7 +336,8 @@ export function ReportForm() {
                   <input
                     type="radio"
                     name="identify"
-                    checked={identify}
+                    required
+                    checked={identify === true}
                     onChange={() => setIdentify(true)}
                     className="h-4 w-4 text-petroleo-600 focus:ring-petroleo-500 border-gray-300"
                   />
@@ -333,7 +347,7 @@ export function ReportForm() {
                   <input
                     type="radio"
                     name="identify"
-                    checked={!identify}
+                    checked={identify === false}
                     onChange={() => setIdentify(false)}
                     className="h-4 w-4 text-petroleo-600 focus:ring-petroleo-500 border-gray-300"
                   />
@@ -364,7 +378,8 @@ export function ReportForm() {
                   <input
                     type="radio"
                     name="informDepartment"
-                    checked={informDepartment}
+                    required
+                    checked={informDepartment === true}
                     onChange={() => setInformDepartment(true)}
                     className="h-4 w-4 text-petroleo-600 focus:ring-petroleo-500 border-gray-300"
                   />
@@ -374,7 +389,7 @@ export function ReportForm() {
                   <input
                     type="radio"
                     name="informDepartment"
-                    checked={!informDepartment}
+                    checked={informDepartment === false}
                     onChange={() => setInformDepartment(false)}
                     className="h-4 w-4 text-petroleo-600 focus:ring-petroleo-500 border-gray-300"
                   />
@@ -389,6 +404,7 @@ export function ReportForm() {
                   </label>
                   <select
                     id="department"
+                    required={informDepartment}
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
                     className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-petroleo-500 focus:border-petroleo-500 sm:text-sm rounded-md"
@@ -414,6 +430,7 @@ export function ReportForm() {
                 onChange={(e) => setSituationType(e.target.value as SituationType)}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-petroleo-500 focus:border-petroleo-500 sm:text-sm rounded-md"
               >
+                <option value="" disabled>Selecione uma opção</option>
                 <option value="conflict">Conflito interpessoal ou clima</option>
                 <option value="misconduct">Conduta inadequada / descumprimento de normas</option>
                 <option value="moral_harassment">Assédio moral</option>
@@ -435,7 +452,8 @@ export function ReportForm() {
                   <input
                     type="radio"
                     name="immediateRisk"
-                    checked={hasImmediateRisk}
+                    required
+                    checked={hasImmediateRisk === true}
                     onChange={() => setHasImmediateRisk(true)}
                     className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
                   />
@@ -445,7 +463,7 @@ export function ReportForm() {
                   <input
                     type="radio"
                     name="immediateRisk"
-                    checked={!hasImmediateRisk}
+                    checked={hasImmediateRisk === false}
                     onChange={() => setHasImmediateRisk(false)}
                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
                   />
@@ -464,7 +482,8 @@ export function ReportForm() {
                   <input
                     type="radio"
                     name="leadership"
-                    checked={involvesLeadership}
+                    required
+                    checked={involvesLeadership === true}
                     onChange={() => setInvolvesLeadership(true)}
                     className="h-4 w-4 text-petroleo-600 focus:ring-petroleo-500 border-gray-300"
                   />
@@ -474,7 +493,7 @@ export function ReportForm() {
                   <input
                     type="radio"
                     name="leadership"
-                    checked={!involvesLeadership}
+                    checked={involvesLeadership === false}
                     onChange={() => setInvolvesLeadership(false)}
                     className="h-4 w-4 text-petroleo-600 focus:ring-petroleo-500 border-gray-300"
                   />
@@ -495,6 +514,7 @@ export function ReportForm() {
                 onChange={(e) => setAffectedScope(e.target.value as AffectedScope)}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-petroleo-500 focus:border-petroleo-500 sm:text-sm rounded-md"
               >
+                <option value="" disabled>Selecione uma opção</option>
                 <option value="individual">Apenas eu / uma pessoa</option>
                 <option value="team">Uma equipe</option>
                 <option value="department">Uma área ou departamento</option>
@@ -512,6 +532,7 @@ export function ReportForm() {
                   <input
                     type="radio"
                     name="recurrence"
+                    required
                     checked={recurrence === 'first_time'}
                     onChange={() => setRecurrence('first_time')}
                     className="h-4 w-4 text-petroleo-600 focus:ring-petroleo-500 border-gray-300"
@@ -551,7 +572,8 @@ export function ReportForm() {
                   <input
                     type="radio"
                     name="retaliation"
-                    checked={hasRetaliation}
+                    required
+                    checked={hasRetaliation === true}
                     onChange={() => setHasRetaliation(true)}
                     className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
                   />
@@ -561,7 +583,7 @@ export function ReportForm() {
                   <input
                     type="radio"
                     name="retaliation"
-                    checked={!hasRetaliation}
+                    checked={hasRetaliation === false}
                     onChange={() => setHasRetaliation(false)}
                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
                   />
@@ -644,7 +666,7 @@ export function ReportForm() {
               </button>
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || !isFormValid}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-petroleo-600 hover:bg-petroleo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500 disabled:opacity-50"
               >
                 <Send className="h-4 w-4 mr-2" />
