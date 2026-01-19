@@ -239,6 +239,10 @@ serve(async (req) => {
     };
     const finalHtml = render(templateHtml, { invite_link: actionLink, ".ConfirmationURL": actionLink, company_name: empresa || "", role: perfil || "", app_url: baseAppUrl, ...nameVars });
 
+    try {
+      await admin.from('invitations').update({ last_invite_at: new Date().toISOString() }).eq('email', email as string)
+    } catch (_) {}
+
     if (!RESEND_API_KEY) {
       return new Response(JSON.stringify({ ok: true, sent_by: "no_resend_api_key", invite_link: actionLink, hashed_token: hashedToken || null }), {
         status: 200,
