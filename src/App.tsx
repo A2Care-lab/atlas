@@ -24,6 +24,8 @@ import ReportSuccess from './pages/ReportSuccess';
 import PreviewEmailDenunciaConfirmacao from './pages/PreviewEmailDenunciaConfirmacao';
 import PreviewEmailAlteracaoSenha from './pages/PreviewEmailAlteracaoSenha';
 import PreviewEmailConviteUsuario from './pages/PreviewEmailConviteUsuario';
+import AssinaturasManager from './components/AssinaturasManager';
+import AssinaturaForm from './pages/AssinaturaForm';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -44,6 +46,17 @@ function AppRoutes() {
   const { user } = useAuth();
 
   useEffect(() => {
+    try {
+      const pathname = (typeof window !== 'undefined' ? window.location.pathname : '') || ''
+      const hasHash = /^#\//.test(window.location.hash || '')
+      const hasTokenFragment = /^#access_token=/.test(window.location.hash) || /(^#token=|[?&]token=)/.test(window.location.hash)
+      if (!hasHash && !hasTokenFragment) {
+        if (pathname === '/signup' || pathname === '/onboarding') {
+          window.location.hash = '#/login'
+        }
+      }
+    } catch {}
+
     const searchParams = new URLSearchParams(window.location.search || '')
     const access_token_q = searchParams.get('access_token') || undefined
     const refresh_token_q = searchParams.get('refresh_token') || undefined
@@ -94,10 +107,13 @@ function AppRoutes() {
     }
     const token = (new URLSearchParams(window.location.search || '')).get('token') || (new URLSearchParams(frag)).get('token') || ''
     const code = (new URLSearchParams(window.location.search || '')).get('code') || (new URLSearchParams(frag)).get('code') || ''
+    const typeParam = (new URLSearchParams(window.location.search || '')).get('type') || (new URLSearchParams(frag)).get('type') || ''
     if (!access_token && token) {
       (async () => {
         try {
-          const { data } = await supabase.auth.verifyOtp({ type: 'recovery', token_hash: token } as any)
+          const t = (typeParam || '').toLowerCase()
+          const verifyType = t === 'magiclink' ? 'magiclink' : (t === 'recovery' ? 'recovery' : 'signup')
+          const { data } = await supabase.auth.verifyOtp({ type: verifyType as any, token_hash: token } as any)
           const s = data?.session
           if (s?.access_token && s?.refresh_token) {
             await supabase.auth.setSession({ access_token: s.access_token, refresh_token: s.refresh_token })
@@ -142,6 +158,7 @@ function AppRoutes() {
         <Route path="/recover" element={<PasswordRecoveryRequest />} />
         <Route path="/recover/:token" element={<PasswordRecoveryReset />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/invite" element={<Onboarding />} />
         <Route path="/report/:token" element={<ReportForm />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/success" element={<ReportSuccess />} />
@@ -251,6 +268,33 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <PoliticaNaoRetaliacaoPage />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* Rota para Assinaturas - apenas Admin */}
+        <Route path="/admin/configuracoes/assinaturas" element={
+          <ProtectedRoute>
+            <Layout>
+              <AssinaturasManager />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* Rota para criar nova assinatura */}
+        <Route path="/admin/configuracoes/assinaturas/nova" element={
+          <ProtectedRoute>
+            <Layout>
+              <AssinaturaForm />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* Rota para editar assinatura */}
+        <Route path="/admin/configuracoes/assinaturas/:id/editar" element={
+          <ProtectedRoute>
+            <Layout>
+              <AssinaturaForm />
             </Layout>
           </ProtectedRoute>
         } />

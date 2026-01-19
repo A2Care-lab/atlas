@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 import { Company, UserProfile, UserRole, Invitation } from '../types/database'
 import { getUserRoleLabel } from '../utils/labels'
-import { Plus, Ban, Trash2, RefreshCw, Pencil } from 'lucide-react'
+import { Plus, Ban, Trash2, RefreshCw, Pencil, Mail } from 'lucide-react'
 import { ClearFiltersButton } from './ClearFiltersButton'
 import { useAuth } from '../hooks/useAuth'
 import { useCorporateAreas } from '../hooks/useCorporateAreas'
@@ -92,7 +92,7 @@ export default function UsersTable() {
       if (!profile) return
       let query = supabase
         .from('invitations')
-        .select('id, email, role, company_id, full_name, created_at, accepted_at')
+        .select('id, email, role, company_id, full_name, created_at, accepted_at, last_invite_at')
         .is('accepted_at', null)
         .order('created_at', { ascending: false })
       if (profile.role !== 'admin') query = query.eq('company_id', profile.company_id)
@@ -160,7 +160,25 @@ export default function UsersTable() {
   }
 
   const sendReset = async (email: string) => {
-    await resetPassword(email)
+    try {
+      const { error } = await resetPassword(email)
+      if (!error) {
+        setMsgTitle('E-mail de recuperação enviado')
+        setMsgText('Verifique sua caixa de entrada para redefinir a senha.')
+        setMsgVariant('success')
+        setMsgOpen(true)
+      } else {
+        setMsgTitle('Erro ao enviar e-mail')
+        setMsgText(error?.message || 'Falha ao solicitar recuperação de senha')
+        setMsgVariant('error')
+        setMsgOpen(true)
+      }
+    } catch (e: any) {
+      setMsgTitle('Erro ao enviar e-mail')
+      setMsgText(e?.message || 'Falha ao solicitar recuperação de senha')
+      setMsgVariant('error')
+      setMsgOpen(true)
+    }
   }
 
   const createInvite = async (email: string, role: UserRole, companyId?: string, fullName?: string) => {
@@ -170,16 +188,15 @@ export default function UsersTable() {
       const token = crypto.randomUUID()
       const { error: dbErr } = await supabase
         .from('invitations')
-        .insert({ email, role, company_id: company?.id || profile?.company_id, full_name: fullName || null, invited_by: profile?.id!, token, expires_at: expires.toISOString() })
+        .insert({ email, role, company_id: company?.id || profile?.company_id, full_name: fullName || null, invited_by: profile?.id!, token, expires_at: expires.toISOString(), last_invite_at: new Date().toISOString() })
       if (dbErr) throw dbErr
 
-      const { error: fnErr } = await supabase.functions.invoke('send-user-invite', {
+      const { data: fnData, error: fnErr } = await supabase.functions.invoke('send-user-invite', {
         body: {
           email,
           nome: fullName || '',
           empresa: company?.name || '',
           perfil: role,
-          fromEmail: import.meta.env.VITE_RESEND_FROM || undefined,
           redirect_to: `${window.location.origin}/#/onboarding`,
         }
       })
@@ -190,12 +207,45 @@ export default function UsersTable() {
 
       setInviteOpen(false)
       setMsgTitle('Convite criado')
-      setMsgText('Convite criado e e-mail enviado.')
+      setMsgText(fnData && (fnData as any).fallback_link ? `Mailer do Supabase falhou; link gerado:\n${(fnData as any).fallback_link}` : 'Convite criado e e-mail enviado.')
       setMsgVariant('success')
       setMsgOpen(true)
     } catch (e: any) {
       setMsgTitle('Erro ao criar convite')
       setMsgText(e?.message || 'Falha ao enviar convite')
+      setMsgVariant('error')
+      setMsgOpen(true)
+    }
+  }
+
+  const resendInvite = async (invite: Invitation) => {
+    try {
+      const company = companies.find(c => c.id === invite.company_id || profile?.company_id)
+      const { data: fnData, error: fnErr } = await supabase.functions.invoke('send-user-invite', {
+        body: {
+          email: invite.email,
+          nome: invite.full_name || '',
+          empresa: company?.name || '',
+          perfil: invite.role,
+          redirect_to: `${window.location.origin}/#/onboarding`,
+        }
+      })
+      if (fnErr) {
+        const details = (fnErr as any)?.context ? `: ${JSON.stringify((fnErr as any).context)}` : ''
+        throw new Error(fnErr.message + details)
+      }
+      await supabase
+        .from('invitations')
+        .update({ last_invite_at: new Date().toISOString() })
+        .eq('id', invite.id)
+      await loadInvites()
+      setMsgTitle('Convite reenviado')
+      setMsgText(fnData && (fnData as any).fallback_link ? `Mailer do Supabase falhou; link gerado:\n${(fnData as any).fallback_link}` : 'E-mail de convite reenviado com sucesso.')
+      setMsgVariant('success')
+      setMsgOpen(true)
+    } catch (e: any) {
+      setMsgTitle('Erro ao reenviar convite')
+      setMsgText(e?.message || 'Falha ao reenviar convite')
       setMsgVariant('error')
       setMsgOpen(true)
     }
@@ -222,6 +272,7 @@ export default function UsersTable() {
       role: i.role,
       company_id: i.company_id,
       created_at: i.created_at,
+      last_invite_at: (i as any).last_invite_at,
       status: 'Pendente',
       is_active: false,
     }))
@@ -337,6 +388,7 @@ export default function UsersTable() {
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Empresa</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Cadastro</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Invite</th>
               {canAdmin && <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Ações</th>}
             </tr>
           </thead>
@@ -349,32 +401,79 @@ export default function UsersTable() {
                 <td className="px-4 py-2 text-sm text-gray-900">{companies.find(c=>c.id===row.company_id)?.name || '-'}</td>
                 <td className="px-4 py-2 text-sm text-gray-900">{row.created_at ? new Date(row.created_at).toLocaleDateString('pt-BR') : '-'}</td>
                 <td className="px-4 py-2 text-sm text-gray-900">{row.status}</td>
+                <td className="px-4 py-2 text-sm text-gray-900">{(row as any).last_invite_at ? new Date((row as any).last_invite_at).toLocaleString('pt-BR') : (row.kind==='invite' ? new Date(row.created_at).toLocaleString('pt-BR') : '—')}</td>
                 {canAdmin && (
                   <td className="px-4 py-2 text-sm text-gray-900">
                     <div className="flex gap-2">
                       {row.kind === 'user' && (
                         <>
-                          <button onClick={()=>setEditUser(users.find(u=>u.id===row.id)!)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-600 text-white">
-                            <Pencil className="h-4 w-4"/>Editar
+                          <button
+                            onClick={()=>setEditUser(users.find(u=>u.id===row.id)!)}
+                            className="inline-flex items-center justify-center p-2 rounded bg-blue-600 text-white"
+                            title="Editar"
+                            aria-label="Editar"
+                          >
+                            <Pencil className="h-4 w-4"/>
                           </button>
-                          <button onClick={()=>toggleActive(users.find(u=>u.id===row.id)!)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-yellow-600 text-white">
-                            <Ban className="h-4 w-4"/>{row.is_active ? 'Bloquear' : 'Desbloquear'}
+                          <button
+                            onClick={()=>toggleActive(users.find(u=>u.id===row.id)!)}
+                            className="inline-flex items-center justify-center p-2 rounded bg-yellow-600 text-white"
+                            title={row.is_active ? 'Bloquear' : 'Desbloquear'}
+                            aria-label={row.is_active ? 'Bloquear' : 'Desbloquear'}
+                          >
+                            <Ban className="h-4 w-4"/>
                           </button>
-                          <button onClick={()=>removeUser(users.find(u=>u.id===row.id)!)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-600 text-white">
-                            <Trash2 className="h-4 w-4"/>Excluir
+                          <button
+                            onClick={()=>removeUser(users.find(u=>u.id===row.id)!)}
+                            className="inline-flex items-center justify-center p-2 rounded bg-red-600 text-white"
+                            title="Excluir"
+                            aria-label="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4"/>
                           </button>
-                          <button onClick={()=>sendReset(row.email)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-petroleo-600 text-white">
-                            <RefreshCw className="h-4 w-4"/>Redefinir Senha
+                          <button
+                            onClick={()=>sendReset(row.email)}
+                            className="inline-flex items-center justify-center p-2 rounded bg-petroleo-600 text-white"
+                            title="Redefinir Senha"
+                            aria-label="Redefinir Senha"
+                          >
+                            <RefreshCw className="h-4 w-4"/>
+                          </button>
+                          <button
+                            disabled
+                            className="inline-flex items-center justify-center p-2 rounded bg-green-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Reenviar Convite (habilitado apenas para Pendente)"
+                            aria-label="Reenviar Convite"
+                          >
+                            <ResendEmailIcon className="h-4 w-4"/>
                           </button>
                         </>
                       )}
                       {row.kind === 'invite' && (
                         <>
-                          <button onClick={()=>setEditInvite(invites.find(i=>i.id===row.id)!)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-600 text-white">
-                            <Pencil className="h-4 w-4"/>Editar
+                          <button
+                            onClick={()=>setEditInvite(invites.find(i=>i.id===row.id)!)}
+                            className="inline-flex items-center justify-center p-2 rounded bg-blue-600 text-white"
+                            title="Editar"
+                            aria-label="Editar"
+                          >
+                            <Pencil className="h-4 w-4"/>
                           </button>
-                          <button onClick={async()=>{ await supabase.from('invitations').delete().eq('id', row.id); loadInvites(); }} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-600 text-white">
-                            <Trash2 className="h-4 w-4"/>Cancelar Convite
+                          <button
+                            onClick={async()=>{ await supabase.from('invitations').delete().eq('id', row.id); loadInvites(); }}
+                            className="inline-flex items-center justify-center p-2 rounded bg-red-600 text-white"
+                            title="Cancelar Convite"
+                            aria-label="Cancelar Convite"
+                          >
+                            <Trash2 className="h-4 w-4"/>
+                          </button>
+                          <button
+                            onClick={()=>{ const inv = invites.find(i=>i.id===row.id)!; resendInvite(inv) }}
+                            className="inline-flex items-center justify-center p-2 rounded bg-green-600 text-white"
+                            title="Reenviar Convite"
+                            aria-label="Reenviar Convite"
+                          >
+                            <ResendEmailIcon className="h-4 w-4"/>
                           </button>
                         </>
                       )}
@@ -384,7 +483,7 @@ export default function UsersTable() {
               </tr>
             ))}
             {filteredUsers.length === 0 && (
-              <tr><td className="px-4 py-6 text-center text-sm text-gray-500" colSpan={canAdmin?7:6}>{loading?'Carregando...':'Nenhum usuário ou convite pendente'}</td></tr>
+              <tr><td className="px-4 py-6 text-center text-sm text-gray-500" colSpan={canAdmin?8:7}>{loading?'Carregando...':'Nenhum usuário ou convite pendente'}</td></tr>
             )}
           </tbody>
         </table>
@@ -450,6 +549,15 @@ export default function UsersTable() {
 
       <MessageModal open={msgOpen} title={msgTitle} message={msgText} variant={msgVariant} onClose={()=>setMsgOpen(false)} />
     </div>
+  )
+}
+
+function ResendEmailIcon({ className }: { className?: string }){
+  return (
+    <span className={"relative inline-block " + (className || "h-4 w-4") }>
+      <RefreshCw className="absolute inset-0 h-full w-full"/>
+      <Mail className="absolute inset-0 h-3 w-3 m-[2px]"/>
+    </span>
   )
 }
 

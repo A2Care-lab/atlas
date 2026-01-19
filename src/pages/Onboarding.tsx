@@ -11,7 +11,6 @@ import { supabase } from '../lib/supabase'
 export default function Onboarding() {
   const { user, loading, updatePassword, updateProfile } = useAuth()
   const [type, setType] = useState<'invite'|'recovery'>('invite')
-  const [fullName, setFullName] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -23,6 +22,9 @@ export default function Onboarding() {
   const [html, setHtml] = useState('')
   const [version, setVersion] = useState<string>('')
   const [lastUpdated, setLastUpdated] = useState<string>('')
+  const [privacyVersion, setPrivacyVersion] = useState<string>('')
+  const [termsVersion, setTermsVersion] = useState<string>('')
+  const [nonRetaliationVersion, setNonRetaliationVersion] = useState<string>('')
   const [docError, setDocError] = useState<string>('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -95,6 +97,16 @@ export default function Onboarding() {
     update()
     trySetSessionFromHash()
     tryVerifyTokenFromUrl()
+    try {
+      const qs = new URLSearchParams(window.location.search || '')
+      const h = window.location.hash || ''
+      const hasTokens = /access_token=/.test(qs.toString()) || /refresh_token=/.test(qs.toString()) || /token=/.test(qs.toString()) || /code=/.test(qs.toString()) || /access_token=/.test(h) || /token=/.test(h) || /code=/.test(h)
+      const t = readTypeFromHash()
+      if (!hasTokens && t === 'recovery') {
+        window.location.hash = '#/login'
+        return
+      }
+    } catch {}
     window.addEventListener('hashchange', update)
     return () => window.removeEventListener('hashchange', update)
   }, [])
@@ -125,10 +137,10 @@ export default function Onboarding() {
       }
       const requireSession = true
       if (!session && requireSession) {
-        throw new Error('Sessão de recuperação ausente. Abra o link enviado por e-mail para redefinir a senha. Se estiver em desenvolvimento, garanta que o domínio esteja configurado nas URLs de redirecionamento do Supabase.')
+        throw new Error('Sessão ausente. Abra o link de convite enviado por e-mail para concluir o cadastro e definir sua senha. Se estiver em desenvolvimento, garanta que o domínio esteja configurado nas URLs de redirecionamento do Supabase.')
       }
       if (password && password.length >= 6 && isStrong(password)) {
-        if (type === 'recovery' && password !== confirm) {
+        if (password !== confirm) {
           throw new Error('As senhas não coincidem')
         }
         const { error: pwErr } = await updatePassword(password)
@@ -138,10 +150,6 @@ export default function Onboarding() {
       }
       if (type !== 'recovery') {
         if (!session?.user) { throw new Error('Sessão ausente') }
-        if (fullName) {
-          const { error: profErr } = await updateProfile({ full_name: fullName })
-          if (profErr) throw profErr
-        }
         const now = new Date().toISOString()
         const email = session.user.email || ''
         const inv = await supabase
@@ -168,6 +176,95 @@ export default function Onboarding() {
             .update({ accepted_at: now })
             .eq('id', invited.id)
         }
+
+        if (agree) {
+          let companyName = ''
+          let companyId = invited?.company_id as string | undefined
+          if (!companyId) {
+            try {
+              const { data: prof } = await supabase
+                .from('user_profiles')
+                .select('company_id')
+                .eq('id', session.user.id)
+                .maybeSingle()
+              companyId = (prof as any)?.company_id || undefined
+            } catch (_) {}
+          }
+          if (companyId) {
+            try {
+              const { data: comp } = await supabase
+                .from('companies')
+                .select('name')
+                .eq('id', companyId)
+                .maybeSingle()
+              companyName = (comp as any)?.name || ''
+            } catch (_) {}
+          }
+          // Garantir versões vigentes mesmo sem abrir os documentos
+          const getPrivacyVersion = async (): Promise<string> => {
+            if (privacyVersion) return privacyVersion
+            try {
+              const { data: fnData, error: fnError } = await supabase.functions.invoke('legaldesk_privacy_policy', { body: { type: 'Política de Privacidade', system_name: 'A2Care' } })
+              if (!fnError && fnData) {
+                const doc = Array.isArray(fnData) ? fnData[0] : fnData
+                return doc?.version || ''
+              }
+              const { data: altData, error: altErr } = await supabase.functions.invoke('legalsdesk_privacy_policy', { body: { type: 'Política de Privacidade', system_name: 'A2Care' } })
+              if (!altErr && altData) {
+                const doc = Array.isArray(altData) ? altData[0] : altData
+                return doc?.version || ''
+              }
+            } catch {}
+            return ''
+          }
+          const getTermsVersion = async (): Promise<string> => {
+            if (termsVersion) return termsVersion
+            try {
+              const { data: fnData, error: fnError } = await supabase.functions.invoke('legaldesk_terms_of_use', { body: { type: 'Termos de Uso', system_name: 'ATLAS' } })
+              if (!fnError && fnData) {
+                const doc = Array.isArray(fnData) ? fnData[0] : fnData
+                return doc?.version || ''
+              }
+            } catch {}
+            return ''
+          }
+          const getNonRetaliationVersion = async (): Promise<string> => {
+            if (nonRetaliationVersion) return nonRetaliationVersion
+            try {
+              const { data, error } = await supabase
+                .from('politica_nao_retaliacao_versions')
+                .select('*')
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+              if (!error && data) {
+                const doc: any = data
+                return doc?.version_code || ''
+              }
+            } catch {}
+            return ''
+          }
+
+          const [pv, tv, nrv] = await Promise.all([
+            getPrivacyVersion(),
+            getTermsVersion(),
+            getNonRetaliationVersion(),
+          ])
+
+          const { error: taErr } = await supabase
+            .from('terms_acceptances')
+            .insert({
+              user_id: session.user.id,
+              full_name: (session.user.user_metadata?.full_name as string) || '',
+              email,
+              accepted_at: now,
+              company_name: companyName || '',
+              privacy_version: pv,
+              terms_version: tv,
+              non_retaliation_version: nrv,
+            })
+          if (taErr) throw taErr
+        }
       }
       navigate(type === 'recovery' ? '/login' : '/')
     } catch (e: any) {
@@ -188,6 +285,7 @@ export default function Onboarding() {
         setHtml(doc?.content || '')
         setVersion(doc?.version || '')
         setLastUpdated(doc?.last_updated || '')
+        setPrivacyVersion(doc?.version || '')
         setHtmlTitle('Política de Privacidade')
         setOpenHtml(true)
         return
@@ -200,6 +298,7 @@ export default function Onboarding() {
         setHtml(doc?.content || '')
         setVersion(doc?.version || '')
         setLastUpdated(doc?.last_updated || '')
+        setPrivacyVersion(doc?.version || '')
         setHtmlTitle('Política de Privacidade')
         setOpenHtml(true)
         return
@@ -221,6 +320,7 @@ export default function Onboarding() {
         setHtml(doc?.content || '')
         setVersion(doc?.version || '')
         setLastUpdated(doc?.last_updated || '')
+        setTermsVersion(doc?.version || '')
         setHtmlTitle('Termos de Uso')
         setOpenHtml(true)
         return
@@ -245,6 +345,7 @@ export default function Onboarding() {
       setHtml(doc?.content || '')
       setVersion(doc?.version_code || '')
       setLastUpdated(doc?.updated_at || '')
+      setNonRetaliationVersion(doc?.version_code || '')
       setHtmlTitle('Política de Não Retaliação')
       setOpenHtml(true)
     } catch (e: any) {
@@ -260,17 +361,11 @@ export default function Onboarding() {
             <Brand variant="teal" withText className="h-16 w-auto" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">{type === 'recovery' ? 'Redefinir senha' : 'Boas vindas ao ATLAS - Integridade Corporativa.'}</h1>
-          <p className="mt-1 text-sm text-gray-600">{type === 'recovery' ? 'Defina uma nova senha para sua conta' : 'Conclua seu cadastro'}</p>
+          <p className="mt-1 text-sm text-gray-600">{type === 'recovery' ? 'Defina uma nova senha para sua conta' : 'Para concluir seu cadastro, crie uma senha e aceite nossas políticas e termos.'}</p>
           <p className="mt-1 text-xs text-gray-500">{user?.email}</p>
         </div>
 
         <form className="space-y-4" onSubmit={submit}>
-          {type !== 'recovery' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Nome completo</label>
-              <input value={fullName} onChange={(e)=>setFullName(e.target.value)} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500" />
-            </div>
-          )}
           <div>
             <label className="block text-sm font-medium text-gray-700">Definir senha</label>
             <div className="relative">
@@ -287,26 +382,24 @@ export default function Onboarding() {
             </div>
             <p className="mt-1 text-xs text-gray-600">Mínimo 6 caracteres. Deve conter letras maiúsculas, minúsculas, números e símbolos.</p>
           </div>
-          {type === 'recovery' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Confirmar senha</label>
-              <div className="relative">
-                <input
-                  type={showConfirm ? 'text' : 'password'}
-                  value={confirm}
-                  onChange={(e)=>setConfirm(e.target.value)}
-                  className="mt-1 w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
-                  placeholder="Repita a nova senha"
-                />
-                <button type="button" onClick={()=>setShowConfirm(v=>!v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-petroleo-600" aria-label={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}>
-                  {showConfirm ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}
-                </button>
-              </div>
-              {!!confirm && confirm !== password && (
-                <p className="mt-1 text-xs text-red-600">As senhas não coincidem.</p>
-              )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Confirmar senha</label>
+            <div className="relative">
+              <input
+                type={showConfirm ? 'text' : 'password'}
+                value={confirm}
+                onChange={(e)=>setConfirm(e.target.value)}
+                className="mt-1 w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+                placeholder={type === 'recovery' ? 'Repita a nova senha' : 'Repita a senha'}
+              />
+              <button type="button" onClick={()=>setShowConfirm(v=>!v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-petroleo-600" aria-label={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}>
+                {showConfirm ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}
+              </button>
             </div>
-          )}
+            {!!confirm && confirm !== password && (
+              <p className="mt-1 text-xs text-red-600">As senhas não coincidem.</p>
+            )}
+          </div>
           {type !== 'recovery' && (
             <>
               <div className="flex gap-3 pt-2 flex-nowrap">
@@ -323,7 +416,7 @@ export default function Onboarding() {
           {error && (
             <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
           )}
-          <button type="submit" disabled={isSubmitting || (type !== 'recovery' && !agree) || (type === 'recovery' && (!confirm || confirm !== password))} className="w-full py-2 px-4 rounded-md bg-petroleo-600 text-white hover:bg-petroleo-700 disabled:opacity-50">
+          <button type="submit" disabled={isSubmitting || (type !== 'recovery' && !agree) || (!confirm || confirm !== password)} className="w-full py-2 px-4 rounded-md bg-petroleo-600 text-white hover:bg-petroleo-700 disabled:opacity-50">
             {isSubmitting ? (type === 'recovery' ? 'Alterando...' : 'Salvando...') : (type === 'recovery' ? 'Alterar senha' : 'Concluir cadastro')}
           </button>
         </form>

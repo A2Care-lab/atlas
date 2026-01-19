@@ -141,7 +141,9 @@ export function generatePasswordChangeEmail(name?: string, actionUrl?: string): 
 export function generateUserInviteEmail(name?: string, inviteUrl?: string, company?: string): string {
   const subject = `Convite para acesso ao sistema`;
   const nome = name || '';
-  const url = inviteUrl || 'https://atlas.a2care.com.br/signup';
+  const base = (typeof window !== 'undefined' ? window.location.origin : ((import.meta as any)?.env?.DEV ? 'http://localhost:5173' : 'http://localhost:4173'))
+  const cleanBase = String(base || '').replace(/\/+$/, '')
+  const url = inviteUrl || `${cleanBase}/#/onboarding?type=invite`;
   const empresa = company || '';
   return `<!doctype html>
 <html lang="pt-BR">

@@ -10,7 +10,9 @@ function useQuery() {
 export default function PreviewEmailConviteUsuario() {
   const q = useQuery()
   const nome = q.get('nome') || 'Cenerli Alexandre'
-  const url = q.get('url') || 'https://atlas.a2care.com.br/signup'
+  const base = (typeof window !== 'undefined' ? window.location.origin : ((import.meta as any)?.env?.DEV ? 'http://localhost:5173' : 'http://localhost:4173'))
+  const cleanBase = String(base || '').replace(/\/+$/, '')
+  const url = q.get('url') || `${cleanBase}/#/invite?type=invite`
   const empresa = q.get('empresa') || 'A2Care'
   const subject = 'Convite para acesso ao sistema'
 

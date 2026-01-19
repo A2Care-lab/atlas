@@ -45,6 +45,7 @@ export interface Invitation {
   expires_at: string;
   accepted_at?: string;
   full_name?: string;
+  last_invite_at?: string;
   created_at: string;
 }
 

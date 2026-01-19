@@ -1,18 +1,29 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
+import { useAuth } from '../hooks/useAuth';
 import AtlasLogo from '../components/AtlasLogo';
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function PasswordRecoveryRequest() {
   const [email, setEmail] = useState('');
-  const { recoveryState, requestPasswordRecovery } = usePasswordRecovery();
+  const { resetPassword } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    
-    await requestPasswordRecovery(email);
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    const { error } = await resetPassword(email);
+    if (!error) {
+      setSuccess(true);
+    } else {
+      setError(error?.message || 'Falha ao solicitar recuperação de senha');
+    }
+    setLoading(false);
   };
 
   return (
@@ -31,7 +42,7 @@ export default function PasswordRecoveryRequest() {
 
         {/* Card */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          {recoveryState.success ? (
+          {success ? (
             <div className="text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
                 <Mail className="h-6 w-6 text-green-600" />
@@ -73,7 +84,7 @@ export default function PasswordRecoveryRequest() {
                 </div>
               </div>
 
-              {recoveryState.error && (
+              {error && (
                 <div className="rounded-md bg-red-50 p-4">
                   <div className="flex">
                     <div className="ml-3">
@@ -81,7 +92,7 @@ export default function PasswordRecoveryRequest() {
                         Erro
                       </h3>
                       <div className="mt-2 text-sm text-red-700">
-                        <p>{recoveryState.error}</p>
+                        <p>{error}</p>
                       </div>
                     </div>
                   </div>
@@ -91,10 +102,10 @@ export default function PasswordRecoveryRequest() {
               <div>
                 <button
                   type="submit"
-                  disabled={recoveryState.loading || !email.trim()}
+                  disabled={loading || !email.trim()}
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-petroleo-600 hover:bg-petroleo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {recoveryState.loading ? (
+                  {loading ? (
                     <>
                       <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
                       Enviando...

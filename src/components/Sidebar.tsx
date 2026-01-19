@@ -66,11 +66,15 @@ export function Sidebar() {
     ...(profile?.role === 'approver_manager' 
       ? [{ name: 'Aprovação Corporativa', href: '/corporate-approval', icon: BarChart3 }]
       : []),
-    ...(profile?.role === 'admin' 
+    ...(profile?.role === 'admin'
       ? [
           { name: 'Configurações', href: '/settings', icon: Settings }
         ]
-      : []),
+      : profile?.role === 'corporate_manager' || profile?.role === 'approver_manager'
+        ? [
+            { name: 'Configurações', href: '/settings', icon: Settings }
+          ]
+        : []),
   ];
 
   const sidebarWidth = isCollapsed ? 'w-20' : 'w-64';
