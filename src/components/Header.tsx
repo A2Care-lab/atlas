@@ -13,6 +13,7 @@ export function Header() {
   const [openProfile, setOpenProfile] = useState(false);
   const [greeting, setGreeting] = useState<string>('');
   const avatarBtnRef = useRef<HTMLButtonElement>(null);
+  const [avatarError, setAvatarError] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -36,6 +37,10 @@ export function Header() {
     setGreeting(`${salutation}, ${displayName}!`);
   }, [profile?.full_name, profile?.email]);
 
+  useEffect(() => {
+    setAvatarError(false);
+  }, [profile?.avatar_url]);
+
   return (
     <header className={`
       fixed top-0 right-0 left-0 bg-petroleo-600 shadow-sm border-b border-petroleo-700 z-40
@@ -46,44 +51,42 @@ export function Header() {
         {/* Espaço para o botão mobile (será preenchido pela sidebar) */}
         <div className="lg:hidden w-10" />
         
-        {/* Logo e título - visível apenas em mobile */}
-        {isMobile && (
-          <div className="flex items-center">
-            <Brand variant="white" withText className="h-8 w-auto" />
-          </div>
-        )}
+        {/* Logo oculto no mobile para evitar o quadrado branco */}
 
-        {/* Saudação alinhada à esquerda (desktop) */}
-        {!isMobile && (
-          <div className="flex-1 flex items-center justify-start">
-            <span className="text-white text-lg md:text-xl font-semibold truncate max-w-[70%]">
-              {greeting}
-            </span>
-          </div>
-        )}
+        {/* Saudação alinhada à esquerda (desktop e mobile) */}
+        <div className="flex-1 flex items-center justify-start">
+          <span className="text-white text-base sm:text-lg md:text-xl font-semibold truncate max-w-[70%]">
+            {greeting}
+          </span>
+        </div>
 
         {/* Área do usuário */}
-        <div className="flex items-center space-x-4 mt-1 md:mt-2">
+        <div className="flex items-center space-x-2 sm:space-x-4 mt-1 md:mt-2">
 
-        <div className="hidden sm:flex items-center">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setOpenProfile(true)}
-              ref={avatarBtnRef}
-              className="w-8 h-8 rounded-full overflow-hidden bg-petroleo-100 flex items-center justify-center hover:ring-2 hover:ring-white/40"
-              aria-label="Abrir perfil"
-            >
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <User className="h-4 w-4 text-petroleo-700" />
-              )}
-            </button>
-            <div className="text-sm text-white/80">
-              {getUserRoleLabel(profile?.role || '')}
+          <div className="flex items-center">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setOpenProfile(true)}
+                ref={avatarBtnRef}
+                className="w-8 h-8 rounded-full overflow-hidden bg-petroleo-100 flex items-center justify-center hover:ring-2 hover:ring-white/40"
+                aria-label="Abrir perfil"
+              >
+                {profile?.avatar_url && !avatarError ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
+                ) : (
+                  <User className="h-4 w-4 text-petroleo-700" />
+                )}
+              </button>
+              <div className="text-sm text-white/80 hidden sm:block">
+                {getUserRoleLabel(profile?.role || '')}
+              </div>
             </div>
           </div>
-        </div>
 
           {/* Botão de logout */}
           <button

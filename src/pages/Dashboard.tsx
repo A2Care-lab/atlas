@@ -306,19 +306,17 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Painel Geral de Denúncias</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 leading-tight truncate">Painel Geral de Denúncias</h1>
+          <p className="mt-2 sm:mt-1 text-sm sm:text-sm text-gray-600 leading-relaxed">
             {isUser
               ? 'Visualize indicadores, status e tendências das denúncias registradas por você no nosso sistema.'
               : 'Visualize indicadores, status e tendências das denúncias registradas no sistema.'}
           </p>
-        </div>
-        <div className="flex items-center gap-3">
           {profile?.role === 'admin' && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Empresas</span>
+            <div className="hidden">
+              <span className="text-sm text-gray-600 block mb-1">Empresas</span>
               <div
                 className="relative"
                 tabIndex={0}
@@ -331,13 +329,13 @@ export function Dashboard() {
               >
                 <button
                   type="button"
-                  className="text-sm border border-gray-300 rounded-md bg-white px-3 py-2 min-w-[220px] max-w-[260px] text-left focus:outline-none focus:ring-1 focus:ring-petroleo-600 focus:border-petroleo-600"
+                  className="text-sm border border-gray-300 rounded-md bg-white px-3 py-2 w-full text-left focus:outline-none focus:ring-1 focus:ring-petroleo-600 focus:border-petroleo-600"
                   onClick={() => setCompaniesOpen((v) => !v)}
                 >
                   {selectedCompaniesLabel}
                 </button>
                 {companiesOpen && (
-                  <div className="absolute right-0 z-10 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-2 max-h-64 overflow-auto">
+                  <div className="absolute left-0 right-0 z-10 mt-2 bg-white border border-gray-200 rounded-md shadow-lg p-2 max-h-64 overflow-auto">
                     <label className="flex items-center gap-2 px-2 py-1 cursor-pointer">
                       <input
                         type="checkbox"
@@ -371,10 +369,67 @@ export function Dashboard() {
               </div>
             </div>
           )}
-          <div className="flex items-center gap-2">
+        </div>
+        <div className="grid grid-cols-2 lg:auto-cols-max lg:grid-flow-col gap-x-6 gap-y-3 w-full lg:w-auto">
+          {profile?.role === 'admin' && (
+            <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2 w-full lg:w-auto lg:mt-0 mt-1">
+              <span className="text-sm text-gray-600 block sm:inline">Empresas</span>
+              <div
+                className="relative"
+                tabIndex={0}
+                onBlur={(e) => {
+                  const rt = e.relatedTarget as Node | null;
+                  if (!rt || !e.currentTarget.contains(rt)) {
+                    setCompaniesOpen(false);
+                  }
+                }}
+              >
+                <button
+                  type="button"
+                  className="text-sm border border-gray-300 rounded-md bg-white px-3 py-2 w-full sm:w-auto sm:min-w-[220px] sm:max-w-[260px] text-left focus:outline-none focus:ring-1 focus:ring-petroleo-600 focus:border-petroleo-600"
+                  onClick={() => setCompaniesOpen((v) => !v)}
+                >
+                  {selectedCompaniesLabel}
+                </button>
+                {companiesOpen && (
+                  <div className="absolute left-0 right-0 lg:left-auto lg:right-0 z-10 mt-2 w-full lg:w-64 bg-white border border-gray-200 rounded-md shadow-lg p-2 max-h-64 overflow-auto">
+                    <label className="flex items-center gap-2 px-2 py-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedCompanies.length === 0}
+                        onChange={() => setSelectedCompanies([])}
+                      />
+                      <span className="text-sm">Todas as Empresas</span>
+                    </label>
+                    {companies.map((c) => {
+                      const checked = selectedCompanies.includes(c.id);
+                      return (
+                        <label key={c.id} className="flex items-center gap-2 px-2 py-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                const next = Array.from(new Set([...selectedCompanies, c.id]));
+                                setSelectedCompanies(next);
+                              } else {
+                                setSelectedCompanies(selectedCompanies.filter(id => id !== c.id));
+                              }
+                            }}
+                          />
+                          <span className="text-sm">{c.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2 w-full sm:w-auto sm:mt-0 mt-1">
             <span className="text-sm text-gray-600">Período</span>
             <select
-              className="text-sm border border-gray-300 rounded-md bg-white px-3 py-2 focus:outline-none focus:ring-1 focus:ring-petroleo-600 focus:border-petroleo-600"
+              className="text-sm border border-gray-300 rounded-md bg-white px-3 py-2 w-full sm:w-auto focus:outline-none focus:ring-1 focus:ring-petroleo-600 focus:border-petroleo-600"
               value={periodo}
               onChange={(e) => setPeriodo(e.target.value as any)}
             >
@@ -388,8 +443,9 @@ export function Dashboard() {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-6">
       {!isUser && (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <>
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
@@ -493,10 +549,10 @@ export function Dashboard() {
             </div>
           </div>
         </div>
-      </div>
+        </>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">

@@ -305,18 +305,18 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Painel Geral de Denúncias</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 leading-tight truncate">Painel Geral de Denúncias</h1>
+          <p className="mt-2 sm:mt-1 text-sm text-gray-600">
             {profile?.role === 'user'
               ? 'Visualize indicadores, status e tendências das denúncias registradas por você no nosso sistema.'
               : 'Visualize indicadores, status e tendências das denúncias registradas no sistema.'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="grid grid-cols-2 sm:auto-cols-max sm:grid-flow-col gap-x-6 gap-y-3">
           {profile?.role === 'admin' && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
               <span className="text-sm text-gray-600">Empresas</span>
               <div
                 className="relative"
@@ -370,7 +370,7 @@ export function Dashboard() {
               </div>
             </div>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
             <span className="text-sm text-gray-600">Período</span>
             <select
               className="text-sm border border-gray-300 rounded-md bg-white px-3 py-2 focus:outline-none focus:ring-1 focus:ring-petroleo-600 focus:border-petroleo-600"
@@ -387,7 +387,7 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
@@ -491,10 +491,9 @@ export function Dashboard() {
             </div>
           </div>
         </div>
-      </div>
 
       {profile?.role !== 'user' && (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <>
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
@@ -582,8 +581,10 @@ export function Dashboard() {
             </div>
           </div>
         </div>
-      </div>
+        </>
       )}
+
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg shadow">

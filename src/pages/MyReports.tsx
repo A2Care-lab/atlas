@@ -246,7 +246,7 @@ export function MyReports() {
           <ul className="divide-y divide-gray-300">
             {reports.map((report) => (
               <li key={report.id}>
-                <div className="px-6 py-4 flex items-center justify-between">
+                <div className="px-6 py-4 flex items-center justify-between gap-2">
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
@@ -260,7 +260,7 @@ export function MyReports() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center md:space-x-4 space-x-2 pr-2">
                         <div className="flex items-center space-x-2">
                           <span className="text-xs text-gray-500">Status</span>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[report.status]}`}>
@@ -268,7 +268,7 @@ export function MyReports() {
                             <span className="ml-1">{getStatusLabel(report.status)}</span>
                           </span>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="hidden md:flex items-center space-x-2">
                           <span className="text-xs text-gray-500">SLA</span>
                           {renderSlaBadge(report)}
                         </div>
@@ -281,6 +281,10 @@ export function MyReports() {
                       <p className="mt-1 text-sm text-gray-600 line-clamp-2">
                         {report.description.substring(0, 150)}...
                       </p>
+                      <div className="mt-2 md:hidden flex items-center space-x-2">
+                        <span className="text-xs text-gray-500">SLA</span>
+                        {renderSlaBadge(report)}
+                      </div>
                     </div>
                     <div className="mt-2 flex items-center text-sm text-gray-500">
                       <span className="mr-4">
@@ -304,10 +308,10 @@ export function MyReports() {
                       )}
                     </div>
                   </div>
-                  <div className="ml-4 flex-shrink-0">
+                  <div className="ml-2 md:ml-4 flex-shrink-0 pr-2">
                     <button
                       onClick={() => { setSelectedReport(report); setDetailsOpen(true); }}
-                    className="inline-flex items-center px-3 py-2 border border-petroleo-300 shadow-sm text-sm leading-4 font-medium rounded-md text-petroleo-700 bg-white hover:bg-petroleo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500"
+                    className="inline-flex items-center px-2.5 md:px-3 py-2 border border-petroleo-300 shadow-sm text-xs md:text-sm leading-4 font-medium rounded-md text-petroleo-700 bg-white hover:bg-petroleo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500"
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Ver Detalhes

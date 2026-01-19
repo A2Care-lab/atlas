@@ -137,6 +137,17 @@ export function Sidebar() {
               {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </button>
           )}
+
+          {isMobile && (
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="p-2 rounded-md hover:bg-gray-800 transition-colors flex items-center gap-2 lg:hidden"
+              aria-label="Fechar menu"
+            >
+              <X className="h-4 w-4" />
+              <span className="text-sm">Fechar</span>
+            </button>
+          )}
         </div>
 
         {/* Navegação */}

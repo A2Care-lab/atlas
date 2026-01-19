@@ -22,6 +22,7 @@ export default function UsersTable() {
   const [users, setUsers] = useState<UserProfile[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
   const [invites, setInvites] = useState<Invitation[]>([])
+  const [lastInvitesByEmail, setLastInvitesByEmail] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState<Filters>({ name: '', email: '', status: 'Todos' })
   const [inviteOpen, setInviteOpen] = useState(false)
@@ -41,6 +42,7 @@ export default function UsersTable() {
     load()
     loadCompanies()
     loadInvites()
+    loadInvitesLastMap()
   }, [profile])
 
   const load = async () => {
@@ -102,6 +104,28 @@ export default function UsersTable() {
     } catch (e) {
       console.error(e)
       setInvites([])
+    }
+  }
+
+  const loadInvitesLastMap = async () => {
+    try {
+      if (!profile) return
+      let query = supabase
+        .from('invitations')
+        .select('email, company_id, created_at, last_invite_at')
+        .order('created_at', { ascending: false })
+      if (profile.role !== 'admin') query = query.eq('company_id', profile.company_id)
+      const { data, error } = await query
+      if (error) throw error
+      const map: Record<string, string> = {}
+      for (const row of ((data as any[]) || [])) {
+        const ts = (row as any).last_invite_at || (row as any).created_at
+        if (ts && !map[(row as any).email]) map[(row as any).email] = ts
+      }
+      setLastInvitesByEmail(map)
+    } catch (e) {
+      console.error(e)
+      setLastInvitesByEmail({})
     }
   }
 
@@ -210,6 +234,7 @@ export default function UsersTable() {
       setMsgText(fnData && (fnData as any).fallback_link ? `Mailer do Supabase falhou; link gerado:\n${(fnData as any).fallback_link}` : 'Convite criado e e-mail enviado.')
       setMsgVariant('success')
       setMsgOpen(true)
+      await loadInvitesLastMap()
     } catch (e: any) {
       setMsgTitle('Erro ao criar convite')
       setMsgText(e?.message || 'Falha ao enviar convite')
@@ -239,6 +264,7 @@ export default function UsersTable() {
         .update({ last_invite_at: new Date().toISOString() })
         .eq('id', invite.id)
       await loadInvites()
+      await loadInvitesLastMap()
       setMsgTitle('Convite reenviado')
       setMsgText(fnData && (fnData as any).fallback_link ? `Mailer do Supabase falhou; link gerado:\n${(fnData as any).fallback_link}` : 'E-mail de convite reenviado com sucesso.')
       setMsgVariant('success')
@@ -261,6 +287,7 @@ export default function UsersTable() {
       role: u.role,
       company_id: u.company_id,
       created_at: u.created_at,
+      last_invite_at: lastInvitesByEmail[u.email as keyof typeof lastInvitesByEmail],
       status: u.is_active ? 'Ativo' : 'Inativo',
       is_active: u.is_active,
     }))
@@ -287,7 +314,7 @@ export default function UsersTable() {
         return nameMatch && emailMatch && companyMatch && startMatch && endMatch && statusMatch
       })
       .sort((a,b)=> new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-  }, [users, invites, companies, filters])
+  }, [users, invites, companies, filters, lastInvitesByEmail])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -399,7 +426,7 @@ export default function UsersTable() {
                 <td className="px-4 py-2 text-sm text-gray-900">{row.email}</td>
                 <td className="px-4 py-2 text-sm text-gray-900">{getUserRoleLabel(row.role)}</td>
                 <td className="px-4 py-2 text-sm text-gray-900">{companies.find(c=>c.id===row.company_id)?.name || '-'}</td>
-                <td className="px-4 py-2 text-sm text-gray-900">{row.created_at ? new Date(row.created_at).toLocaleDateString('pt-BR') : '-'}</td>
+                <td className="px-4 py-2 text-sm text-gray-900">{row.created_at ? new Date(row.created_at).toLocaleString('pt-BR') : '-'}</td>
                 <td className="px-4 py-2 text-sm text-gray-900">{row.status}</td>
                 <td className="px-4 py-2 text-sm text-gray-900">{(row as any).last_invite_at ? new Date((row as any).last_invite_at).toLocaleString('pt-BR') : (row.kind==='invite' ? new Date(row.created_at).toLocaleString('pt-BR') : '—')}</td>
                 {canAdmin && (
@@ -526,6 +553,7 @@ export default function UsersTable() {
           setMsgVariant('success')
           setMsgOpen(true)
           await loadInvites()
+          await loadInvitesLastMap()
         }} />
       )}
 
