@@ -221,7 +221,7 @@ export function NewReport() {
                                 .from('report_tokens_pending')
                                 .select('link_token, company_id, company_name')
                                 .eq('access_token', tok)
-                                .order('created_at', { descending: true })
+                                .order('created_at', { ascending: false })
                                 .limit(1);
                               if (error) {
                                 setCrmErrorMsg('Erro ao consultar tokens pendentes. Tente novamente.');
@@ -237,7 +237,7 @@ export function NewReport() {
                               .from('report_tokens_pending')
                               .select('link_token, access_token, company_id, company_name')
                               .eq('link_token', linkTok)
-                              .order('created_at', { descending: true })
+                              .order('created_at', { ascending: false })
                               .limit(1);
                             if (error) {
                               setCrmErrorMsg('Erro ao consultar tokens pendentes. Tente novamente.');
@@ -252,7 +252,7 @@ export function NewReport() {
                                 .from('report_tokens_pending')
                                 .select('link_token, company_id, company_name')
                                 .eq('access_token', tok)
-                                .order('created_at', { descending: true })
+                                .order('created_at', { ascending: false })
                                 .limit(1);
                               if (error2) {
                                 setCrmErrorMsg('Erro ao consultar tokens pendentes. Tente novamente.');
@@ -272,7 +272,7 @@ export function NewReport() {
                                 .from('report_tokens_pending')
                                 .select('link_token, company_id, created_at')
                                 .eq('access_token', tok)
-                                .order('created_at', { descending: true })
+                                .order('created_at', { ascending: false })
                                 .limit(3);
                               const count = (probe || []).length;
                               if (count === 0) {
@@ -350,7 +350,6 @@ export function NewReport() {
                         </div>
                       </div>
                     ) : (
-                      /* @ts-expect-error */
                       <ReportForm tokenOverride={crmFormToken} accessOverride={crmFormAccess} onSubmitted={(p)=>setCrmFormProtocol(p)} />
                     )}
                   </div>
