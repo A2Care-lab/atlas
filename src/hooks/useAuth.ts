@@ -61,6 +61,18 @@ export function useAuth() {
 
   const loadProfile = async (userId: string) => {
     try {
+      const sessionRes = await supabase.auth.getSession();
+      const session = sessionRes.data.session;
+      const baseEmail = session?.user?.email || '';
+      const metaRole = (session?.user?.user_metadata as any)?.role || null;
+      const metaCompany = (session?.user?.user_metadata as any)?.company_id || null;
+      const fallbackProfile: any = {
+        id: userId,
+        email: baseEmail,
+        role: metaRole || 'user',
+        company_id: metaCompany || null,
+        is_active: true,
+      };
       const sel = await supabase
         .from('user_profiles')
         .select('*')
@@ -73,8 +85,7 @@ export function useAuth() {
         return;
       }
 
-      const session = (await supabase.auth.getSession()).data.session;
-      const email = session?.user?.email || '';
+      const email = baseEmail;
       const inv = await supabase
         .from('invitations')
         .select('id, role, company_id, full_name, expires_at, accepted_at, created_at')
@@ -98,7 +109,12 @@ export function useAuth() {
         .select('*')
         .maybeSingle();
 
-      if (up.error && !up.data) throw up.error;
+      if (up.error && !up.data) {
+        // Fallback duro: usar dados da sessão para não deixar a UI em branco
+        setProfile(fallbackProfile);
+        await ensureClaims(fallbackProfile);
+        return;
+      }
       const profileData = up.data || (await supabase
         .from('user_profiles')
         .select('*')
@@ -120,20 +136,67 @@ export function useAuth() {
         } catch (_) {}
       }
     } catch (error) {
-      console.error('Error loading profile:', error);
+      try {
+        const session = (await supabase.auth.getSession()).data.session;
+        const baseEmail = session?.user?.email || '';
+        const metaRole = (session?.user?.user_metadata as any)?.role || 'user';
+        const metaCompany = (session?.user?.user_metadata as any)?.company_id || null;
+        const fallbackProfile: any = { id: userId, email: baseEmail, role: metaRole, company_id: metaCompany, is_active: true };
+        setProfile(fallbackProfile);
+        await ensureClaims(fallbackProfile);
+      } catch (_) {}
     }
   };
 
   const signIn = async (email: string, password: string) => {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedPassword = String(password || '').trim();
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: normalizedEmail,
+      password: normalizedPassword,
     });
+    try {
+      if (!error && data?.user) {
+        const uid = data.user.id;
+        const sel = await supabase
+          .from('user_profiles')
+          .select('id, role, company_id, full_name')
+          .eq('id', uid)
+          .maybeSingle();
+        const p = (!sel.error && sel.data) ? (sel.data as any) : null;
+        const nextRole = p?.role || (data.user.user_metadata as any)?.role || 'user';
+        const nextCompany = p?.company_id || (data.user.user_metadata as any)?.company_id || null;
+        await supabase.auth.updateUser({ data: { role: nextRole, company_id: nextCompany } } as any);
+        await supabase.auth.refreshSession();
+      }
+    } catch {}
     return { data, error };
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    let error: any = null
+    try {
+      const res = await supabase.auth.signOut();
+      error = res?.error || null
+    } catch (e) {
+      error = e
+    }
+    try {
+      const ls = typeof window !== 'undefined' ? window.localStorage : undefined
+      const ss = typeof window !== 'undefined' ? window.sessionStorage : undefined
+      if (ls) {
+        const keys = Object.keys(ls)
+        for (const k of keys) {
+          if (/^sb-/.test(k) || /supabase/i.test(k) || /atlas/i.test(k)) {
+            ls.removeItem(k)
+          }
+        }
+      }
+      if (ss) ss.clear()
+    } catch {}
+    try {
+      await supabase.auth.getSession()
+    } catch {}
     return { error };
   };
 

@@ -61,6 +61,19 @@ export function ManageReports() {
     if (!profile) return;
 
     try {
+      let companyIds: string[] | null = null
+      if (profile.role === 'crm_n1') {
+        try {
+          const { data } = await supabase
+            .from('crm_n1_company_access')
+            .select('company_id')
+            .eq('user_id', profile.id)
+          const extras = (data || []).map((r:any)=>r.company_id)
+          const base = profile.company_id ? [profile.company_id] : []
+          companyIds = Array.from(new Set([...base, ...extras]))
+        } catch {}
+      }
+
       let query = supabase
         .from('reports')
         .select(`
@@ -74,7 +87,11 @@ export function ManageReports() {
 
       // Filtrar por empresa
       if (profile.role !== 'admin') {
-        query = query.eq('company_id', profile.company_id);
+        if (profile.role === 'crm_n1' && companyIds && companyIds.length > 0) {
+          query = query.in('company_id', companyIds as any);
+        } else {
+          query = query.eq('company_id', profile.company_id);
+        }
       }
 
       const { data, error } = await query;
@@ -442,7 +459,13 @@ export function ManageReports() {
             </button>
           </div>
         </div>
-      <ReportDetailsModal report={selectedReport} open={detailsOpen} onClose={() => setDetailsOpen(false)} hideFinalStatusOptions />
+      <ReportDetailsModal
+        report={selectedReport}
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        hideFinalStatusOptions
+        hideStatusControls={profile?.role === 'crm_n1'}
+      />
     </div>
   );
 }

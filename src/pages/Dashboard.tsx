@@ -35,7 +35,7 @@ const RISK_COLORS = {
 
 export function Dashboard() {
   const { profile, loading: authLoading } = useAuth();
-  const isUser = profile ? (profile.role !== 'admin' && profile.role !== 'corporate_manager' && profile.role !== 'approver_manager') : false;
+  const isUser = profile ? (profile.role === 'user') : false;
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeCompanies, setActiveCompanies] = useState<number>(0);
@@ -60,6 +60,18 @@ export function Dashboard() {
     }
 
     try {
+      let companyIds: string[] | null = null;
+      if (profile.role === 'crm_n1') {
+        try {
+          const { data } = await supabase
+            .from('crm_n1_company_access')
+            .select('company_id')
+            .eq('user_id', profile.id);
+          const extras = (data || []).map((r:any)=>r.company_id);
+          companyIds = Array.from(new Set([...(profile.company_id ? [profile.company_id] : []), ...extras]));
+        } catch {}
+      }
+
       let query = supabase
         .from('reports')
         .select(`
@@ -73,7 +85,11 @@ export function Dashboard() {
       if (isUser) {
         query = query.eq('user_id', profile.id);
       } else if (profile.role !== 'admin') {
-        query = query.eq('company_id', profile.company_id);
+        if (profile.role === 'crm_n1' && companyIds && companyIds.length > 0) {
+          query = query.in('company_id', companyIds as any);
+        } else {
+          query = query.eq('company_id', profile.company_id);
+        }
       }
 
       const { data, error } = await query;
@@ -91,11 +107,27 @@ export function Dashboard() {
   const loadActiveCounts = async () => {
     if (!profile) return;
     try {
+      let companyIds: string[] | null = null;
+      if (profile.role === 'crm_n1') {
+        try {
+          const { data } = await supabase
+            .from('crm_n1_company_access')
+            .select('company_id')
+            .eq('user_id', profile.id);
+          const extras = (data || []).map((r:any)=>r.company_id);
+          companyIds = Array.from(new Set([...(profile.company_id ? [profile.company_id] : []), ...extras]));
+        } catch {}
+      }
+
       let companiesQuery = supabase
         .from('companies')
         .select('id, is_active');
       if (profile.role !== 'admin') {
-        companiesQuery = companiesQuery.eq('id', profile.company_id);
+        if (profile.role === 'crm_n1' && companyIds && companyIds.length > 0) {
+          companiesQuery = companiesQuery.in('id', companyIds as any);
+        } else {
+          companiesQuery = companiesQuery.eq('id', profile.company_id);
+        }
       }
       companiesQuery = companiesQuery.eq('is_active', true);
       const { data: companiesData } = await companiesQuery;
@@ -105,7 +137,11 @@ export function Dashboard() {
         .from('user_profiles')
         .select('id, is_active, company_id');
       if (profile.role !== 'admin') {
-        usersQuery = usersQuery.eq('company_id', profile.company_id);
+        if (profile.role === 'crm_n1' && companyIds && companyIds.length > 0) {
+          usersQuery = usersQuery.in('company_id', companyIds as any);
+        } else {
+          usersQuery = usersQuery.eq('company_id', profile.company_id);
+        }
       }
       usersQuery = usersQuery.eq('is_active', true);
       const { data: usersData } = await usersQuery;
@@ -114,13 +150,35 @@ export function Dashboard() {
   };
 
   const loadCompanies = async () => {
-    if (!profile || profile.role !== 'admin') return;
+    if (!profile) return;
     try {
-      const { data } = await supabase
-        .from('companies')
-        .select('id, name, is_active')
-        .eq('is_active', true);
-      setCompanies((data as any[]) || []);
+      if (profile.role === 'admin') {
+        const { data } = await supabase
+          .from('companies')
+          .select('id, name, is_active')
+          .eq('is_active', true);
+        setCompanies((data as any[]) || []);
+      } else if (profile.role === 'crm_n1') {
+        let companyIds: string[] = [];
+        try {
+          const { data } = await supabase
+            .from('crm_n1_company_access')
+            .select('company_id')
+            .eq('user_id', profile.id);
+          const extras = (data || []).map((r:any)=>r.company_id);
+          companyIds = Array.from(new Set([...(profile.company_id ? [profile.company_id] : []), ...extras]));
+        } catch {}
+        if (companyIds.length > 0) {
+          const { data } = await supabase
+            .from('companies')
+            .select('id, name, is_active')
+            .in('id', companyIds as any)
+            .eq('is_active', true);
+          setCompanies((data as any[]) || []);
+        } else {
+          setCompanies([]);
+        }
+      }
     } catch {}
   };
 

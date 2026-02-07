@@ -620,6 +620,7 @@ function InviteModal({ onClose, companies, onCreate }:{ onClose:()=>void, compan
               <option value="user">Usuário</option>
               <option value="corporate_manager">Gestor Corporativo</option>
               <option value="approver_manager">Aprovador Corporativo</option>
+              <option value="crm_n1">CRM - N1</option>
             </select>
           </div>
         </div>
@@ -669,6 +670,7 @@ function EditInviteModal({ invite, companies, onClose, onSaved }:{ invite:Invita
               <option value="user">Usuário</option>
               <option value="corporate_manager">Gestor Corporativo</option>
               <option value="approver_manager">Aprovador Corporativo</option>
+              <option value="crm_n1">CRM - N1</option>
             </select>
           </div>
           <div>
@@ -689,7 +691,7 @@ function EditInviteModal({ invite, companies, onClose, onSaved }:{ invite:Invita
 }
 
 function BulkInviteModal({ onClose, companies, onCreateMany }:{ onClose:()=>void, companies:Company[], onCreateMany:(rows:{fullName:string,email:string,companyId?:string,role:string}[])=>void }){
-  const roles: UserRole[] = ['user','corporate_manager','approver_manager','admin']
+  const roles: UserRole[] = ['user','corporate_manager','approver_manager','crm_n1','admin']
   const cellToString = (val: any): string => {
     if (val == null) return ''
     if (typeof val === 'string') return val
@@ -764,7 +766,7 @@ function BulkInviteModal({ onClose, companies, onCreateMany }:{ onClose:()=>void
         const idxCompany = cols.findIndex(c=>c.includes('empresa'))
         const idxRole = cols.findIndex(c=>c.includes('perfil'))
         const mapNameToId = new Map(companies.map(c=>[c.name.toLowerCase(), c.id]))
-        const allowedRoles = ['user','corporate_manager','approver_manager']
+        const allowedRoles = ['user','corporate_manager','approver_manager','crm_n1']
         const items: {fullName:string,email:string,companyId?:string,role:string}[] = []
         ws.eachRow((row: any, rowNumber: number)=>{
           if (rowNumber === 1) return
@@ -794,7 +796,7 @@ function BulkInviteModal({ onClose, companies, onCreateMany }:{ onClose:()=>void
             const idxRole = cols.findIndex(c=>c.includes('perfil'))
             if (idxFull<0 || idxEmail<0 || idxCompany<0 || idxRole<0) throw new Error('Cabeçalho inválido')
             const mapNameToId = new Map(companies.map(c=>[c.name.toLowerCase(), c.id]))
-            const allowedRoles = ['user','corporate_manager','approver_manager']
+            const allowedRoles = ['user','corporate_manager','approver_manager','crm_n1']
             const items: {fullName:string,email:string,companyId?:string,role:string}[] = []
             for (let i=1;i<lines.length;i++){
               const parts = lines[i].split(sep).map(p=>p.trim())
@@ -874,11 +876,14 @@ function EditUserModal({ user, companies, onClose, onSaved }:{ user:UserProfile,
     phone: user.phone || '',
     is_active: user.is_active,
   })
+  const [crmCompanies, setCrmCompanies] = useState<string[]>([])
+  const [saveError, setSaveError] = useState<string>('')
 
   const activeAreas = areas.filter(a=>a.status==='active')
   const showCurrentDept = !!form.department && !activeAreas.some(a=>a.name===form.department)
 
   const save = async () => {
+    setSaveError('')
     const payload = {
       full_name: form.full_name,
       email: form.email,
@@ -888,9 +893,48 @@ function EditUserModal({ user, companies, onClose, onSaved }:{ user:UserProfile,
       phone: form.phone || null,
       is_active: form.is_active,
     }
-    const { error } = await supabase.from('user_profiles').update(payload).eq('id', user.id)
-    if (!error) onSaved();
+    const { error: upError } = await supabase.from('user_profiles').update(payload).eq('id', user.id)
+    if (upError) {
+      setSaveError(upError.message || 'Falha ao salvar usuário')
+      return
+    }
+    if (form.role === 'crm_n1') {
+      const { error: delError } = await supabase.from('crm_n1_company_access').delete().eq('user_id', user.id)
+      if (delError) {
+        setSaveError(delError.message || 'Falha ao atualizar vínculos CRM - N1 (exclusão)')
+        return
+      }
+      if (crmCompanies.length > 0) {
+        const rows = crmCompanies.map((cid) => ({ user_id: user.id, company_id: cid }))
+        const { error: insError } = await supabase.from('crm_n1_company_access').insert(rows)
+        if (insError) {
+          setSaveError(insError.message || 'Falha ao atualizar vínculos CRM - N1 (inserção)')
+          return
+        }
+      }
+    } else {
+      const { error: delError } = await supabase.from('crm_n1_company_access').delete().eq('user_id', user.id)
+      if (delError) {
+        setSaveError(delError.message || 'Falha ao remover vínculos CRM - N1')
+        return
+      }
+    }
+    onSaved();
   }
+
+  useEffect(() => {
+    (async () => {
+      if (user.role === 'crm_n1') {
+        const { data } = await supabase
+          .from('crm_n1_company_access')
+          .select('company_id')
+          .eq('user_id', user.id)
+        setCrmCompanies((data || []).map((r:any)=>r.company_id))
+      } else {
+        setCrmCompanies([])
+      }
+    })()
+  }, [user.role, user.id])
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -911,6 +955,7 @@ function EditUserModal({ user, companies, onClose, onSaved }:{ user:UserProfile,
               <option value="user">Usuário</option>
               <option value="corporate_manager">Gestor Corporativo</option>
               <option value="approver_manager">Aprovador Corporativo</option>
+              <option value="crm_n1">CRM - N1</option>
               <option value="admin">Administrador</option>
             </select>
           </div>
@@ -921,6 +966,31 @@ function EditUserModal({ user, companies, onClose, onSaved }:{ user:UserProfile,
               {companies.map(c=> <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
+          {form.role === 'crm_n1' && (
+            <div className="md:col-span-2">
+              <label className="block text-xs text-gray-600">Empresas autorizadas (CRM - N1)</label>
+              <div className="border rounded px-2 py-2 max-h-40 overflow-auto">
+                {companies.map((c) => (
+                  <label key={c.id} className="flex items-center gap-2 text-sm py-1">
+                    <input
+                      type="checkbox"
+                      checked={crmCompanies.includes(c.id)}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        setCrmCompanies((prev) => {
+                          const set = new Set(prev)
+                          if (checked) set.add(c.id); else set.delete(c.id)
+                          return Array.from(set)
+                        })
+                      }}
+                    />
+                    <span className="text-gray-800">{c.name}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="mt-1 text-[11px] text-gray-600">Selecione as empresas nas quais este usuário poderá abrir e gerir denúncias.</p>
+            </div>
+          )}
           <div>
             <label className="block text-xs text-gray-600">Departamento</label>
             <select value={form.department} onChange={(e)=>setForm({...form, department:e.target.value})} className="border rounded px-2 py-1 w-full">
@@ -944,6 +1014,7 @@ function EditUserModal({ user, companies, onClose, onSaved }:{ user:UserProfile,
           <button onClick={onClose} className="px-3 py-2 rounded border">Cancelar</button>
           <button onClick={save} className="px-3 py-2 rounded bg-petroleo-600 text-white">Salvar</button>
         </div>
+        {saveError && <p className="mt-2 text-sm text-red-600">{saveError}</p>}
       </div>
     </div>
   )

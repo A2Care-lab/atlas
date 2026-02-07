@@ -90,7 +90,11 @@ export function Header() {
 
           {/* Botão de logout */}
           <button
-            onClick={signOut}
+            onClick={async () => {
+              try { await signOut() } catch {}
+              try { window.location.replace('#/login') } catch {}
+              try { setTimeout(() => window.location.reload(), 50) } catch {}
+            }}
             className="flex items-center px-3 py-2 text-sm text-white hover:bg-white/10 rounded-lg transition-colors border border-white/20"
           >
             <LogOut className="h-4 w-4 mr-2" />

@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'corporate_manager' | 'approver_manager' | 'user';
+export type UserRole = 'admin' | 'corporate_manager' | 'approver_manager' | 'crm_n1' | 'user';
 export type ReportStatus = 'received' | 'under_analysis' | 'under_investigation' | 'waiting_info' | 'corporate_approval' | 'approved' | 'rejected';
 export type RiskLevel = 'low' | 'moderate' | 'high' | 'critical';
 export type SituationType = 'conflict' | 'misconduct' | 'moral_harassment' | 'discrimination' | 'sexual_harassment' | 'threat_violence' | 'fraud' | 'other';

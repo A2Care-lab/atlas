@@ -26,6 +26,7 @@ import PreviewEmailAlteracaoSenha from './pages/PreviewEmailAlteracaoSenha';
 import PreviewEmailConviteUsuario from './pages/PreviewEmailConviteUsuario';
 import AssinaturasManager from './components/AssinaturasManager';
 import AssinaturaForm from './pages/AssinaturaForm';
+import Landing from './pages/Landing';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -154,7 +155,8 @@ function AppRoutes() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route path="/landing" element={<Landing />} />
         <Route path="/recover" element={<PasswordRecoveryRequest />} />
         <Route path="/recover/:token" element={<PasswordRecoveryReset />} />
         <Route path="/onboarding" element={<Onboarding />} />
@@ -166,7 +168,9 @@ function AppRoutes() {
         <Route path="/preview/email/alteracao-senha" element={<PreviewEmailAlteracaoSenha />} />
         <Route path="/preview/email/convite-usuario" element={<PreviewEmailConviteUsuario />} />
         
-        <Route path="/" element={
+        <Route path="/" element={<Landing />} />
+        
+        <Route path="/dashboard" element={
           <ProtectedRoute>
             <Layout>
               <Dashboard />
@@ -301,7 +305,7 @@ function AppRoutes() {
 
         
         
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/landing" replace />} />
       </Routes>
     </HashRouter>
   );

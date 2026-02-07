@@ -55,27 +55,37 @@ export function Sidebar() {
     setLastUpdate(formatted)
   }, [buildLastUpdate])
 
-  const navigation = [
-    { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Minhas Denúncias', href: '/my-reports', icon: FileText },
-    { name: 'Nova Denúncia', href: '/new-report', icon: PlusCircle },
-    { name: 'Política de Não Retaliação', href: '/politica-nao-retaliacao', icon: ScrollText },
-    ...(profile?.role === 'admin' || profile?.role === 'corporate_manager' || profile?.role === 'approver_manager' 
-      ? [{ name: 'Gestão de Denúncias', href: '/manage-reports', icon: Shield }]
-      : []),
-    ...(profile?.role === 'approver_manager' 
-      ? [{ name: 'Aprovação Corporativa', href: '/corporate-approval', icon: BarChart3 }]
-      : []),
-    ...(profile?.role === 'admin'
-      ? [
-          { name: 'Configurações', href: '/settings', icon: Settings }
-        ]
-      : profile?.role === 'corporate_manager' || profile?.role === 'approver_manager'
+  const navigation = (() => {
+    if (profile?.role === 'crm_n1') {
+      return [
+        { name: 'Dashboard', href: '/dashboard', icon: Home },
+        { name: 'Nova Denúncia', href: '/new-report', icon: PlusCircle },
+        { name: 'Gestão de Denúncias', href: '/manage-reports', icon: Shield },
+        { name: 'Política de Não Retaliação', href: '/politica-nao-retaliacao', icon: ScrollText },
+      ];
+    }
+    return [
+      { name: 'Dashboard', href: '/dashboard', icon: Home },
+      { name: 'Minhas Denúncias', href: '/my-reports', icon: FileText },
+      { name: 'Nova Denúncia', href: '/new-report', icon: PlusCircle },
+      { name: 'Política de Não Retaliação', href: '/politica-nao-retaliacao', icon: ScrollText },
+      ...(profile?.role === 'admin' || profile?.role === 'corporate_manager' || profile?.role === 'approver_manager'
+        ? [{ name: 'Gestão de Denúncias', href: '/manage-reports', icon: Shield }]
+        : []),
+      ...(profile?.role === 'approver_manager' 
+        ? [{ name: 'Aprovação Corporativa', href: '/corporate-approval', icon: BarChart3 }]
+        : []),
+      ...(profile?.role === 'admin'
         ? [
             { name: 'Configurações', href: '/settings', icon: Settings }
           ]
-        : []),
-  ];
+        : profile?.role === 'corporate_manager' || profile?.role === 'approver_manager'
+          ? [
+              { name: 'Configurações', href: '/settings', icon: Settings }
+            ]
+          : []),
+    ];
+  })();
 
   const sidebarWidth = isCollapsed ? 'w-20' : 'w-64';
   const sidebarMobileWidth = 'w-64';

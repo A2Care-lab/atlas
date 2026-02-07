@@ -39,6 +39,7 @@ const ROLE_TEXT_COLORS: Record<UserProfile['role'], string> = {
   admin: 'text-indigo-700',
   corporate_manager: 'text-emerald-700',
   approver_manager: 'text-blue-700',
+  crm_n1: 'text-teal-700',
   user: 'text-gray-800'
 }
 
@@ -46,6 +47,7 @@ const ROLE_BORDER_COLORS: Record<UserProfile['role'], string> = {
   admin: 'border-indigo-600',
   corporate_manager: 'border-emerald-600',
   approver_manager: 'border-blue-600',
+  crm_n1: 'border-teal-600',
   user: 'border-gray-400'
 }
 
@@ -60,7 +62,8 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
   const [internal, setInternal] = useState(false)
   const canInternal = profile?.role && profile.role !== 'user'
   const [reporterName, setReporterName] = useState<string>('')
-  const canManage = !!profile && ['admin','corporate_manager','approver_manager'].includes(profile.role)
+  const canManage = !!profile && ['admin','corporate_manager','approver_manager','crm_n1'].includes(profile.role)
+  const canChangeStatus = !!profile && ['admin','corporate_manager','approver_manager'].includes(profile.role)
   const [displayStatus, setDisplayStatus] = useState<ReportStatus>(report?.status || 'received')
   const [statusDraft, setStatusDraft] = useState<ReportStatus>(report?.status || 'received')
   const [statusComment, setStatusComment] = useState('')
@@ -287,6 +290,7 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
       admin: 'Administrador do Sistema',
       corporate_manager: 'Gestor Corporativo',
       approver_manager: 'Aprovador Corporativo',
+      crm_n1: 'CRM - N1',
       user: 'Usuário'
     }
     if (!role) return 'Usuário'
@@ -486,7 +490,7 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
                 </div>
               </div>
             </div>
-            {!hideStatusControls && canManage && (
+            {!hideStatusControls && canChangeStatus && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs text-gray-700">Alterar status</label>

@@ -30,7 +30,7 @@ export function Layout({ children }: LayoutProps) {
   useEffect(() => {
     const runCheck = async () => {
       try {
-        const isCorp = profile?.role === 'corporate_manager' || profile?.role === 'approver_manager';
+        const isCorp = profile?.role === 'corporate_manager' || profile?.role === 'approver_manager' || profile?.role === 'crm_n1';
         const companyId = (profile as any)?.company_id || null;
         if (!isCorp || !companyId) {
           setShowLimitModal(false);

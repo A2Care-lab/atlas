@@ -11,8 +11,9 @@ import MessageModal from '../components/MessageModal';
 import { deriveAccessTokenFromLinkToken } from '../utils/accessToken';
 import { useAuth } from '../hooks/useAuth';
 
-export function ReportForm() {
-  const { token } = useParams<{ token: string }>();
+export function ReportForm({ tokenOverride, accessOverride, onSubmitted }: { tokenOverride?: string; accessOverride?: string; onSubmitted?: (protocol: string) => void }) {
+  const routeParams = useParams<{ token: string }>();
+  const token = tokenOverride ?? routeParams.token;
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [isValidToken, setIsValidToken] = useState(false);
@@ -21,6 +22,10 @@ export function ReportForm() {
   const [submitting, setSubmitting] = useState(false);
   const [errorOpen, setErrorOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [originUserId, setOriginUserId] = useState<string | null>(null);
+  const [originEmail, setOriginEmail] = useState<string | null>(null);
+  const [originCompanyId, setOriginCompanyId] = useState<string | null>(null);
+  const [originFullName, setOriginFullName] = useState<string>('');
 
   // Form data
   const [identify, setIdentify] = useState<boolean | null>(null);
@@ -55,6 +60,33 @@ export function ReportForm() {
   useEffect(() => {
     validateToken();
   }, [token]);
+
+  useEffect(() => {
+    try {
+      const pre = (accessOverride || '').toLowerCase();
+      if (!pre) {
+        const hash = window.location.hash || '';
+        const q = (() => {
+          const i = hash.indexOf('?');
+          return i >= 0 ? new URLSearchParams(hash.substring(i + 1)) : new URLSearchParams('');
+        })();
+        const fromHash = (q.get('access') || '').toLowerCase();
+        if (fromHash) {
+          const expected = token ? deriveAccessTokenFromLinkToken(token) : '';
+          if (expected && fromHash === expected) {
+            setTokenInput(fromHash);
+            setIsValidToken(true);
+          }
+        }
+      } else {
+        const expected = token ? deriveAccessTokenFromLinkToken(token) : '';
+        if (expected && pre === expected) {
+          setTokenInput(pre);
+          setIsValidToken(true);
+        }
+      }
+    } catch {}
+  }, [token, accessOverride]);
 
   useEffect(() => {
     if (identify && profile?.full_name) {
@@ -99,6 +131,33 @@ export function ReportForm() {
       if (!error && data) {
         setIsValidToken(true);
       }
+      try {
+        const mp = await supabase
+          .from('report_tokens_pending')
+          .select('user_id,email,company_id')
+          .eq('link_token', token)
+          .maybeSingle();
+        if (!mp.error && mp.data) {
+          setOriginUserId((mp.data as any)?.user_id || null);
+          setOriginEmail((mp.data as any)?.email || null);
+          setOriginCompanyId((mp.data as any)?.company_id || null);
+          const uid = (mp.data as any)?.user_id || null;
+          if (uid) {
+            try {
+              const { data: up } = await supabase
+                .from('user_profiles')
+                .select('full_name,email')
+                .eq('id', uid)
+                .maybeSingle();
+              const nm = ((up as any)?.full_name || (up as any)?.email || '').trim();
+              if (nm) setOriginFullName(nm);
+            } catch {}
+          } else {
+            const nm = (((mp.data as any)?.email) || '').trim();
+            if (nm) setOriginFullName(nm);
+          }
+        }
+      } catch {}
     } catch (error) {
       console.error('Token validation error:', error);
     } finally {
@@ -124,6 +183,10 @@ export function ReportForm() {
     setSubmitting(true);
 
     try {
+      const resolvedMainReason = (mainReason || (situationType as string) || 'other').trim();
+      if (!resolvedMainReason) {
+        throw new Error('main-reason-missing');
+      }
       // Calcular risco
       const riskCalculation = calculateRiskLevel({
         situationType: situationType as SituationType,
@@ -138,15 +201,19 @@ export function ReportForm() {
       const protocol = `DEN${Date.now().toString().slice(-8)}`;
 
       // Criar denúncia
+      const companyId = originCompanyId || profile?.company_id;
+      if (!companyId) {
+        throw new Error('Perfil sem empresa associada');
+      }
       const reportData = {
         protocol,
-        company_id: profile?.company_id || '550e8400-e29b-41d4-a716-446655440001',
+        company_id: companyId,
         title: title.trim(),
         description,
         is_anonymous: !(identify as boolean),
-        user_id: user?.id || null,
+        user_id: originUserId || user?.id || null,
         department: informDepartment ? department : null,
-        main_reason: mainReason,
+        main_reason: resolvedMainReason,
         sub_reason: subReason,
         situation_type: situationType,
         has_immediate_risk: hasImmediateRisk,
@@ -208,25 +275,39 @@ export function ReportForm() {
 
       // Enviar e-mail de confirmação (Edge Function com fallback para RPC)
       try {
-        if (user?.email) {
+        const targetEmail = originEmail || user?.email || null;
+        if (targetEmail) {
           try {
             await supabase.functions.invoke('send-denuncia-confirmation', {
-              body: { email: user.email, protocolo: protocol, nome: profile?.full_name || '', fromEmail: 'ATLAS - Integridade Corporativa <atlas@a2care.com.br>' },
+              body: { email: targetEmail, protocolo: protocol, nome: originFullName || profile?.full_name || '', fromEmail: 'ATLAS - Integridade Corporativa <atlas@a2care.com.br>' },
             });
           } catch (err) {
             await sendEmail({
-              to: user.email,
+              to: targetEmail,
               subject: `Confirmação de abertura de denúncia – Protocolo ${protocol}`,
-              html: generateReportCreatedEmail(protocol, !identify, profile?.full_name || ''),
+              html: generateReportCreatedEmail(protocol, !identify, originFullName || profile?.full_name || ''),
             });
           }
+        }
+        try {
+          const res = await supabase.functions.invoke('notify-corporate-new-report', {
+            body: { company_id: reportData.company_id, protocolo: protocol, fromEmail: 'ATLAS - Integridade Corporativa <atlas@a2care.com.br>' },
+          });
+          if ((res.data as any)?.sent === 0) {
+            console.warn('Nenhum destinatário corporativo encontrado para company_id', reportData.company_id);
+          }
+        } catch (err) {
+          console.error('Falha ao notificar Gestor/Aprovador corporativos:', err);
         }
       } catch (emailErr) {
         console.error('Falha ao enviar e-mail de confirmação:', emailErr);
       }
 
-      // Redirecionar para página de sucesso
-      navigate('/success', { state: { protocol } });
+      if (typeof onSubmitted === 'function') {
+        onSubmitted(protocol);
+      } else {
+        navigate('/success', { state: { protocol } });
+      }
     } catch (error) {
       console.error('Error submitting report:', error);
       setErrorMsg('Erro ao enviar denúncia. Tente novamente.');
@@ -359,7 +440,7 @@ export function ReportForm() {
                   <label className="block text-sm font-medium text-gray-700">Nome Completo</label>
                   <input
                     type="text"
-                    value={profile?.full_name || ''}
+                    value={originFullName || profile?.full_name || ''}
                     readOnly
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-700 sm:text-sm"
                     placeholder="Nome não informado no perfil"

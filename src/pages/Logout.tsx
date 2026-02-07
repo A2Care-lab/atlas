@@ -12,6 +12,7 @@ export function Logout() {
     const run = async () => {
       try {
         if (!user) {
+          try { window.location.replace('#/login') } catch {}
           navigate('/login', { replace: true })
           return
         }
@@ -20,12 +21,17 @@ export function Logout() {
       } catch (_) {
         // ignore
       } finally {
+        try { window.location.replace('#/login') } catch {}
         navigate('/login', { replace: true })
+        try { setTimeout(() => window.location.reload(), 50) } catch {}
       }
     }
 
     // Fallback de segurança caso algo demore
-    const t = setTimeout(() => navigate('/login', { replace: true }), 3000)
+    const t = setTimeout(() => {
+      try { window.location.replace('#/login') } catch {}
+      navigate('/login', { replace: true })
+    }, 3000)
     run()
     return () => clearTimeout(t)
   }, [navigate, signOut, user, loading])
