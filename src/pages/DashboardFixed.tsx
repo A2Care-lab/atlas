@@ -14,7 +14,7 @@ import {
   MessageSquare,
   BadgeCheck
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 
 const STATUS_COLORS = {
   received: '#006D77',
@@ -446,7 +446,7 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 overflow-hidden shadow-lg ring-1 ring-black/5 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -466,7 +466,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 overflow-hidden shadow-lg ring-1 ring-black/5 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -488,7 +488,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 overflow-hidden shadow-lg ring-1 ring-black/5 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -510,7 +510,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 overflow-hidden shadow-lg ring-1 ring-black/5 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -530,7 +530,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 overflow-hidden shadow-lg ring-1 ring-black/5 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -552,7 +552,7 @@ export function Dashboard() {
 
       {profile?.role !== 'user' && (
         <>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 overflow-hidden shadow-lg ring-1 ring-black/5 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -568,7 +568,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 overflow-hidden shadow-lg ring-1 ring-black/5 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -592,7 +592,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 overflow-hidden shadow-lg ring-1 ring-black/5 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -608,7 +608,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 overflow-hidden shadow-lg ring-1 ring-black/5 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -624,7 +624,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 overflow-hidden shadow-lg ring-1 ring-black/5 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -645,7 +645,7 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 p-6 rounded-2xl shadow-lg ring-1 ring-black/5">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Denúncias por Status</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -670,25 +670,7 @@ export function Dashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-        {isUser ? (
-          getMonthlyData().length > 0 && (
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Tendência Mensal</h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={getMonthlyData()}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip formatter={(value: any) => [value, 'TT']} />
-                    <Bar dataKey="count" fill="#10B981" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )
-        ) : (
-          <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 p-6 rounded-2xl shadow-lg ring-1 ring-black/5">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Denúncias por Nível de Risco</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -706,34 +688,56 @@ export function Dashboard() {
               </ResponsiveContainer>
             </div>
           </div>
-        )}
+        
       </div>
 
-      {!isUser && getMonthlyData().length > 0 && (
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Tendência Mensal</h3>
+      {/* Adicionais: barras horizontais por Status e linha de tendência mensal */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 p-6 rounded-2xl shadow-lg ring-1 ring-black/5">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Status (Horizontal)</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={getMonthlyData()}>
+              <BarChart data={getStatusCounts()} layout="vertical" margin={{ left: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value: any) => [value, 'TT']} />
-                <Bar dataKey="count" fill="#10B981" />
+                <XAxis type="number" />
+                <YAxis type="category" dataKey="status" width={120} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#334155">
+                  {getStatusCounts().map((entry, index) => (
+                    <Cell key={`hcell-${index}`} fill={STATUS_COLORS[entry.statusKey as ReportStatus]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
-      )}
+        {getMonthlyData().length > 0 && (
+          <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 p-6 rounded-2xl shadow-lg ring-1 ring-black/5">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Tendência Mensal (Linha)</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={getMonthlyData()}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="count" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+      </div>
 
       {isUser && (
         <div className="grid grid-cols-1 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
+          <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 p-6 rounded-2xl shadow-lg ring-1 ring-black/5">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Últimos Comentários</h3>
             <ul className="space-y-3">
               {getLatestComments().length > 0 ? (
                 getLatestComments().map((c: any, idx: number) => (
-                  <li key={idx} className="border border-gray-200 rounded-md p-3">
+                  <li key={idx} className="border border-gray-200 rounded-xl p-3">
                     <div className="text-xs text-gray-600">Denúncia “{c.report_title || c.report_id}” • {new Date(c.created_at).toLocaleString('pt-BR')}</div>
                     <div className="text-sm text-gray-900 mt-1">{c.content}</div>
                   </li>
