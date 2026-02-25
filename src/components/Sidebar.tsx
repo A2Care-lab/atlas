@@ -118,7 +118,8 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 h-full bg-gray-900 text-white z-50
+        fixed top-0 left-0 h-full text-white z-50
+        bg-gradient-to-b from-slate-900 via-petroleo-900 to-slate-800 shadow-2xl
         transition-all duration-300 ease-in-out
         ${isMobile 
           ? `${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} ${sidebarMobileWidth}` 
@@ -126,7 +127,7 @@ export function Sidebar() {
         }
       `}>
         {/* Header da Sidebar */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-800">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-white/10">
           {!isCollapsed && (
             <div className="flex flex-col">
               <div className="flex items-center">
@@ -142,7 +143,7 @@ export function Sidebar() {
           {!isMobile && (
             <button
               onClick={toggleSidebar}
-              className="p-2 rounded-md hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-md hover:bg-white/10 transition-colors"
             >
               {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </button>
@@ -151,7 +152,7 @@ export function Sidebar() {
           {isMobile && (
             <button
               onClick={() => setIsMobileOpen(false)}
-              className="p-2 rounded-md hover:bg-gray-800 transition-colors flex items-center gap-2 lg:hidden"
+              className="p-2 rounded-md hover:bg-white/10 transition-colors flex items-center gap-2 lg:hidden"
               aria-label="Fechar menu"
             >
               <X className="h-4 w-4" />
@@ -176,10 +177,10 @@ export function Sidebar() {
                 to={item.href}
                 onClick={handleLinkClick}
                 className={`
-                  flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                  relative flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200
                   ${isActive 
-                    ? 'bg-petroleo-600 text-white shadow-lg' 
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    ? 'bg-white/10 ring-1 ring-white/10 text-white shadow-lg' 
+                    : 'text-gray-300 hover:bg-white/10 hover:text-white'
                   }
                   ${isCollapsed ? 'justify-center' : 'justify-start'}
                 `}
@@ -191,7 +192,7 @@ export function Sidebar() {
                 {/* Indicador visual de página ativa */}
                 {isActive && (
                   <div className={`
-                    absolute right-0 w-1 h-6 bg-petroleo-400 rounded-l-full
+                    absolute right-0 w-1.5 h-6 bg-petroleo-400 rounded-l-full
                     ${isCollapsed ? 'opacity-0' : 'opacity-100'}
                   `} />
                 )}
@@ -201,7 +202,7 @@ export function Sidebar() {
         </nav>
 
         {/* Footer da Sidebar */}
-        <div className="px-2 py-4 border-t border-gray-800">
+        <div className="px-2 py-4 border-t border-white/10">
           <div className={`
             flex items-center px-3 py-2 text-sm text-gray-400
             ${isCollapsed ? 'justify-center' : 'justify-start'}
