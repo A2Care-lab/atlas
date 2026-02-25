@@ -119,19 +119,21 @@ export function Footer() {
   }
 
   return (
-    <footer className="bg-petroleo-600 border-t border-petroleo-700">
-      <div className="px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between text-sm text-white/90">
+    <footer className="bg-slate-900/50 backdrop-blur-md border-t border-white/10 mt-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between text-sm text-gray-400">
         <span>© {new Date().getFullYear()} ATLAS</span>
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={handlePrivacyClick}
-            className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-1 focus:ring-offset-petroleo-600"
+            className="px-3 py-1 rounded-lg hover:bg-white/5 hover:text-white transition-colors focus:outline-none focus:ring-1 focus:ring-sky-500"
           >
             Política de Privacidade
           </button>
           <button
+            type="button"
             onClick={handleTermsClick}
-            className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-1 focus:ring-offset-petroleo-600"
+            className="px-3 py-1 rounded-lg hover:bg-white/5 hover:text-white transition-colors focus:outline-none focus:ring-1 focus:ring-sky-500"
           >
             Termos de Uso
           </button>
