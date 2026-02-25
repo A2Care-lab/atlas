@@ -259,7 +259,7 @@ export function SupportChatbot() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-24 right-28 z-50 p-4 bg-petroleo-600 hover:bg-petroleo-500 text-white rounded-full shadow-lg shadow-petroleo-900/50 transition-all duration-300 hover:scale-110 flex items-center justify-center group ${isOpen ? 'hidden' : ''}`}
+        className={`fixed bottom-56 right-6 z-50 p-4 bg-petroleo-600 hover:bg-petroleo-500 text-white rounded-full shadow-lg shadow-petroleo-900/50 transition-all duration-300 hover:scale-110 flex items-center justify-center group ${isOpen ? 'hidden' : ''}`}
         title="Ajuda Inteligente"
       >
         <Bot className="w-8 h-8" />

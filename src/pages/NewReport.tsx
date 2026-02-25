@@ -522,7 +522,18 @@ export function NewReport() {
         </div>
         </div>
       </div>
-      <FloatingWhatsAppButton companyId={profile?.company_id} />
+      <FloatingWhatsAppButton
+        companyId={profile?.company_id}
+        confirmBeforeRedirect
+        confirmTitle="Você será direcionado ao WhatsApp"
+        confirmMessage={
+          <div className="space-y-2">
+            <p>Você será direcionado para o WhatsApp, mas continuará com acesso seguro.</p>
+            <p>Por segurança, para abrir uma nova denúncia será necessário informar o seu código.</p>
+            <p>Esse código pode ser gerado agora nesta tela, no botão "Gerar Link de Denúncia".</p>
+          </div>
+        }
+      />
       <SupportChatbot />
     </div>
   );
