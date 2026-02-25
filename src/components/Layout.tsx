@@ -54,11 +54,12 @@ export function Layout({ children }: LayoutProps) {
   }, [profile?.role, (profile as any)?.company_id]);
 
   return (
-    <div className="min-h-screen bg-papel">
+    <div className="min-h-screen relative bg-gradient-to-br from-emerald-100 via-teal-50 to-slate-100
+      bg-[radial-gradient(600px_at_10%_20%,rgba(15,118,110,0.12)_0,transparent_60%),radial-gradient(800px_at_90%_10%,rgba(2,132,199,0.12)_0,transparent_60%)]">
       <Sidebar />
       <Header />
       <main
-        className={`pt-16 bg-papel transition-all duration-300 ${
+        className={`pt-16 transition-all duration-300 ${
           isMobile ? 'pl-0' : isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
         }`}
       >
