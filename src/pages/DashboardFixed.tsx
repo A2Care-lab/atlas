@@ -446,7 +446,7 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 overflow-hidden shadow-2xl ring-1 ring-black/10 border border-white/30 rounded-2xl">
+        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -466,7 +466,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 overflow-hidden shadow-2xl ring-1 ring-black/10 border border-white/30 rounded-2xl">
+        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -488,7 +488,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 overflow-hidden shadow-2xl ring-1 ring-black/10 border border-white/30 rounded-2xl">
+        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -510,7 +510,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 overflow-hidden shadow-2xl ring-1 ring-black/10 border border-white/30 rounded-2xl">
+        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -530,7 +530,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 overflow-hidden shadow-2xl ring-1 ring-black/10 border border-white/30 rounded-2xl">
+        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -552,7 +552,7 @@ export function Dashboard() {
 
       {profile?.role !== 'user' && (
         <>
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 overflow-hidden shadow-2xl ring-1 ring-black/10 border border-white/30 rounded-2xl">
+        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -568,7 +568,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 overflow-hidden shadow-2xl ring-1 ring-black/10 border border-white/30 rounded-2xl">
+        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -645,7 +645,7 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 p-6 rounded-2xl shadow-2xl ring-1 ring-black/10 border border-white/30">
+        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/40 border border-white/30">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Denúncias por Status</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -670,7 +670,7 @@ export function Dashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 p-6 rounded-2xl shadow-2xl ring-1 ring-black/10 border border-white/30">
+        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/40 border border-white/30">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Denúncias por Nível de Risco</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -693,7 +693,7 @@ export function Dashboard() {
 
       {/* Adicionais: barras horizontais por Status e linha de tendência mensal */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 p-6 rounded-2xl shadow-2xl ring-1 ring-black/10 border border-white/30">
+        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/40 border border-white/30">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Status (Horizontal)</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -712,7 +712,7 @@ export function Dashboard() {
           </div>
         </div>
         {getMonthlyData().length > 0 && (
-          <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 p-6 rounded-2xl shadow-2xl ring-1 ring-black/10 border border-white/30">
+          <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/40 border border-white/30">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Tendência Mensal (Linha)</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -732,7 +732,7 @@ export function Dashboard() {
 
       {isUser && (
         <div className="grid grid-cols-1 gap-6">
-          <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 p-6 rounded-2xl shadow-2xl ring-1 ring-black/10 border border-white/30">
+          <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/40 border border-white/30">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Últimos Comentários</h3>
             <ul className="space-y-3">
               {getLatestComments().length > 0 ? (
