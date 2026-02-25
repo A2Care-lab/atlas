@@ -20,7 +20,7 @@ export function HtmlModal({ open, title, html, footer, onClose }: Props) {
           <h2 className="min-w-0 flex-1 pr-2 text-base sm:text-lg font-semibold text-white truncate">{title}</h2>
           <button onClick={onClose} className="flex-shrink-0 px-3 py-2 rounded-lg bg-petroleo-600/20 hover:bg-petroleo-600/40 text-petroleo-300 hover:text-white text-sm transition-colors border border-petroleo-500/30">Fechar</button>
         </div>
-        <div className="p-6 prose prose-invert prose-sm sm:prose max-w-none overflow-y-auto overflow-x-hidden flex-1 break-words scrollbar-thin scrollbar-thumb-petroleo-600/50 scrollbar-track-transparent">
+        <div className="p-6 prose prose-invert prose-sm sm:prose max-w-none overflow-y-auto overflow-x-hidden flex-1 break-words scrollbar-thin scrollbar-thumb-petroleo-600/50 scrollbar-track-transparent text-gray-200 [&_strong]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_a]:text-sky-400">
           <div dangerouslySetInnerHTML={{ __html: html || '' }} />
         </div>
         {footer && (
