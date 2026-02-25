@@ -54,8 +54,8 @@ export function Layout({ children }: LayoutProps) {
   }, [profile?.role, (profile as any)?.company_id]);
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-emerald-100 via-teal-50 to-slate-100
-      bg-[radial-gradient(600px_at_10%_20%,rgba(15,118,110,0.12)_0,transparent_60%),radial-gradient(800px_at_90%_10%,rgba(2,132,199,0.12)_0,transparent_60%)]">
+    <div className="min-h-screen relative bg-gradient-to-br from-gray-900 via-petroleo-950 to-gray-900 text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,rgba(14,165,233,0.15),transparent_40%),radial-gradient(circle_at_80%_15%,rgba(168,85,247,0.15),transparent_40%)] pointer-events-none" />
       <Sidebar />
       <Header />
       <main

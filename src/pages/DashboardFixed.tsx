@@ -17,20 +17,20 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 
 const STATUS_COLORS = {
-  received: '#006D77',
-  under_analysis: '#F59E0B',
-  under_investigation: '#EF4444',
-  waiting_info: '#8B5CF6',
-  corporate_approval: '#10B981',
-  approved: '#059669',
-  rejected: '#6B7280',
+  received: '#0ea5e9', // Sky 500
+  under_analysis: '#f59e0b', // Amber 500
+  under_investigation: '#ef4444', // Red 500
+  waiting_info: '#8b5cf6', // Violet 500
+  corporate_approval: '#10b981', // Emerald 500
+  approved: '#059669', // Emerald 600
+  rejected: '#64748b', // Slate 500
 };
 
 const RISK_COLORS = {
-  low: '#10B981',
-  moderate: '#F59E0B',
-  high: '#EF4444',
-  critical: '#DC2626',
+  low: '#10b981',
+  moderate: '#f59e0b',
+  high: '#ef4444',
+  critical: '#dc2626',
 };
 
 export function Dashboard() {
@@ -356,7 +356,7 @@ export function Dashboard() {
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-petroleo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
       </div>
     );
   }
@@ -365,8 +365,8 @@ export function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 leading-tight truncate">Painel Geral de Denúncias</h1>
-          <p className="mt-2 sm:mt-1 text-sm text-gray-600">
+          <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight truncate">Painel Geral de Denúncias</h1>
+          <p className="mt-2 sm:mt-1 text-sm text-gray-300">
             {profile?.role === 'user'
               ? 'Visualize indicadores, status e tendências das denúncias registradas por você no nosso sistema.'
               : 'Visualize indicadores, status e tendências das denúncias registradas no sistema.'}
@@ -375,7 +375,7 @@ export function Dashboard() {
         <div className="grid grid-cols-2 sm:auto-cols-max sm:grid-flow-col gap-x-6 gap-y-3">
           {profile?.role === 'admin' && (
             <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
-              <span className="text-sm text-gray-600">Empresas</span>
+              <span className="text-sm text-gray-300">Empresas</span>
               <div
                 className="relative"
                 tabIndex={0}
@@ -388,25 +388,26 @@ export function Dashboard() {
               >
                 <button
                   type="button"
-                  className="text-sm border border-gray-300 rounded-md bg-white px-3 py-2 min-w-[220px] max-w-[260px] text-left focus:outline-none focus:ring-1 focus:ring-petroleo-600 focus:border-petroleo-600"
+                  className="text-sm border border-white/20 rounded-md bg-white/10 text-white px-3 py-2 min-w-[220px] max-w-[260px] text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 hover:bg-white/20 transition-colors"
                   onClick={() => setCompaniesOpen((v) => !v)}
                 >
                   {selectedCompaniesLabel}
                 </button>
                 {companiesOpen && (
-                  <div className="absolute right-0 z-10 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-2 max-h-64 overflow-auto">
-                    <label className="flex items-center gap-2 px-2 py-1 cursor-pointer">
+                  <div className="absolute right-0 z-10 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-md shadow-lg p-2 max-h-64 overflow-auto">
+                    <label className="flex items-center gap-2 px-2 py-1 cursor-pointer text-gray-200 hover:bg-slate-700 rounded">
                       <input
                         type="checkbox"
                         checked={selectedCompanies.length === 0}
                         onChange={() => setSelectedCompanies([])}
+                        className="rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
                       />
                       <span className="text-sm">Todas as Empresas</span>
                     </label>
                     {companies.map((c) => {
                       const checked = selectedCompanies.includes(c.id);
                       return (
-                        <label key={c.id} className="flex items-center gap-2 px-2 py-1 cursor-pointer">
+                        <label key={c.id} className="flex items-center gap-2 px-2 py-1 cursor-pointer text-gray-200 hover:bg-slate-700 rounded">
                           <input
                             type="checkbox"
                             checked={checked}
@@ -418,6 +419,7 @@ export function Dashboard() {
                                 setSelectedCompanies(selectedCompanies.filter(id => id !== c.id));
                               }
                             }}
+                            className="rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
                           />
                           <span className="text-sm">{c.name}</span>
                         </label>
@@ -429,9 +431,9 @@ export function Dashboard() {
             </div>
           )}
           <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
-            <span className="text-sm text-gray-600">Período</span>
+            <span className="text-sm text-gray-300">Período</span>
             <select
-              className="text-sm border border-gray-300 rounded-md bg-white px-3 py-2 focus:outline-none focus:ring-1 focus:ring-petroleo-600 focus:border-petroleo-600"
+              className="text-sm border border-white/20 rounded-md bg-white/10 text-white px-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 [&>option]:bg-slate-800 [&>option]:text-white hover:bg-white/20 transition-colors"
               value={periodo}
               onChange={(e) => setPeriodo(e.target.value as any)}
             >
@@ -446,18 +448,18 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden rounded-2xl shadow-lg transition-all hover:bg-white/10 hover:shadow-sky-500/10 hover:border-white/20 group">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <FileText className="h-6 w-6 text-petroleo-600" />
+              <div className="flex-shrink-0 p-3 bg-sky-500/10 rounded-xl group-hover:bg-sky-500/20 transition-colors">
+                <FileText className="h-6 w-6 text-sky-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-gray-400 truncate">
                     Total de Denúncias
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-bold text-white mt-1">
                     {totalReports}
                   </dd>
                 </dl>
@@ -466,20 +468,20 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden rounded-2xl shadow-lg transition-all hover:bg-white/10 hover:shadow-red-500/10 hover:border-white/20 group">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 p-3 bg-red-500/10 rounded-xl group-hover:bg-red-500/20 transition-colors">
                 {profile?.role === 'user' 
-                  ? <MessageSquare className="h-6 w-6 text-petroleo-600" /> 
-                  : <AlertTriangle className="h-6 w-6 text-red-600" />}
+                  ? <MessageSquare className="h-6 w-6 text-sky-400" /> 
+                  : <AlertTriangle className="h-6 w-6 text-red-400" />}
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-gray-400 truncate">
                     {profile?.role === 'user' ? 'Denúncias Comentadas' : 'Alto Risco'}
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-bold text-white mt-1">
                     {profile?.role === 'user' ? commentedOpenReports : highRiskReports}
                   </dd>
                 </dl>
@@ -488,20 +490,20 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden rounded-2xl shadow-lg transition-all hover:bg-white/10 hover:shadow-emerald-500/10 hover:border-white/20 group">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 p-3 bg-emerald-500/10 rounded-xl group-hover:bg-emerald-500/20 transition-colors">
                 {profile?.role === 'user' 
-                  ? <BadgeCheck className="h-6 w-6 text-green-600" /> 
-                  : <AlertOctagon className="h-6 w-6 text-red-700" />}
+                  ? <BadgeCheck className="h-6 w-6 text-emerald-400" /> 
+                  : <AlertOctagon className="h-6 w-6 text-rose-500" />}
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-gray-400 truncate">
                     {profile?.role === 'user' ? '% Denúncias Dentro do SLA' : 'Risco Crítico'}
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-bold text-white mt-1">
                     {profile?.role === 'user' ? `${calcUserSlaWithinPercent()}%` : criticalRiskReports}
                   </dd>
                 </dl>
@@ -510,18 +512,18 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden rounded-2xl shadow-lg transition-all hover:bg-white/10 hover:shadow-amber-500/10 hover:border-white/20 group">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Clock className="h-6 w-6 text-yellow-600" />
+              <div className="flex-shrink-0 p-3 bg-amber-500/10 rounded-xl group-hover:bg-amber-500/20 transition-colors">
+                <Clock className="h-6 w-6 text-amber-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-gray-400 truncate">
                     Pendentes
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-bold text-white mt-1">
                     {pendingReports}
                   </dd>
                 </dl>
@@ -530,18 +532,18 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden rounded-2xl shadow-lg transition-all hover:bg-white/10 hover:shadow-emerald-500/10 hover:border-white/20 group">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="flex-shrink-0 p-3 bg-emerald-500/10 rounded-xl group-hover:bg-emerald-500/20 transition-colors">
+                <CheckCircle className="h-6 w-6 text-emerald-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-gray-400 truncate">
                     Concluídas
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-bold text-white mt-1">
                     {approvedReports}
                   </dd>
                 </dl>
@@ -552,36 +554,36 @@ export function Dashboard() {
 
       {profile?.role !== 'user' && (
         <>
-        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden rounded-2xl shadow-lg transition-all hover:bg-white/10 hover:shadow-red-500/10 hover:border-white/20 group">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+              <div className="flex-shrink-0 p-3 bg-red-500/10 rounded-xl group-hover:bg-red-500/20 transition-colors">
+                <AlertTriangle className="h-6 w-6 text-red-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">SLA Excedido</dt>
-                  <dd className="text-lg font-medium text-gray-900">{calcSlaExceededPercent()}%</dd>
+                  <dt className="text-sm font-medium text-gray-400 truncate">SLA Excedido</dt>
+                  <dd className="text-lg font-bold text-white mt-1">{calcSlaExceededPercent()}%</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 overflow-hidden rounded-2xl ring-1 ring-white/40 border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden rounded-2xl shadow-lg transition-all hover:bg-white/10 hover:shadow-sky-500/10 hover:border-white/20 group">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <BarChart3 className="h-6 w-6 text-petroleo-600" />
+              <div className="flex-shrink-0 p-3 bg-sky-500/10 rounded-xl group-hover:bg-sky-500/20 transition-colors">
+                <BarChart3 className="h-6 w-6 text-sky-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-gray-400 truncate">
                     {profile?.role === 'corporate_manager' || profile?.role === 'approver_manager'
                       ? 'Status Minha Empresa'
                       : 'Empresas Ativas'}
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-bold text-white mt-1">
                     {profile?.role === 'corporate_manager' || profile?.role === 'approver_manager'
                       ? (myCompanyStatus ?? '—')
                       : activeCompanies}
@@ -592,48 +594,48 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 overflow-hidden shadow-2xl ring-1 ring-black/10 border border-white/30 rounded-2xl">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden rounded-2xl shadow-lg transition-all hover:bg-white/10 hover:shadow-sky-500/10 hover:border-white/20 group">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Users className="h-6 w-6 text-petroleo-600" />
+              <div className="flex-shrink-0 p-3 bg-sky-500/10 rounded-xl group-hover:bg-sky-500/20 transition-colors">
+                <Users className="h-6 w-6 text-sky-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Usuários Ativos</dt>
-                  <dd className="text-lg font-medium text-gray-900">{activeUsers}</dd>
+                  <dt className="text-sm font-medium text-gray-400 truncate">Usuários Ativos</dt>
+                  <dd className="text-lg font-bold text-white mt-1">{activeUsers}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-md supports-[backdrop-filter]:bg-white/50 overflow-hidden shadow-2xl ring-1 ring-black/10 border border-white/30 rounded-2xl">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden rounded-2xl shadow-lg transition-all hover:bg-white/10 hover:shadow-gray-500/10 hover:border-white/20 group">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="h-6 w-6 text-gray-600" />
+              <div className="flex-shrink-0 p-3 bg-gray-500/10 rounded-xl group-hover:bg-gray-500/20 transition-colors">
+                <AlertTriangle className="h-6 w-6 text-gray-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Rejeitadas</dt>
-                  <dd className="text-lg font-medium text-gray-900">{rejectedPercent}%</dd>
+                  <dt className="text-sm font-medium text-gray-400 truncate">Rejeitadas</dt>
+                  <dd className="text-lg font-bold text-white mt-1">{rejectedPercent}%</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 overflow-hidden shadow-lg ring-1 ring-black/5 rounded-2xl">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden rounded-2xl shadow-lg transition-all hover:bg-white/10 hover:shadow-emerald-500/10 hover:border-white/20 group">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+              <div className="flex-shrink-0 p-3 bg-emerald-500/10 rounded-xl group-hover:bg-emerald-500/20 transition-colors">
+                <TrendingUp className="h-6 w-6 text-emerald-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Eficiência</dt>
-                  <dd className="text-lg font-medium text-gray-900">{efficiencyPercent}%</dd>
+                  <dt className="text-sm font-medium text-gray-400 truncate">Eficiência</dt>
+                  <dd className="text-lg font-bold text-white mt-1">{efficiencyPercent}%</dd>
                 </dl>
               </div>
             </div>
@@ -645,43 +647,45 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/40 border border-white/30">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Denúncias por Status</h3>
-          <div className="h-64">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-lg">
+          <h3 className="text-lg font-medium text-white mb-6">Denúncias por Status</h3>
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={getStatusCounts()}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  nameKey="status"
-                  label={({ name, value, percent }: any) => `${name}: ${value} (${Math.round(percent * 100)}%)`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="count"
-                >
+              <BarChart data={getStatusCounts()} layout="vertical" margin={{ left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
+                <XAxis type="number" stroke="#94a3b8" tick={{fill: '#cbd5e1'}} axisLine={{stroke: '#475569'}} tickLine={false} />
+                <YAxis type="category" dataKey="status" width={120} stroke="#94a3b8" tick={{fill: '#cbd5e1'}} axisLine={{stroke: '#475569'}} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc', borderRadius: '0.5rem' }}
+                  itemStyle={{ color: '#f8fafc' }}
+                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                />
+                <Bar dataKey="count" fill="#334155" radius={[0, 4, 4, 0]}>
                   {getStatusCounts().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.statusKey as ReportStatus]} />
+                    <Cell key={`hcell-${index}`} fill={STATUS_COLORS[entry.statusKey as ReportStatus]} stroke="rgba(255,255,255,0.1)" />
                   ))}
-                </Pie>
-                <Tooltip formatter={(value: any, _name: any, props: any) => [value, props?.payload?.status || 'TT']} />
-              </PieChart>
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/40 border border-white/30">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Denúncias por Nível de Risco</h3>
-            <div className="h-64">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-lg font-medium text-white mb-6">Denúncias por Nível de Risco</h3>
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={getRiskCounts()}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="risk" />
-                  <YAxis />
-                  <Tooltip formatter={(value: any) => [value, 'TT']} />
-                  <Bar dataKey="count" fill="#006D77">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                  <XAxis dataKey="risk" stroke="#94a3b8" tick={{fill: '#cbd5e1'}} axisLine={{stroke: '#475569'}} tickLine={false} />
+                  <YAxis stroke="#94a3b8" tick={{fill: '#cbd5e1'}} axisLine={{stroke: '#475569'}} tickLine={false} />
+                  <Tooltip 
+                    formatter={(value: any) => [value, 'TT']}
+                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc', borderRadius: '0.5rem' }}
+                    itemStyle={{ color: '#f8fafc' }}
+                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                  />
+                  <Bar dataKey="count" fill="#0ea5e9" radius={[4, 4, 0, 0]}>
                     {getRiskCounts().map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={RISK_COLORS[entry.riskKey as RiskLevel]} />
+                      <Cell key={`cell-${index}`} fill={RISK_COLORS[entry.riskKey as RiskLevel]} stroke="rgba(255,255,255,0.1)" />
                     ))}
                   </Bar>
                 </BarChart>
@@ -691,55 +695,40 @@ export function Dashboard() {
         
       </div>
 
-      {/* Adicionais: barras horizontais por Status e linha de tendência mensal */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/40 border border-white/30">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Status (Horizontal)</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={getStatusCounts()} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis type="category" dataKey="status" width={120} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#334155">
-                  {getStatusCounts().map((entry, index) => (
-                    <Cell key={`hcell-${index}`} fill={STATUS_COLORS[entry.statusKey as ReportStatus]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        {getMonthlyData().length > 0 && (
-          <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/40 border border-white/30">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Tendência Mensal (Linha)</h3>
-            <div className="h-64">
+      {/* Adicionais: linha de tendência mensal */}
+      {getMonthlyData().length > 0 && (
+        <div className="grid grid-cols-1 gap-6">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-lg font-medium text-white mb-6">Tendência Mensal (Linha)</h3>
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={getMonthlyData()}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="count" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                  <XAxis dataKey="month" stroke="#94a3b8" tick={{fill: '#cbd5e1'}} axisLine={{stroke: '#475569'}} tickLine={false} />
+                  <YAxis stroke="#94a3b8" tick={{fill: '#cbd5e1'}} axisLine={{stroke: '#475569'}} tickLine={false} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc', borderRadius: '0.5rem' }}
+                    itemStyle={{ color: '#f8fafc' }}
+                  />
+                  <Legend wrapperStyle={{ color: '#94a3b8' }} />
+                  <Line type="monotone" dataKey="count" stroke="#38bdf8" strokeWidth={3} dot={{ r: 4, fill: '#38bdf8', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {isUser && (
         <div className="grid grid-cols-1 gap-6">
-          <div className="bg-white/25 backdrop-blur-lg backdrop-saturate-150 supports-[backdrop-filter]:bg-white/15 p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/40 border border-white/30">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Últimos Comentários</h3>
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-lg font-medium text-white mb-4">Últimos Comentários</h3>
             <ul className="space-y-3">
               {getLatestComments().length > 0 ? (
                 getLatestComments().map((c: any, idx: number) => (
-                  <li key={idx} className="border border-gray-200 rounded-xl p-3">
-                    <div className="text-xs text-gray-600">Denúncia “{c.report_title || c.report_id}” • {new Date(c.created_at).toLocaleString('pt-BR')}</div>
-                    <div className="text-sm text-gray-900 mt-1">{c.content}</div>
+                  <li key={idx} className="border border-white/10 bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-colors">
+                    <div className="text-xs text-gray-400">Denúncia “{c.report_title || c.report_id}” • {new Date(c.created_at).toLocaleString('pt-BR')}</div>
+                    <div className="text-sm text-gray-200 mt-1">{c.content}</div>
                   </li>
                 ))
               ) : (
