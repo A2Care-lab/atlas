@@ -7,6 +7,7 @@ import { Shield, Copy, Check, QrCode, AlertCircle, Info } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import MessageModal from '../components/MessageModal';
 import { deriveAccessTokenFromLinkToken } from '../utils/accessToken';
+import { trackFunnelEvent } from '../lib/analytics';
 import { ReportForm } from './ReportForm';
 import { FloatingWhatsAppButton } from '../components/FloatingWhatsAppButton';
 import { SupportChatbot } from '../components/SupportChatbot';
@@ -50,6 +51,12 @@ export function NewReport() {
         email: (profile as any)?.email || null,
         company_id: (profile as any)?.company_id || null,
       });
+      try {
+        await trackFunnelEvent('link_generated', newToken, {
+          company_id: (profile as any)?.company_id || null,
+          generated_by_user_id: (profile as any)?.id || null,
+        });
+      } catch {}
       setToken(access);
       setReportUrl(url);
     } catch (err) {

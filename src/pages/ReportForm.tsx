@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../lib/supabase';
@@ -10,6 +10,7 @@ import { sendEmail, generateReportCreatedEmail } from '../utils/email';
 import MessageModal from '../components/MessageModal';
 import { deriveAccessTokenFromLinkToken } from '../utils/accessToken';
 import { useAuth } from '../hooks/useAuth';
+import { trackFunnelEvent } from '../lib/analytics';
 
 export function ReportForm({ tokenOverride, accessOverride, onSubmitted }: { tokenOverride?: string; accessOverride?: string; onSubmitted?: (protocol: string) => void }) {
   const routeParams = useParams<{ token: string }>();
@@ -26,6 +27,7 @@ export function ReportForm({ tokenOverride, accessOverride, onSubmitted }: { tok
   const [originEmail, setOriginEmail] = useState<string | null>(null);
   const [originCompanyId, setOriginCompanyId] = useState<string | null>(null);
   const [originFullName, setOriginFullName] = useState<string>('');
+  const clickedTrackedRef = useRef(false);
 
   // Form data
   const [identify, setIdentify] = useState<boolean | null>(null);
@@ -156,6 +158,14 @@ export function ReportForm({ tokenOverride, accessOverride, onSubmitted }: { tok
             const nm = (((mp.data as any)?.email) || '').trim();
             if (nm) setOriginFullName(nm);
           }
+          if (!clickedTrackedRef.current) {
+            clickedTrackedRef.current = true;
+            try {
+              await trackFunnelEvent('link_clicked', token!, {
+                company_id: (mp.data as any)?.company_id || null,
+              });
+            } catch {}
+          }
         }
       } catch {}
     } catch (error) {
@@ -235,6 +245,13 @@ export function ReportForm({ tokenOverride, accessOverride, onSubmitted }: { tok
         .single();
 
       if (error) throw error;
+
+      try {
+        await trackFunnelEvent('report_submitted', reportData.token, {
+          company_id: companyId,
+          generated_by_user_id: originUserId || null,
+        });
+      } catch {}
 
       // Upload de anexos
       if (attachments.length > 0 && report) {

@@ -13,7 +13,8 @@ import {
   ChevronRight,
   Menu,
   X,
-  ScrollText
+  ScrollText,
+  Ear
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Brand } from './Brand';
@@ -70,7 +71,10 @@ export function Sidebar() {
       { name: 'Nova Denúncia', href: '/new-report', icon: PlusCircle },
       { name: 'Política de Não Retaliação', href: '/politica-nao-retaliacao', icon: ScrollText },
       ...(profile?.role === 'admin' || profile?.role === 'corporate_manager' || profile?.role === 'approver_manager'
-        ? [{ name: 'Gestão de Denúncias', href: '/manage-reports', icon: Shield }]
+        ? [
+            { name: 'Gestão de Denúncias', href: '/manage-reports', icon: Shield },
+            { name: 'Silêncio Percebido', href: '/silencio-percebido', icon: Ear }
+          ]
         : []),
       ...(profile?.role === 'approver_manager' 
         ? [{ name: 'Aprovação Corporativa', href: '/corporate-approval', icon: BarChart3 }]

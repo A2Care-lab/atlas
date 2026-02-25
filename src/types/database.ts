@@ -121,3 +121,12 @@ export interface ReportReason {
   is_active: boolean;
   created_at: string;
 }
+
+export interface MonthlySilentIntentStat {
+  month_start: string;
+  company_id: string;
+  generated_by_user_id: string;
+  clicked: number;
+  not_submitted: number;
+  percent: number;
+}

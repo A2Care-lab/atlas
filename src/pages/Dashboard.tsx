@@ -46,13 +46,19 @@ export function Dashboard() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
   const [companiesOpen, setCompaniesOpen] = useState(false);
+  const [silentSeries, setSilentSeries] = useState<{ month: string; empresa: number; usuario: number }[]>([]);
 
   useEffect(() => {
     loadReports();
     loadActiveCounts();
     loadCompanies();
     loadMyCompanyStatus();
+    loadSilentIntentSeries();
   }, [profile]);
+
+  useEffect(() => {
+    loadSilentIntentSeries();
+  }, [selectedCompanies, periodo]);
 
   const loadReports = async () => {
     if (!profile) { 
@@ -201,6 +207,85 @@ export function Dashboard() {
       setMyCompanyStatus(active ? 'Ativo' : 'Inativo');
     } catch {
       setMyCompanyStatus(null);
+    }
+  };
+
+  const loadSilentIntentSeries = async () => {
+    if (!profile) return;
+    try {
+      const now = new Date();
+      const inicio = new Date(now);
+      if (periodo === '1ano') inicio.setFullYear(inicio.getFullYear() - 1);
+      if (periodo === '6meses') inicio.setMonth(inicio.getMonth() - 6);
+      if (periodo === '3meses') inicio.setMonth(inicio.getMonth() - 3);
+      if (periodo === '1mes') inicio.setMonth(inicio.getMonth() - 1);
+
+      const monthStartIso = new Date(inicio.getFullYear(), inicio.getMonth(), 1).toISOString();
+
+      let companyFilter: string[] | null = null;
+      if (profile.role === 'admin') {
+        companyFilter = selectedCompanies.length > 0 ? selectedCompanies : null;
+      } else if (profile.role === 'crm_n1') {
+        try {
+          const { data } = await supabase
+            .from('crm_n1_company_access')
+            .select('company_id')
+            .eq('user_id', profile.id);
+          const extras = (data || []).map((r: any) => r.company_id);
+          companyFilter = Array.from(new Set([...(profile.company_id ? [profile.company_id] : []), ...extras]));
+        } catch {
+          companyFilter = profile.company_id ? [profile.company_id] : [];
+        }
+      } else {
+        companyFilter = profile.company_id ? [profile.company_id] : [];
+      }
+
+      let q = supabase
+        .from('monthly_silent_intent_stats')
+        .select('month_start, company_id, generated_by_user_id, clicked, not_submitted, percent')
+        .order('month_start', { ascending: true });
+      if (periodo !== 'geral') {
+        q = q.gte('month_start', monthStartIso);
+      }
+
+      if (companyFilter && companyFilter.length > 0) {
+        q = q.in('company_id', companyFilter as any);
+      }
+
+      const { data, error } = await q;
+      if (error) {
+        setSilentSeries([]);
+        return;
+      }
+      const rows = (data as any[]) || [];
+
+      // Agrega por mês: empresa = agregado por companyFilter; usuário = somente profile.id
+      const byMonth: Record<string, { empresaClicked: number; empresaNot: number; userClicked: number; userNot: number }> = {};
+      for (const r of rows) {
+        const m = new Date(r.month_start).toLocaleDateString('pt-BR', { month: 'short' });
+        if (!byMonth[m]) byMonth[m] = { empresaClicked: 0, empresaNot: 0, userClicked: 0, userNot: 0 };
+        // Empresa: soma de todas as empresas consideradas
+        byMonth[m].empresaClicked += Number(r.clicked || 0);
+        byMonth[m].empresaNot += Number(r.not_submitted || 0);
+        // Usuário: apenas linhas do usuário gerador atual
+        if (r.generated_by_user_id && r.generated_by_user_id === profile.id) {
+          byMonth[m].userClicked += Number(r.clicked || 0);
+          byMonth[m].userNot += Number(r.not_submitted || 0);
+        }
+      }
+
+      const series = Object.keys(byMonth).map((m) => {
+        const v = byMonth[m];
+        const emp = v.empresaClicked > 0 ? Math.round((v.empresaNot * 10000) / v.empresaClicked) / 100 : 0;
+        const usr = v.userClicked > 0 ? Math.round((v.userNot * 10000) / v.userClicked) / 100 : 0;
+        return { month: m, empresa: emp, usuario: usr };
+      });
+      // Ordena por calendário aproximado usando índice do mês em pt-BR; fallback por ordem de iteração
+      const order = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
+      series.sort((a, b) => order.indexOf(a.month) - order.indexOf(b.month));
+      setSilentSeries(series);
+    } catch {
+      setSilentSeries([]);
     }
   };
 
@@ -748,8 +833,8 @@ export function Dashboard() {
         
       </div>
 
-      {/* Gráficos adicionais: barras horizontais por Status e linha de tendência */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Gráficos adicionais: barras horizontais por Status, tendência mensal e intenção silenciosa */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 p-6 rounded-2xl shadow-lg ring-1 ring-black/5 min-w-0 min-h-0">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Status (Horizontal)</h3>
           <ChartContainer className="h-64">
@@ -768,11 +853,11 @@ export function Dashboard() {
             </ResponsiveContainer>
           </ChartContainer>
         </div>
-        {getMonthlyData().length > 0 && (
-          <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 p-6 rounded-2xl shadow-lg ring-1 ring-black/5 min-w-0 min-h-0">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Tendência Mensal (Linha)</h3>
-            <ChartContainer className="h-64">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 p-6 rounded-2xl shadow-lg ring-1 ring-black/5 min-w-0 min-h-0">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Tendência Mensal (Linha)</h3>
+          <ChartContainer className="h-64">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              {getMonthlyData().length > 0 ? (
                 <LineChart data={getMonthlyData()}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
@@ -781,10 +866,32 @@ export function Dashboard() {
                   <Legend />
                   <Line type="monotone" dataKey="count" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </div>
-        )}
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">Sem dados</div>
+              )}
+            </ResponsiveContainer>
+          </ChartContainer>
+        </div>
+        <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 p-6 rounded-2xl shadow-lg ring-1 ring-black/5 min-w-0 min-h-0">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Índice de Intenção Silenciosa (Linha)</h3>
+          <ChartContainer className="h-64">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              {silentSeries.length > 0 ? (
+                <LineChart data={silentSeries}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis domain={[0, 100]} tickFormatter={(v)=>`${v}%`} />
+                  <Tooltip formatter={(value:any)=>[`${value}%`, '']} />
+                  <Legend />
+                  <Line type="monotone" dataKey="empresa" name="Empresa" stroke="#8B5CF6" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="usuario" name="Usuário" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3 }} />
+                </LineChart>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">Sem dados para o período</div>
+              )}
+            </ResponsiveContainer>
+          </ChartContainer>
+        </div>
       </div>
 
       {isUser && (

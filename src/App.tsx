@@ -12,6 +12,7 @@ import { MyReports } from './pages/MyReports';
 import { NewReport } from './pages/NewReport';
 import { ReportForm } from './pages/ReportForm';
 import { ManageReports } from './pages/ManageReports';
+import { SilencioPercebido } from './pages/SilencioPercebido';
 import { CorporateApproval } from './pages/CorporateApproval';
 import { Logout } from './pages/Logout';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
@@ -211,6 +212,16 @@ function AppRoutes() {
         <ProtectedRoute>
           <Layout>
             <ManageReports />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/silencio-percebido',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <SilencioPercebido />
           </Layout>
         </ProtectedRoute>
       ),
