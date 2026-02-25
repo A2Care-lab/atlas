@@ -13,6 +13,8 @@ export function Brand({ variant = 'teal', withText = true, className = '' }: Bra
       : variant === 'black'
       ? BRAND_LOGO_URLS.black_with_text
       : BRAND_LOGO_URLS.teal_with_text
+    : variant === 'white'
+    ? BRAND_LOGO_URLS.white_icon_only
     : BRAND_LOGO_URLS.teal_icon_only
 
   return (

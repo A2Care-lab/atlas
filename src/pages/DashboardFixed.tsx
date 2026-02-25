@@ -15,6 +15,7 @@ import {
   BadgeCheck
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
+import ChartContainer from '../components/ChartContainer'
 
 const STATUS_COLORS = {
   received: '#0ea5e9', // Sky 500
@@ -647,10 +648,10 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-lg">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-lg min-w-0">
           <h3 className="text-lg font-medium text-white mb-6">Denúncias por Status</h3>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer className="h-72">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart data={getStatusCounts()} layout="vertical" margin={{ left: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
                 <XAxis type="number" stroke="#94a3b8" tick={{fill: '#cbd5e1'}} axisLine={{stroke: '#475569'}} tickLine={false} />
@@ -667,12 +668,12 @@ export function Dashboard() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </ChartContainer>
         </div>
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-lg">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-lg min-w-0 min-h-0">
             <h3 className="text-lg font-medium text-white mb-6">Denúncias por Nível de Risco</h3>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
+            <ChartContainer className="h-72">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <BarChart data={getRiskCounts()}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
                   <XAxis dataKey="risk" stroke="#94a3b8" tick={{fill: '#cbd5e1'}} axisLine={{stroke: '#475569'}} tickLine={false} />
@@ -690,7 +691,7 @@ export function Dashboard() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            </ChartContainer>
           </div>
         
       </div>
@@ -698,10 +699,10 @@ export function Dashboard() {
       {/* Adicionais: linha de tendência mensal */}
       {getMonthlyData().length > 0 && (
         <div className="grid grid-cols-1 gap-6">
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-lg">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-lg min-w-0 min-h-0">
             <h3 className="text-lg font-medium text-white mb-6">Tendência Mensal (Linha)</h3>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
+            <ChartContainer className="h-72">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <LineChart data={getMonthlyData()}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
                   <XAxis dataKey="month" stroke="#94a3b8" tick={{fill: '#cbd5e1'}} axisLine={{stroke: '#475569'}} tickLine={false} />
@@ -714,7 +715,7 @@ export function Dashboard() {
                   <Line type="monotone" dataKey="count" stroke="#38bdf8" strokeWidth={3} dot={{ r: 4, fill: '#38bdf8', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+            </ChartContainer>
           </div>
         </div>
       )}

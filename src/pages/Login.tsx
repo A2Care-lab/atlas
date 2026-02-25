@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { Brand } from '../components/Brand';
+import AtlasLogo from '../components/AtlasLogo';
 import { HtmlModal } from '../components/HtmlModal';
 import InputModal from '../components/InputModal';
 import MessageModal from '../components/MessageModal';
@@ -27,8 +27,9 @@ export function Login() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-petroleo-600"></div>
+      <div className="min-h-screen relative bg-gradient-to-br from-gray-900 via-petroleo-950 to-gray-900 flex items-center justify-center">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,rgba(14,165,233,0.15),transparent_40%),radial-gradient(circle_at_80%_15%,rgba(168,85,247,0.15),transparent_40%)] pointer-events-none" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
       </div>
     );
   }
@@ -148,56 +149,58 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen relative bg-gradient-to-br from-gray-900 via-petroleo-950 to-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,rgba(14,165,233,0.15),transparent_40%),radial-gradient(circle_at_80%_15%,rgba(168,85,247,0.15),transparent_40%)] pointer-events-none" />
+      <div className="max-w-md w-full space-y-8 bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl relative z-10">
         <div className="text-center">
-          <div className="flex justify-center">
-            <Brand variant="teal" withText className="h-20 w-auto" />
+          <div className="flex flex-col items-center justify-center gap-3">
+            <AtlasLogo className="h-16 w-16 text-white" />
+            <span className="text-2xl font-bold text-white tracking-widest">ATLAS</span>
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-3xl font-extrabold text-white">
             Integridade Corporativa
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-gray-400">
             Acesse o sistema
           </p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
-            <div>
+            <div className="relative">
               <label htmlFor="email" className="sr-only">
                 Email
               </label>
-              <div className="relative">
+              <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-gray-500 group-focus-within:text-petroleo-500 transition-colors" />
                 </div>
                 <input
                   id="email"
                   name="email"
                   type="email"
                   required
-                  className="appearance-none rounded-none relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-petroleo-500 focus:border-petroleo-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-t-lg relative block w-full pl-10 pr-3 py-3 border border-white/10 placeholder-gray-500 text-white bg-white/5 focus:outline-none focus:ring-1 focus:ring-petroleo-500 focus:border-petroleo-500 focus:z-10 sm:text-sm transition-colors hover:bg-white/10"
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </div>
-            <div>
+            <div className="relative">
               <label htmlFor="password" className="sr-only">
                 Senha
               </label>
-              <div className="relative">
+              <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-gray-500 group-focus-within:text-petroleo-500 transition-colors" />
                 </div>
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
-                  className="appearance-none rounded-none relative block w-full pl-10 pr-12 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-petroleo-500 focus:border-petroleo-500 sm:text-sm"
+                  className="appearance-none rounded-b-lg relative block w-full pl-10 pr-12 py-3 border border-white/10 border-t-0 placeholder-gray-500 text-white bg-white/5 focus:outline-none focus:ring-1 focus:ring-petroleo-500 focus:border-petroleo-500 sm:text-sm transition-colors hover:bg-white/10"
                   placeholder="Senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -205,7 +208,7 @@ export function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-petroleo-600 z-20"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-petroleo-500 z-20 transition-colors"
                   aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 >
                   {showPassword ? (
@@ -219,11 +222,11 @@ export function Login() {
           </div>
 
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
+            <div className="rounded-md bg-red-500/10 border border-red-500/20 p-4">
               <div className="flex">
                 <AlertCircle className="h-5 w-5 text-red-400" />
                 <div className="ml-3">
-                  <p className="text-sm text-red-800">{error}</p>
+                  <p className="text-sm text-red-300">{error}</p>
                 </div>
               </div>
             </div>
@@ -233,7 +236,7 @@ export function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-petroleo-600 hover:bg-petroleo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-petroleo-600 hover:bg-petroleo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-petroleo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-petroleo-500/20"
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
             </button>
@@ -242,7 +245,7 @@ export function Login() {
           <div className="text-center">
             <a
               href="#"
-              className="text-sm text-petroleo-600 hover:text-petroleo-500"
+              className="text-sm text-petroleo-400 hover:text-petroleo-300 transition-colors"
               onClick={(e) => {
                 e.preventDefault();
                 setResetOpen(true);
@@ -256,13 +259,13 @@ export function Login() {
         <div className="mt-8 flex items-center justify-center gap-3">
           <button
             onClick={handlePrivacyClick}
-            className="px-3 py-1 rounded-lg border border-petroleo-600 text-petroleo-700 hover:bg-petroleo-50 focus:outline-none focus:ring-2 focus:ring-petroleo-300"
+            className="px-3 py-1 rounded-lg border border-white/20 text-gray-400 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-petroleo-500 transition-all text-sm"
           >
             Política de Privacidade
           </button>
           <button
             onClick={handleTermsClick}
-            className="px-3 py-1 rounded-lg border border-petroleo-600 text-petroleo-700 hover:bg-petroleo-50 focus:outline-none focus:ring-2 focus:ring-petroleo-300"
+            className="px-3 py-1 rounded-lg border border-white/20 text-gray-400 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-petroleo-500 transition-all text-sm"
           >
             Termos de Uso
           </button>

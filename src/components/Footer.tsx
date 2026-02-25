@@ -119,10 +119,10 @@ export function Footer() {
   }
 
   return (
-    <footer className="bg-slate-900/50 backdrop-blur-md border-t border-white/10 mt-auto">
-      <div className="px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between text-sm text-gray-400">
-        <span>© {new Date().getFullYear()} ATLAS</span>
-        <div className="flex items-center gap-3">
+    <footer className="bg-white/5 backdrop-blur-md border-t border-white/10 mt-auto relative z-10">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between text-sm text-gray-400">
+        <span>© {new Date().getFullYear()} ATLAS. Todos os direitos reservados.</span>
+        <div className="flex items-center gap-4 mt-4 sm:mt-0">
           <button
             type="button"
             onClick={handlePrivacyClick}

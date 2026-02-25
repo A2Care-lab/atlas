@@ -123,15 +123,15 @@ export function UserProfileModal({ profile, open, onClose, onSave, anchorRef }: 
       <div aria-modal="true" role="dialog" className="fixed inset-0 z-[1000]" onClick={onClose}>
         <div
         ref={containerRef}
-        className="fixed bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-2xl border border-slate-700 text-white"
+        className="fixed bg-[#0f172a] rounded-xl shadow-2xl border border-white/10 text-white"
         style={{ top: layout.top, left: layout.left, width: layout.width }}
         onClick={(e) => e.stopPropagation()}
         >
         <div
-          className="absolute bg-slate-900/95 backdrop-blur-sm rotate-45 border-t border-l border-slate-700"
+          className="absolute bg-[#0f172a] rotate-45 border-t border-l border-white/10"
           style={{ top: -6, left: layout.arrowLeft, width: 12, height: 12 }}
         />
-        <div className="flex items-center justify-between p-4 border-b border-slate-700">
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
           <h2 className="text-base font-semibold text-white">Perfil do Usuário</h2>
           <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
             <X className="h-4 w-4" />
@@ -170,7 +170,7 @@ export function UserProfileModal({ profile, open, onClose, onSave, anchorRef }: 
               value={form.full_name}
               onChange={handleChange}
               disabled={!editing}
-              className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             />
           </div>
           <div className="space-y-1">
@@ -179,7 +179,7 @@ export function UserProfileModal({ profile, open, onClose, onSave, anchorRef }: 
               type="email"
               value={profile?.email || ''}
               disabled
-              className="w-full rounded-md border border-slate-600 bg-slate-900/50 px-3 py-2 text-sm text-gray-400 cursor-not-allowed"
+              className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-400 cursor-not-allowed"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -191,7 +191,7 @@ export function UserProfileModal({ profile, open, onClose, onSave, anchorRef }: 
                 value={form.phone}
                 onChange={handleChange}
                 disabled={!editing}
-                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               />
             </div>
             <div className="space-y-1">
@@ -201,7 +201,7 @@ export function UserProfileModal({ profile, open, onClose, onSave, anchorRef }: 
                 value={form.department}
                 onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))}
                 disabled={!editing}
-                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors [&>option]:bg-slate-800"
+                className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors [&>option]:bg-slate-800"
               >
                 <option value="">Selecionar...</option>
                 {areas.filter((a) => a.status === 'active').map((a) => (
@@ -216,13 +216,13 @@ export function UserProfileModal({ profile, open, onClose, onSave, anchorRef }: 
               type="text"
               value={companyName || ''}
               disabled
-              className="w-full rounded-md border border-slate-600 bg-slate-900/50 px-3 py-2 text-sm text-gray-400 cursor-not-allowed"
+              className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-400 cursor-not-allowed"
             />
           </div>
           <div className="text-xs text-gray-500">Função: <span className="font-medium text-sky-400">{getUserRoleLabel(profile?.role || '') || '—'}</span></div>
         </div>
-          <div className="p-4 flex justify-end gap-2 border-t border-slate-700">
-            <button onClick={onClose} className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm transition-colors border border-slate-600">Fechar</button>
+          <div className="p-4 flex justify-end gap-2 border-t border-white/10">
+            <button onClick={onClose} className="px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 text-white text-sm transition-colors border border-white/10">Fechar</button>
             <button onClick={handlePrimary} className="px-3 py-2 rounded-md bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium shadow-lg shadow-sky-900/20 transition-all">
               {editing ? 'Salvar' : 'Editar'}
             </button>

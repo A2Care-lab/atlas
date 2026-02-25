@@ -8,6 +8,8 @@ import QRCode from 'react-qr-code';
 import MessageModal from '../components/MessageModal';
 import { deriveAccessTokenFromLinkToken } from '../utils/accessToken';
 import { ReportForm } from './ReportForm';
+import { FloatingWhatsAppButton } from '../components/FloatingWhatsAppButton';
+import { SupportChatbot } from '../components/SupportChatbot';
 
 export function NewReport() {
   const { profile } = useAuth();
@@ -92,17 +94,17 @@ export function NewReport() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Registrar um Relato</h1>
-      </div>
-      <p className="text-sm text-gray-500">Você pode abrir uma nova denúncia de forma sigilosa e protegida.</p>
+      </div> */}
+      <p className="text-sm text-gray-400 ml-1">Você pode abrir uma nova denúncia de forma sigilosa e protegida.</p>
 
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white shadow rounded-lg relative">
-        <div className="p-6">
+      <div className="max-w-5xl mx-auto mt-8">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl relative overflow-hidden">
+        <div className="p-8">
           {profile.role === 'crm_n1' ? (
-            <div className="space-y-6">
-              <div className="absolute top-3 right-3">
+            <div className="space-y-8">
+              <div className="absolute top-4 right-4">
                 <button
                   onMouseEnter={async ()=>{
                     try {
@@ -129,19 +131,22 @@ export function NewReport() {
                       setInfoOpen(true);
                     }
                   }}
-                  className="inline-flex items-center justify-center w-7 h-7 rounded-full border border-petroleo-300 text-petroleo-700 bg-white hover:bg-petroleo-50"
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-white/20 text-sky-400 bg-white/5 hover:bg-white/10 transition-colors"
                   title="Empresas autorizadas"
                 >
                   <Info className="h-4 w-4" />
                 </button>
               </div>
               <div className="text-center">
-                <h3 className="mt-1 text-lg font-medium text-gray-900">Nova Denúncia (CRM - N1)</h3>
-                <p className="mt-2 text-sm text-gray-600">Para abrir o formulário, solicite apenas o Token de Acesso do usuário.</p>
-                <div className="mt-6">
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-2xl bg-sky-500/10 mb-6">
+                   <Shield className="h-8 w-8 text-sky-400" />
+                </div>
+                <h3 className="mt-1 text-2xl font-bold text-white">Nova Denúncia (CRM - N1)</h3>
+                <p className="mt-3 text-base text-gray-400 max-w-md mx-auto">Para abrir o formulário, solicite apenas o Token de Acesso do usuário.</p>
+                <div className="mt-8">
                   <button
                     onClick={() => setCrmOpenModal(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-petroleo-600 hover:bg-petroleo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500"
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-lg shadow-sky-900/20 text-white bg-sky-600 hover:bg-sky-500 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-sky-500"
                   >
                     Nova Denúncia
                   </button>
@@ -242,6 +247,7 @@ export function NewReport() {
                             if (error) {
                               setCrmErrorMsg('Erro ao consultar tokens pendentes. Tente novamente.');
                               setCrmErrorOpen(true);
+                              return;
                               return;
                             }
                             row = (data || [])[0] || null;
@@ -369,119 +375,122 @@ export function NewReport() {
             </div>
           ) : !token ? (
             <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-petroleo-100">
-                <Shield className="h-6 w-6 text-petroleo-600" />
+              <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-2xl bg-emerald-500/10 mb-6 group-hover:bg-emerald-500/20 transition-colors">
+                <Shield className="h-10 w-10 text-emerald-400" />
               </div>
-              <h3 className="mt-4 text-lg font-medium text-gray-900">
+              <h3 className="mt-4 text-2xl font-bold text-white">
                 Gerar Link Seguro
               </h3>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-3 text-base text-gray-400 max-w-lg mx-auto">
                 Clique no botão abaixo para gerar um link único e seguro para sua denúncia.
                 Este link conterá um token de acesso que garante a segurança do processo.
               </p>
-              <div className="mt-6">
+              <div className="mt-8">
                 <button
                   onClick={generateToken}
                   disabled={isGenerating}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-petroleo-600 hover:bg-petroleo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500 disabled:opacity-50"
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-lg shadow-emerald-900/20 text-white bg-emerald-600 hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-emerald-500 disabled:opacity-50 transition-all"
                 >
                   {isGenerating ? 'Gerando...' : 'Gerar Link de Denúncia'}
                 </button>
               </div>
             </div>
           ) : (
-            <div className="space-y-6">
-              {/* Alert informativo */}
-              <div className="bg-petroleo-50 border border-petroleo-200 rounded-md p-4">
-                <div className="flex">
-                  <AlertCircle className="h-5 w-5 text-petroleo-400 mt-0.5" />
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-petroleo-800">
-                      Importante: Mantenha este link seguro
-                    </h3>
-                    <div className="mt-2 text-sm text-petroleo-700">
-                      <p>
-                        Este link e token são únicos para sua denúncia. Você pode:
-                      </p>
-                      <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Copiar o endereço do link abaixo para abrir esse link em outra aba ou dispositivo</li>
-                        <li>Salvar o link em local seguro para preencher mais tarde</li>
-                        <li>Clicar no botão Abrir Formulário e você será direcionado para uma página externa para preencher o formulário com confidencialidade e segurança</li>
-                      </ul>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-6">
+                {/* Alert informativo */}
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                  <div className="flex">
+                    <AlertCircle className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-amber-200">
+                        Importante: Mantenha este link seguro
+                      </h3>
+                      <div className="mt-1 text-sm text-amber-200/80">
+                        <p>Este link e token são únicos. Você pode:</p>
+                        <ul className="list-disc list-inside mt-1 space-y-0.5">
+                          <li>Copiar o link para acessar depois</li>
+                          <li>Salvar o token em local seguro</li>
+                          <li>Clicar em "Abrir Formulário" para prosseguir</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Link da denúncia */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Link da Denúncia
-                </label>
-                <div className="flex rounded-md shadow-sm">
-                  <input
-                    type="text"
-                    value={reportUrl}
-                    readOnly
-                    className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-md border border-gray-300 bg-gray-50 text-gray-900 text-sm"
-                  />
+                {/* Link da denúncia */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                    Link da Denúncia
+                  </label>
+                  <div className="flex rounded-lg shadow-sm">
+                    <input
+                      type="text"
+                      value={reportUrl}
+                      readOnly
+                      className="flex-1 min-w-0 block w-full px-4 py-2.5 rounded-none rounded-l-lg border border-white/10 bg-black/20 text-white text-sm focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={copyToClipboard}
+                      className="inline-flex items-center px-4 py-2.5 border border-l-0 border-white/10 rounded-r-lg bg-white/5 text-sm text-gray-300 hover:bg-white/10 transition-colors"
+                    >
+                      {copied ? <Check className="h-5 w-5 text-emerald-400" /> : <Copy className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Token */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                    Token de Acesso
+                  </label>
+                  <div className="flex rounded-lg shadow-sm">
+                    <input
+                      type="text"
+                      value={token}
+                      readOnly
+                      className="flex-1 min-w-0 block w-full px-4 py-2.5 rounded-none rounded-l-lg border border-white/10 bg-black/20 text-white text-sm font-mono focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={copyToken}
+                      className="inline-flex items-center px-4 py-2.5 border border-l-0 border-white/10 rounded-r-lg bg-white/5 text-sm text-gray-300 hover:bg-white/10 transition-colors"
+                    >
+                      {copied ? <Check className="h-5 w-5 text-emerald-400" /> : <Copy className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    Necessário para acessar a denúncia posteriormente.
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <button
-                    type="button"
-                    onClick={copyToClipboard}
-                    className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={handleOpenForm}
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-xl shadow-lg shadow-emerald-900/20 text-white bg-emerald-600 hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-emerald-500 transition-all"
                   >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    Abrir Formulário
+                  </button>
+                  <button
+                    onClick={() => navigate('/my-reports')}
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2.5 border border-white/10 text-sm font-medium rounded-xl shadow-sm text-gray-300 bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-emerald-500 transition-all"
+                  >
+                    Minhas Denúncias
                   </button>
                 </div>
               </div>
 
-              {/* Token */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Token de Acesso
-                </label>
-                <div className="flex rounded-md shadow-sm">
-                  <input
-                    type="text"
-                    value={token}
-                    readOnly
-                    className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-md border border-gray-300 bg-gray-50 text-gray-900 text-sm font-mono"
-                  />
-                  <button
-                    type="button"
-                    onClick={copyToken}
-                    className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </button>
+              {/* QR Code Column */}
+              <div className="lg:col-span-1 flex flex-col justify-center">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-6 flex flex-col items-center text-center h-full justify-center">
+                  <div className="p-3 bg-white rounded-xl shadow-lg mb-4">
+                    <QRCode value={reportUrl} size={160} bgColor="#ffffff" fgColor="#000000" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-300">Escaneie o QR Code</p>
+                  <p className="text-xs text-gray-500 mt-1">Acesse pelo celular</p>
                 </div>
-                <p className="mt-1 text-sm text-gray-500">
-                  Você precisará deste token para acessar o formulário de denúncia
-                </p>
-              </div>
-
-              {/* QR Code */}
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-2">Ou escaneie o QR Code:</p>
-                <div className="inline-flex items-center justify-center p-3 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg">
-                  <QRCode value={reportUrl} size={128} bgColor="#f9fafb" fgColor="#111827" />
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={handleOpenForm}
-                  className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  Abrir Formulário
-                </button>
-                <button
-                  onClick={() => navigate('/my-reports')}
-                  className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500"
-                >
-                  Voltar para Minhas Denúncias
-                </button>
               </div>
 
               {/* Modal de redirecionamento */}
@@ -501,7 +510,7 @@ export function NewReport() {
                     </button>
                     <button
                       onClick={confirmRedirect}
-                      className="px-3 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+                      className="px-3 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700"
                     >
                       OK
                     </button>
@@ -513,6 +522,8 @@ export function NewReport() {
         </div>
         </div>
       </div>
+      <FloatingWhatsAppButton companyId={profile?.company_id} />
+      <SupportChatbot />
     </div>
   );
 }

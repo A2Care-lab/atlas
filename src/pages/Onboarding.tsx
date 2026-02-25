@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { HtmlModal } from '../components/HtmlModal'
-import { Brand } from '../components/Brand'
+import AtlasLogo from '../components/AtlasLogo'
 import { Eye, EyeOff } from 'lucide-react'
 import MessageModal from '../components/MessageModal'
 import { formatDate } from '../utils/format'
@@ -354,69 +354,86 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full space-y-6 bg-white p-8 rounded-lg shadow">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-petroleo-950 to-gray-900 py-12 px-4 sm:px-6 lg:px-8 selection:bg-petroleo-500/30 selection:text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,rgba(14,165,233,0.15),transparent_40%),radial-gradient(circle_at_80%_15%,rgba(168,85,247,0.15),transparent_40%)] pointer-events-none fixed" />
+      
+      <div className="max-w-2xl w-full space-y-6 bg-white/5 backdrop-blur-lg border border-white/10 p-8 rounded-2xl shadow-2xl relative z-10">
         <div className="text-center">
-          <div className="flex justify-center mb-2">
-            <Brand variant="teal" withText className="h-16 w-auto" />
+          <div className="flex flex-col items-center justify-center gap-3 mb-6">
+            <AtlasLogo className="h-16 w-16 text-white" />
+            <span className="text-2xl font-bold text-white tracking-widest">ATLAS</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">{type === 'recovery' ? 'Redefinir senha' : 'Boas vindas ao ATLAS - Integridade Corporativa.'}</h1>
-          <p className="mt-1 text-sm text-gray-600">{type === 'recovery' ? 'Defina uma nova senha para sua conta' : 'Para concluir seu cadastro, crie uma senha e aceite nossas políticas e termos.'}</p>
-          <p className="mt-1 text-xs text-gray-500">{user?.email}</p>
+          <h1 className="text-2xl font-bold text-white whitespace-nowrap">{type === 'recovery' ? 'Redefinir senha' : 'Boas vindas ao ATLAS - Integridade Corporativa.'}</h1>
+          <p className="mt-2 text-sm text-gray-400">{type === 'recovery' ? 'Defina uma nova senha para sua conta' : 'Para concluir seu cadastro, crie uma senha e aceite nossas políticas e termos.'}</p>
+          <p className="mt-1 text-xs text-gray-500 font-mono bg-white/5 inline-block px-2 py-1 rounded border border-white/5">{user?.email}</p>
         </div>
 
         <form className="space-y-4" onSubmit={submit}>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Definir senha</label>
-            <div className="relative">
+            <label className="block text-sm font-medium text-gray-300">Definir senha</label>
+            <div className="relative mt-1">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e)=>setPassword(e.target.value)}
-                className="mt-1 w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+                className="w-full pl-3 pr-12 py-2.5 bg-gray-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-petroleo-500 focus:border-transparent transition-all"
                 placeholder="Mínimo 6 caracteres"
               />
-              <button type="button" onClick={()=>setShowPassword(v=>!v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-petroleo-600" aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>
+              <button type="button" onClick={()=>setShowPassword(v=>!v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors" aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>
                 {showPassword ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}
               </button>
             </div>
-            <p className="mt-1 text-xs text-gray-600">Mínimo 6 caracteres. Deve conter letras maiúsculas, minúsculas, números e símbolos.</p>
+            <p className="mt-1.5 text-xs text-gray-400">Mínimo 6 caracteres. Deve conter letras maiúsculas, minúsculas, números e símbolos.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Confirmar senha</label>
-            <div className="relative">
+            <label className="block text-sm font-medium text-gray-300">Confirmar senha</label>
+            <div className="relative mt-1">
               <input
                 type={showConfirm ? 'text' : 'password'}
                 value={confirm}
                 onChange={(e)=>setConfirm(e.target.value)}
-                className="mt-1 w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+                className="w-full pl-3 pr-12 py-2.5 bg-gray-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-petroleo-500 focus:border-transparent transition-all"
                 placeholder={type === 'recovery' ? 'Repita a nova senha' : 'Repita a senha'}
               />
-              <button type="button" onClick={()=>setShowConfirm(v=>!v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-petroleo-600" aria-label={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}>
+              <button type="button" onClick={()=>setShowConfirm(v=>!v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors" aria-label={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}>
                 {showConfirm ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}
               </button>
             </div>
             {!!confirm && confirm !== password && (
-              <p className="mt-1 text-xs text-red-600">As senhas não coincidem.</p>
+              <p className="mt-1.5 text-xs text-red-400">As senhas não coincidem.</p>
             )}
           </div>
           {type !== 'recovery' && (
             <>
-              <div className="flex gap-3 pt-2 flex-nowrap">
-                <button type="button" onClick={openPrivacy} className="px-3 py-1 rounded-lg border border-petroleo-600 text-petroleo-700 hover:bg-petroleo-50 whitespace-nowrap shrink-0">Política de Privacidade</button>
-                <button type="button" onClick={openTerms} className="px-3 py-1 rounded-lg border border-petroleo-600 text-petroleo-700 hover:bg-petroleo-50 whitespace-nowrap shrink-0">Termos de Uso</button>
-                <button type="button" onClick={openNonRetaliation} className="px-3 py-1 rounded-lg border border-petroleo-600 text-petroleo-700 hover:bg-petroleo-50 whitespace-nowrap shrink-0">Política de Não Retaliação</button>
+              <div className="flex gap-3 pt-2 flex-wrap sm:flex-nowrap">
+                <button type="button" onClick={openPrivacy} className="flex-1 px-3 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 hover:text-white text-sm transition-colors whitespace-nowrap">Política de Privacidade</button>
+                <button type="button" onClick={openTerms} className="flex-1 px-3 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 hover:text-white text-sm transition-colors whitespace-nowrap">Termos de Uso</button>
+                <button type="button" onClick={openNonRetaliation} className="flex-1 px-3 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 hover:text-white text-sm transition-colors whitespace-nowrap">Política de Não Retaliação</button>
               </div>
-              <div className="flex items-center gap-2">
-                <input id="agree" type="checkbox" checked={agree} onChange={(e)=>setAgree(e.target.checked)} />
-                <label htmlFor="agree" className="text-xs text-gray-600">Li e concordo com a Política de Privacidade, Política de Não Retaliação e Termos de Uso</label>
+              <div className="flex items-start gap-3 pt-2">
+                <div className="flex items-center h-5">
+                  <input 
+                    id="agree" 
+                    type="checkbox" 
+                    checked={agree} 
+                    onChange={(e)=>setAgree(e.target.checked)}
+                    className="h-4 w-4 rounded border-white/10 bg-gray-900/50 text-petroleo-600 focus:ring-petroleo-500 focus:ring-offset-gray-900"
+                  />
+                </div>
+                <label htmlFor="agree" className="text-sm text-gray-400 select-none">
+                  Li e concordo com a Política de Privacidade, Política de Não Retaliação e Termos de Uso
+                </label>
               </div>
             </>
           )}
           {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+            <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">{error}</div>
           )}
-          <button type="submit" disabled={isSubmitting || (type !== 'recovery' && !agree) || (!confirm || confirm !== password)} className="w-full py-2 px-4 rounded-md bg-petroleo-600 text-white hover:bg-petroleo-700 disabled:opacity-50">
+          <button 
+            type="submit" 
+            disabled={isSubmitting || (type !== 'recovery' && !agree) || (!confirm || confirm !== password)} 
+            className="w-full py-3 px-4 rounded-lg bg-petroleo-600 text-white font-medium hover:bg-petroleo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-petroleo-900/20 hover:shadow-petroleo-500/20 mt-4"
+          >
             {isSubmitting ? (type === 'recovery' ? 'Alterando...' : 'Salvando...') : (type === 'recovery' ? 'Alterar senha' : 'Concluir cadastro')}
           </button>
         </form>

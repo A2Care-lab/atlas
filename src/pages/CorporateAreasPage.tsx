@@ -40,10 +40,10 @@ export function CorporateAreasPage() {
     return (
       <div className="p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="h-8 bg-white/10 rounded w-1/4 mb-6"></div>
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-200 rounded"></div>
+              <div key={i} className="h-12 bg-white/5 rounded"></div>
             ))}
           </div>
         </div>
@@ -59,12 +59,12 @@ export function CorporateAreasPage() {
   if (profile && userRole !== 'admin') {
     return (
       <div className="p-6">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+        <div className="bg-yellow-900/20 border border-yellow-700/30 rounded-md p-4">
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-yellow-500" />
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">Acesso restrito</h3>
-              <p className="mt-2 text-sm text-yellow-700">Apenas administradores podem gerenciar Áreas Corporativas.</p>
+              <h3 className="text-sm font-medium text-yellow-400">Acesso restrito</h3>
+              <p className="mt-2 text-sm text-yellow-300">Apenas administradores podem gerenciar Áreas Corporativas.</p>
             </div>
           </div>
         </div>
@@ -127,8 +127,8 @@ export function CorporateAreasPage() {
 
   const getStatusBadge = (status: 'active' | 'paused') => {
     return status === 'active' 
-      ? <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Ativa</span>
-      : <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Pausada</span>;
+      ? <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Ativa</span>
+      : <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700/50 text-gray-300 border border-gray-600">Pausada</span>;
   };
 
   const filteredAreas = areas.filter((area) => {
@@ -141,10 +141,10 @@ export function CorporateAreasPage() {
     return (
       <div className="p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="h-8 bg-white/10 rounded w-1/4 mb-6"></div>
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-200 rounded"></div>
+              <div key={i} className="h-12 bg-white/5 rounded"></div>
             ))}
           </div>
         </div>
@@ -156,17 +156,17 @@ export function CorporateAreasPage() {
     <div className="space-y-6">
       <SettingsHeader />
       <SettingsTabs />
-      <div className="bg-white shadow rounded-lg">
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl">
         <div className="p-6 space-y-6">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-lg font-medium text-gray-900">Gestão de Áreas Corporativas</h2>
-              <p className="text-gray-600 mt-2">Cadastre, edite e administre as áreas e departamentos que compõem a estrutura organizacional das empresas.</p>
+              <h2 className="text-lg font-medium text-white">Gestão de Áreas Corporativas</h2>
+              <p className="text-gray-400 mt-2">Cadastre, edite e administre as áreas e departamentos que compõem a estrutura organizacional das empresas.</p>
             </div>
             <div className="flex justify-end">
               <button
                 onClick={openCreateModal}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Área
@@ -174,31 +174,31 @@ export function CorporateAreasPage() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <div className="bg-white/5 p-6 rounded-2xl border border-white/10">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <Filter className="h-5 w-5 mr-2" />
+              <h3 className="text-lg font-medium text-white flex items-center">
+                <Filter className="h-5 w-5 mr-2 text-sky-400" />
                 Filtros
               </h3>
               <ClearFiltersButton onClick={() => { setSearchTerm(''); setStatusFilter('all'); }} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Buscar por nome</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Buscar por nome</label>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Digite o nome da área"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500 text-sm"
+                className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg focus:ring-sky-500 focus:border-sky-500 text-sm text-white placeholder-gray-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'paused')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500 text-sm"
+                className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg focus:ring-sky-500 focus:border-sky-500 text-sm text-white [&>option]:bg-slate-800"
                 >
                   <option value="all">Todos</option>
                   <option value="active">Ativa</option>
@@ -209,12 +209,12 @@ export function CorporateAreasPage() {
           </div>
 
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="mb-4 bg-red-900/20 border border-red-700/30 rounded-lg p-4">
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-red-400" />
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Erro</h3>
-              <div className="mt-2 text-sm text-red-700">
+              <h3 className="text-sm font-medium text-red-400">Erro</h3>
+              <div className="mt-2 text-sm text-red-300">
                 <p>{error}</p>
               </div>
             </div>
@@ -223,13 +223,13 @@ export function CorporateAreasPage() {
       )}
 
       <div>
-        <ul className="p-2">
+        <ul className="space-y-4">
           {filteredAreas.length === 0 ? (
-            <li className="px-6 py-12 text-center">
-              <p className="text-gray-500 text-sm">Nenhuma área corporativa cadastrada</p>
+            <li className="px-6 py-12 text-center bg-white/5 rounded-2xl border border-white/10">
+              <p className="text-gray-400 text-sm">Nenhuma área corporativa encontrada</p>
               <button
                 onClick={openCreateModal}
-                className="mt-2 text-teal-600 hover:text-teal-700 text-sm font-medium"
+                className="mt-2 text-sky-400 hover:text-sky-300 text-sm font-medium"
               >
                 Criar primeira área
               </button>
@@ -237,25 +237,25 @@ export function CorporateAreasPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredAreas.map((area) => (
-                <li key={area.id} className="border border-gray-200 rounded-lg p-4">
+                <li key={area.id} className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
                       <div className="flex items-center">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm font-medium text-white truncate">
                           {area.name}
                         </p>
                         <div className="ml-3">
                           {getStatusBadge(area.status)}
                         </div>
                       </div>
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-xs text-gray-400">
                         Criado em {new Date(area.created_at).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => handleToggleStatus(area)}
-                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                        className="p-2 text-gray-400 hover:text-white transition-colors"
                         title={area.status === 'active' ? 'Pausar área' : 'Ativar área'}
                       >
                         {area.status === 'active' ? (
@@ -266,14 +266,14 @@ export function CorporateAreasPage() {
                       </button>
                       <button
                         onClick={() => openEditModal(area)}
-                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                        className="p-2 text-gray-400 hover:text-white transition-colors"
                         title="Editar área"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => setDeleteConfirm(area.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                        className="p-2 text-gray-400 hover:text-red-400 transition-colors"
                         title="Excluir área"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -300,33 +300,33 @@ export function CorporateAreasPage() {
 
       {/* Modal de Confirmação de Exclusão */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-[#0f172a] border border-white/10 rounded-2xl max-w-md w-full p-6 shadow-2xl">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0">
-                <AlertCircle className="h-6 w-6 text-red-600" />
+                <AlertCircle className="h-6 w-6 text-red-500" />
               </div>
               <div className="ml-3">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-white">
                   Confirmar exclusão
                 </h3>
               </div>
             </div>
             <div className="mb-6">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-300">
                 Tem certeza que deseja excluir esta área corporativa? Esta ação não pode ser desfeita.
               </p>
             </div>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => handleDeleteArea(deleteConfirm)}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 Excluir
               </button>

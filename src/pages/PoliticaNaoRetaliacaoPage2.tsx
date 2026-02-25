@@ -93,12 +93,12 @@ export default function PoliticaNaoRetaliacaoPage2() {
     <div className="space-y-6">
       <SettingsHeader />
       <SettingsTabs />
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-          <ScrollText className="mr-2 h-5 w-5" />
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-6">
+        <h2 className="text-lg font-medium text-white mb-2 flex items-center">
+          <ScrollText className="mr-2 h-5 w-5 text-sky-400" />
           Gestão da Política de Não Retaliação
         </h2>
-        <p className="text-gray-600">
+        <p className="text-gray-400">
           Crie, edite e mantenha a política de não retaliação aplicada às empresas vinculadas ao sistema.
         </p>
 
@@ -106,12 +106,12 @@ export default function PoliticaNaoRetaliacaoPage2() {
           <div className="flex space-x-2 mb-2">
             <button
               onClick={handlePaste}
-              className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+              className="inline-flex items-center px-3 py-1 border border-white/10 text-xs font-medium rounded-md text-gray-300 bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors"
             >
               Colar
             </button>
           </div>
-          <div className="bg-white border border-gray-300 rounded-md">
+          <div className="bg-white/90 border border-white/10 rounded-md overflow-hidden text-gray-900">
             <ReactQuill
               ref={quillRef}
               theme="snow"
@@ -142,10 +142,10 @@ export default function PoliticaNaoRetaliacaoPage2() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Justificativa da alteração</label>
+            <label className="block text-sm font-medium text-gray-400 mb-2">Justificativa da alteração</label>
             <textarea
               rows={4}
-              className="shadow-sm focus:ring-teal-500 focus:border-teal-500 block w-full sm:text-sm border-gray-300 rounded-md"
+              className="shadow-sm focus:ring-sky-500 focus:border-sky-500 block w-full sm:text-sm border-white/10 bg-white/5 rounded-md text-white placeholder-gray-500"
               placeholder="Descreva o motivo da alteração realizada"
               value={justification}
               onChange={(e) => setJustification(e.target.value)}
@@ -156,10 +156,10 @@ export default function PoliticaNaoRetaliacaoPage2() {
             <button
               onClick={handleSave}
               disabled={isSaving || !content.trim() || !justification.trim()}
-              className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+              className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white transition-colors ${
                 isSaving || !content.trim() || !justification.trim()
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500'
+                  ? 'bg-gray-600 cursor-not-allowed'
+                  : 'bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500'
               }`}
             >
               <Save className="mr-2 h-4 w-4" />
@@ -168,73 +168,73 @@ export default function PoliticaNaoRetaliacaoPage2() {
           </div>
 
           <div className="pt-8">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">Histórico de versões</h3>
-            <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <h3 className="text-base font-semibold text-white mb-3">Histórico de versões</h3>
+            <div className="bg-white/5 p-4 rounded border border-white/10 mb-3">
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Busca por texto/justificativa</label>
-                  <input value={filterText} onChange={(e)=>setFilterText(e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded" placeholder="Digite para filtrar" />
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Busca por texto/justificativa</label>
+                  <input value={filterText} onChange={(e)=>setFilterText(e.target.value)} className="w-full px-2 py-1 border border-white/10 bg-white/5 rounded text-white placeholder-gray-500" placeholder="Digite para filtrar" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Autor</label>
-                  <input value={filterAuthor} onChange={(e)=>setFilterAuthor(e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded" placeholder="E-mail ou Nome" />
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Autor</label>
+                  <input value={filterAuthor} onChange={(e)=>setFilterAuthor(e.target.value)} className="w-full px-2 py-1 border border-white/10 bg-white/5 rounded text-white placeholder-gray-500" placeholder="E-mail ou Nome" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Início</label>
-                  <input type="date" value={filterStart} onChange={(e)=>setFilterStart(e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded" />
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Início</label>
+                  <input type="date" value={filterStart} onChange={(e)=>setFilterStart(e.target.value)} className="w-full px-2 py-1 border border-white/10 bg-white/5 rounded text-white [color-scheme:dark]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Fim</label>
-                  <input type="date" value={filterEnd} onChange={(e)=>setFilterEnd(e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded" />
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Fim</label>
+                  <input type="date" value={filterEnd} onChange={(e)=>setFilterEnd(e.target.value)} className="w-full px-2 py-1 border border-white/10 bg-white/5 rounded text-white [color-scheme:dark]" />
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
+            <div className="overflow-x-auto bg-white/5 border border-white/10 rounded-lg">
+              <table className="min-w-full divide-y divide-white/10 text-sm">
+                <thead className="bg-white/5">
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium text-gray-700">Versão</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-700">Atualizado em</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-700">Autor</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-700">Justificativa</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-700">Selecionar</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-700">Ações</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-300">Versão</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-300">Atualizado em</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-300">Autor</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-300">Justificativa</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-300">Selecionar</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-300">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-white/10">
                   {pageItems.map(v => {
                     const isCurrent = politica?.id === v.id;
                     return (
-                    <tr key={v.id} className={isCurrent ? 'bg-teal-50' : ''}>
-                      <td className="px-3 py-2">{v.version_code}{isCurrent && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">Atual</span>}</td>
-                      <td className="px-3 py-2">{new Date(v.updated_at).toLocaleString('pt-BR')}</td>
-                      <td className="px-3 py-2">{v.author_name || v.author_email || v.updated_by || '—'}</td>
-                      <td className="px-3 py-2 max-w-md truncate" title={v.justification}>{v.justification}</td>
+                    <tr key={v.id} className={`${isCurrent ? 'bg-sky-500/10' : 'hover:bg-white/5'} transition-colors`}>
+                      <td className="px-3 py-2 text-gray-200">{v.version_code}{isCurrent && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-sky-500/20 text-sky-400 border border-sky-500/30">Atual</span>}</td>
+                      <td className="px-3 py-2 text-gray-200">{new Date(v.updated_at).toLocaleString('pt-BR')}</td>
+                      <td className="px-3 py-2 text-gray-200">{v.author_name || v.author_email || v.updated_by || '—'}</td>
+                      <td className="px-3 py-2 max-w-md truncate text-gray-400" title={v.justification}>{v.justification}</td>
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
-                          <label className="inline-flex items-center gap-1">
-                            <input type="radio" name="compareA" checked={compareA === v.id} onChange={() => setCompareA(v.id)} />
-                            <span className="text-xs text-gray-600">A</span>
+                          <label className="inline-flex items-center gap-1 cursor-pointer">
+                            <input type="radio" name="compareA" checked={compareA === v.id} onChange={() => setCompareA(v.id)} className="text-sky-500 focus:ring-sky-500 bg-slate-800 border-gray-600" />
+                            <span className="text-xs text-gray-400">A</span>
                           </label>
-                          <label className="inline-flex items-center gap-1">
-                            <input type="radio" name="compareB" checked={compareB === v.id} onChange={() => setCompareB(v.id)} />
-                            <span className="text-xs text-gray-600">B</span>
+                          <label className="inline-flex items-center gap-1 cursor-pointer">
+                            <input type="radio" name="compareB" checked={compareB === v.id} onChange={() => setCompareB(v.id)} className="text-sky-500 focus:ring-sky-500 bg-slate-800 border-gray-600" />
+                            <span className="text-xs text-gray-400">B</span>
                           </label>
                         </div>
                       </td>
                       <td className="px-3 py-2">
                         <div className="flex gap-2 flex-wrap">
-                          <button onClick={() => setViewVersionId(v.id)} className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50">Visualizar</button>
-                          <button onClick={() => { setContent(v.content); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50">Editar</button>
+                          <button onClick={() => setViewVersionId(v.id)} className="px-2 py-1 text-xs rounded border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 transition-colors">Visualizar</button>
+                          <button onClick={() => { setContent(v.content); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="px-2 py-1 text-xs rounded border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 transition-colors">Editar</button>
                           <button
                             onClick={() => setShowCompare(true)}
                             disabled={!compareA || !compareB}
-                            className={`px-2 py-1 text-xs rounded ${(!compareA || !compareB) ? 'bg-gray-200 text-gray-500' : 'border border-gray-300 bg-white hover:bg-gray-50'}`}
+                            className={`px-2 py-1 text-xs rounded transition-colors ${(!compareA || !compareB) ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed' : 'border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300'}`}
                           >Comparar</button>
                           {!isCurrent && (
                             <button
                               onClick={() => { setRestoreId(v.id); setRestoreOpen(true); }}
-                              className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50"
+                              className="px-2 py-1 text-xs rounded border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 transition-colors"
                             >Restaurar Como Atual</button>
                           )}
                         </div>
@@ -245,16 +245,16 @@ export default function PoliticaNaoRetaliacaoPage2() {
               </table>
             </div>
             <div className="flex items-center justify-between mt-3">
-              <div className="text-xs text-gray-600">Página {page} de {Math.max(1, Math.ceil(filtered.length / pageSize))} • {filtered.length} versão(ões)</div>
+              <div className="text-xs text-gray-400">Página {page} de {Math.max(1, Math.ceil(filtered.length / pageSize))} • {filtered.length} versão(ões)</div>
               <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-700">Itens por página</label>
-                <select value={pageSize} onChange={(e)=>{ setPage(1); setPageSize(Number(e.target.value)); }} className="px-2 py-1 border border-gray-300 rounded text-xs">
+                <label className="text-xs text-gray-400">Itens por página</label>
+                <select value={pageSize} onChange={(e)=>{ setPage(1); setPageSize(Number(e.target.value)); }} className="px-2 py-1 border border-white/10 bg-white/5 rounded text-xs text-white [&>option]:bg-slate-800">
                   <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                 </select>
-                <button onClick={()=> setPage(Math.max(1, page-1))} className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50">Anterior</button>
-                <button onClick={()=> setPage(Math.min(Math.max(1, Math.ceil(filtered.length / pageSize)), page+1))} className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50">Próxima</button>
+                <button onClick={()=> setPage(Math.max(1, page-1))} className="px-2 py-1 text-xs rounded border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 transition-colors">Anterior</button>
+                <button onClick={()=> setPage(Math.min(Math.max(1, Math.ceil(filtered.length / pageSize)), page+1))} className="px-2 py-1 text-xs rounded border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 transition-colors">Próxima</button>
               </div>
             </div>
           </div>

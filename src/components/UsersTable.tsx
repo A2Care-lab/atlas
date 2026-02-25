@@ -329,56 +329,56 @@ export default function UsersTable() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button onClick={load} className="inline-flex items-center gap-2 bg-petroleo-600 text-white px-4 py-2 rounded-md">
+        <button onClick={load} className="inline-flex items-center gap-2 bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors shadow-sm text-sm font-medium">
           <RefreshCw className="h-4 w-4"/> Atualizar
         </button>
         {canAdmin && (
-          <button onClick={()=>setInviteOpen(true)} className="ml-2 inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md">
+          <button onClick={()=>setInviteOpen(true)} className="ml-2 inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm text-sm font-medium">
             <Plus className="h-4 w-4"/> Cadastrar Usuário
           </button>
         )}
         {canAdmin && (
-          <button onClick={()=>setBulkOpen(true)} className="ml-2 inline-flex items-center gap-2 bg-green-700 text-white px-4 py-2 rounded-md">
+          <button onClick={()=>setBulkOpen(true)} className="ml-2 inline-flex items-center gap-2 bg-emerald-700 text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition-colors shadow-sm text-sm font-medium">
             <Plus className="h-4 w-4"/> Cadastrar Usuários em Lote
           </button>
         )}
       </div>
 
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 shadow-lg">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h18M6 8h12M9 12h6M12 16h0"/></svg>
+          <h3 className="text-lg font-medium text-white flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h18M6 8h12M9 12h6M12 16h0"/></svg>
             Filtros
           </h3>
           <ClearFiltersButton onClick={()=>setFilters({ name:'', email:'', status:'Todos', start:'', end:'', companyId:'' })} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           <div className="lg:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
-            <input value={filters.name} onChange={(e)=>setFilters({...filters, name:e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500" />
+            <label className="block text-xs font-medium text-gray-400 mb-2">Nome</label>
+            <input value={filters.name} onChange={(e)=>setFilters({...filters, name:e.target.value})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 placeholder-gray-500" />
           </div>
           <div className="lg:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
-            <input value={filters.email} onChange={(e)=>setFilters({...filters, email:e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500" />
+            <label className="block text-xs font-medium text-gray-400 mb-2">E-mail</label>
+            <input value={filters.email} onChange={(e)=>setFilters({...filters, email:e.target.value})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 placeholder-gray-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Início</label>
-            <input type="date" value={filters.start||''} onChange={(e)=>setFilters({...filters, start:e.target.value||undefined})} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500" />
+            <label className="block text-xs font-medium text-gray-400 mb-2">Início</label>
+            <input type="date" value={filters.start||''} onChange={(e)=>setFilters({...filters, start:e.target.value||undefined})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [color-scheme:dark]" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Fim</label>
-            <input type="date" value={filters.end||''} onChange={(e)=>setFilters({...filters, end:e.target.value||undefined})} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500" />
+            <label className="block text-xs font-medium text-gray-400 mb-2">Fim</label>
+            <input type="date" value={filters.end||''} onChange={(e)=>setFilters({...filters, end:e.target.value||undefined})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [color-scheme:dark]" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Empresa</label>
-            <select value={filters.companyId||''} onChange={(e)=>setFilters({...filters, companyId:e.target.value||undefined})} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500">
+            <label className="block text-xs font-medium text-gray-400 mb-2">Empresa</label>
+            <select value={filters.companyId||''} onChange={(e)=>setFilters({...filters, companyId:e.target.value||undefined})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [&>option]:bg-slate-800">
               <option value="">Todas</option>
               {companies.map(c=> <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select value={filters.status||'Todos'} onChange={(e)=>setFilters({...filters, status:e.target.value as Filters['status']})} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500">
+            <label className="block text-xs font-medium text-gray-400 mb-2">Status</label>
+            <select value={filters.status||'Todos'} onChange={(e)=>setFilters({...filters, status:e.target.value as Filters['status']})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [&>option]:bg-slate-800">
               <option value="Todos">Todos</option>
               <option value="Ativo">Ativo</option>
               <option value="Inativo">Inativo</option>
@@ -389,13 +389,13 @@ export default function UsersTable() {
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-600">{combinedRows.length} registro(s)</p>
+        <p className="text-sm text-gray-400">{combinedRows.length} registro(s)</p>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-700">Itens por página</span>
+          <span className="text-sm text-gray-400">Itens por página</span>
           <select
             value={pageSize}
             onChange={(e)=>{ setPageSize(Number(e.target.value)); setCurrentPage(1) }}
-            className="px-2 py-1 border border-gray-300 rounded-md text-sm"
+            className="px-2 py-1 border border-white/10 bg-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500 [&>option]:bg-slate-800"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -405,38 +405,42 @@ export default function UsersTable() {
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto bg-white/5 border border-white/10 rounded-2xl shadow-lg">
+        <table className="min-w-full divide-y divide-white/10">
+          <thead className="bg-white/5">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Nome</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">E-mail</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Perfil</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Empresa</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Cadastro</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Invite</th>
-              {canAdmin && <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Ações</th>}
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">E-mail</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Perfil</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Empresa</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Cadastro</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Invite</th>
+              {canAdmin && <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-white/10">
             {paginatedRows.map(row => (
-              <tr key={`${row.kind}-${row.id}`}>
-                <td className="px-4 py-2 text-sm text-gray-900">{row.full_name || '-'}</td>
-                <td className="px-4 py-2 text-sm text-gray-900">{row.email}</td>
-                <td className="px-4 py-2 text-sm text-gray-900">{getUserRoleLabel(row.role)}</td>
-                <td className="px-4 py-2 text-sm text-gray-900">{companies.find(c=>c.id===row.company_id)?.name || '-'}</td>
-                <td className="px-4 py-2 text-sm text-gray-900">{row.created_at ? new Date(row.created_at).toLocaleString('pt-BR') : '-'}</td>
-                <td className="px-4 py-2 text-sm text-gray-900">{row.status}</td>
-                <td className="px-4 py-2 text-sm text-gray-900">{(row as any).last_invite_at ? new Date((row as any).last_invite_at).toLocaleString('pt-BR') : (row.kind==='invite' ? new Date(row.created_at).toLocaleString('pt-BR') : '—')}</td>
+              <tr key={`${row.kind}-${row.id}`} className="hover:bg-white/5 transition-colors">
+                <td className="px-4 py-3 text-sm text-gray-200">{row.full_name || '-'}</td>
+                <td className="px-4 py-3 text-sm text-gray-200">{row.email}</td>
+                <td className="px-4 py-3 text-sm text-gray-200">{getUserRoleLabel(row.role)}</td>
+                <td className="px-4 py-3 text-sm text-gray-200">{companies.find(c=>c.id===row.company_id)?.name || '-'}</td>
+                <td className="px-4 py-3 text-sm text-gray-400">{row.created_at ? new Date(row.created_at).toLocaleString('pt-BR') : '-'}</td>
+                <td className="px-4 py-3 text-sm">
+                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${row.status === 'Ativo' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : row.status === 'Pendente' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                    {row.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-400">{(row as any).last_invite_at ? new Date((row as any).last_invite_at).toLocaleString('pt-BR') : (row.kind==='invite' ? new Date(row.created_at).toLocaleString('pt-BR') : '—')}</td>
                 {canAdmin && (
-                  <td className="px-4 py-2 text-sm text-gray-900">
+                  <td className="px-4 py-3 text-sm text-gray-200">
                     <div className="flex gap-2">
                       {row.kind === 'user' && (
                         <>
                           <button
                             onClick={()=>setEditUser(users.find(u=>u.id===row.id)!)}
-                            className="inline-flex items-center justify-center p-2 rounded bg-blue-600 text-white"
+                            className="inline-flex items-center justify-center p-2 rounded-lg bg-sky-600/20 text-sky-400 border border-sky-600/30 hover:bg-sky-600/30 transition-colors"
                             title="Editar"
                             aria-label="Editar"
                           >
@@ -444,7 +448,7 @@ export default function UsersTable() {
                           </button>
                           <button
                             onClick={()=>toggleActive(users.find(u=>u.id===row.id)!)}
-                            className="inline-flex items-center justify-center p-2 rounded bg-yellow-600 text-white"
+                            className="inline-flex items-center justify-center p-2 rounded-lg bg-amber-600/20 text-amber-400 border border-amber-600/30 hover:bg-amber-600/30 transition-colors"
                             title={row.is_active ? 'Bloquear' : 'Desbloquear'}
                             aria-label={row.is_active ? 'Bloquear' : 'Desbloquear'}
                           >
@@ -452,7 +456,7 @@ export default function UsersTable() {
                           </button>
                           <button
                             onClick={()=>removeUser(users.find(u=>u.id===row.id)!)}
-                            className="inline-flex items-center justify-center p-2 rounded bg-red-600 text-white"
+                            className="inline-flex items-center justify-center p-2 rounded-lg bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30 transition-colors"
                             title="Excluir"
                             aria-label="Excluir"
                           >
@@ -460,19 +464,11 @@ export default function UsersTable() {
                           </button>
                           <button
                             onClick={()=>sendReset(row.email)}
-                            className="inline-flex items-center justify-center p-2 rounded bg-petroleo-600 text-white"
+                            className="inline-flex items-center justify-center p-2 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-600/30 hover:bg-indigo-600/30 transition-colors"
                             title="Redefinir Senha"
                             aria-label="Redefinir Senha"
                           >
                             <RefreshCw className="h-4 w-4"/>
-                          </button>
-                          <button
-                            disabled
-                            className="inline-flex items-center justify-center p-2 rounded bg-green-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Reenviar Convite (habilitado apenas para Pendente)"
-                            aria-label="Reenviar Convite"
-                          >
-                            <ResendEmailIcon className="h-4 w-4"/>
                           </button>
                         </>
                       )}
@@ -480,7 +476,7 @@ export default function UsersTable() {
                         <>
                           <button
                             onClick={()=>setEditInvite(invites.find(i=>i.id===row.id)!)}
-                            className="inline-flex items-center justify-center p-2 rounded bg-blue-600 text-white"
+                            className="inline-flex items-center justify-center p-2 rounded-lg bg-sky-600/20 text-sky-400 border border-sky-600/30 hover:bg-sky-600/30 transition-colors"
                             title="Editar"
                             aria-label="Editar"
                           >
@@ -488,7 +484,7 @@ export default function UsersTable() {
                           </button>
                           <button
                             onClick={async()=>{ await supabase.from('invitations').delete().eq('id', row.id); loadInvites(); }}
-                            className="inline-flex items-center justify-center p-2 rounded bg-red-600 text-white"
+                            className="inline-flex items-center justify-center p-2 rounded-lg bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30 transition-colors"
                             title="Cancelar Convite"
                             aria-label="Cancelar Convite"
                           >
@@ -496,7 +492,7 @@ export default function UsersTable() {
                           </button>
                           <button
                             onClick={()=>{ const inv = invites.find(i=>i.id===row.id)!; resendInvite(inv) }}
-                            className="inline-flex items-center justify-center p-2 rounded bg-green-600 text-white"
+                            className="inline-flex items-center justify-center p-2 rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-600/30 hover:bg-emerald-600/30 transition-colors"
                             title="Reenviar Convite"
                             aria-label="Reenviar Convite"
                           >
@@ -510,26 +506,26 @@ export default function UsersTable() {
               </tr>
             ))}
             {filteredUsers.length === 0 && (
-              <tr><td className="px-4 py-6 text-center text-sm text-gray-500" colSpan={canAdmin?8:7}>{loading?'Carregando...':'Nenhum usuário ou convite pendente'}</td></tr>
+              <tr><td className="px-4 py-8 text-center text-sm text-gray-500" colSpan={canAdmin?8:7}>{loading?'Carregando...':'Nenhum usuário ou convite pendente'}</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
       {combinedRows.length > 0 && (
-        <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-4">
-          <p className="text-sm text-gray-600">Mostrando {startIndex + 1}-{Math.min(endIndex, combinedRows.length)} de {combinedRows.length}</p>
+        <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg p-4">
+          <p className="text-sm text-gray-400">Mostrando {startIndex + 1}-{Math.min(endIndex, combinedRows.length)} de {combinedRows.length}</p>
           <div className="flex items-center space-x-2">
             <button
-              className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50"
+              className="px-3 py-1 rounded-md border border-white/10 text-sm text-gray-300 disabled:opacity-50 hover:bg-white/5 transition-colors"
               disabled={page <= 1}
               onClick={()=>setCurrentPage(p=>Math.max(1, p-1))}
             >
               Anterior
             </button>
-            <span className="text-sm text-gray-700">Página {page} de {totalPages}</span>
+            <span className="text-sm text-gray-300">Página {page} de {totalPages}</span>
             <button
-              className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50"
+              className="px-3 py-1 rounded-md border border-white/10 text-sm text-gray-300 disabled:opacity-50 hover:bg-white/5 transition-colors"
               disabled={page >= totalPages}
               onClick={()=>setCurrentPage(p=>Math.min(totalPages, p+1))}
             >
@@ -595,28 +591,28 @@ function InviteModal({ onClose, companies, onCreate }:{ onClose:()=>void, compan
   const [role, setRole] = useState<UserRole>('user')
   const [companyId, setCompanyId] = useState<string>('')
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow p-6 w-full max-w-md">
-        <h3 className="text-lg font-semibold mb-4">Cadastrar Usuário</h3>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl p-6 w-full max-w-md text-white">
+        <h3 className="text-lg font-semibold mb-4 text-white">Cadastrar Usuário</h3>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-600">Nome completo</label>
-            <input value={fullName} onChange={(e)=>setFullName(e.target.value)} className="border rounded px-2 py-1 w-full" />
+            <label className="block text-xs font-medium text-gray-400 mb-1">Nome completo</label>
+            <input value={fullName} onChange={(e)=>setFullName(e.target.value)} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
           </div>
           <div>
-            <label className="block text-xs text-gray-600">E-mail</label>
-            <input value={email} onChange={(e)=>setEmail(e.target.value)} className="border rounded px-2 py-1 w-full" />
+            <label className="block text-xs font-medium text-gray-400 mb-1">E-mail</label>
+            <input value={email} onChange={(e)=>setEmail(e.target.value)} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
           </div>
           <div>
-            <label className="block text-xs text-gray-600">Empresa</label>
-            <select value={companyId} onChange={(e)=>setCompanyId(e.target.value)} className="border rounded px-2 py-1 w-full">
+            <label className="block text-xs font-medium text-gray-400 mb-1">Empresa</label>
+            <select value={companyId} onChange={(e)=>setCompanyId(e.target.value)} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [&>option]:bg-slate-800">
               <option value="">Selecione</option>
               {companies.map(c=> <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-600">Perfil</label>
-            <select value={role} onChange={(e)=>setRole(e.target.value as UserRole)} className="border rounded px-2 py-1 w-full">
+            <label className="block text-xs font-medium text-gray-400 mb-1">Perfil</label>
+            <select value={role} onChange={(e)=>setRole(e.target.value as UserRole)} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [&>option]:bg-slate-800">
               <option value="user">Usuário</option>
               <option value="corporate_manager">Gestor Corporativo</option>
               <option value="approver_manager">Aprovador Corporativo</option>
@@ -625,8 +621,8 @@ function InviteModal({ onClose, companies, onCreate }:{ onClose:()=>void, compan
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <button onClick={onClose} className="px-3 py-2 rounded border">Cancelar</button>
-          <button onClick={()=>onCreate(email, role, companyId || undefined, fullName || undefined)} className="px-3 py-2 rounded bg-green-600 text-white">Criar Convite</button>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 text-sm">Cancelar</button>
+          <button onClick={()=>onCreate(email, role, companyId || undefined, fullName || undefined)} className="px-4 py-2 rounded-lg bg-sky-600 text-white hover:bg-sky-700 text-sm font-medium">Criar Convite</button>
         </div>
       </div>
     </div>
@@ -652,21 +648,21 @@ function EditInviteModal({ invite, companies, onClose, onSaved }:{ invite:Invita
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow p-6 w-full max-w-lg">
-        <h3 className="text-lg font-semibold mb-4">Editar Convite</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl p-6 w-full max-w-lg text-white">
+        <h3 className="text-lg font-semibold mb-4 text-white">Editar Convite</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-xs text-gray-600">Nome completo</label>
-            <input value={form.full_name} onChange={(e)=>setForm({...form, full_name:e.target.value})} className="border rounded px-2 py-1 w-full" />
+            <label className="block text-xs font-medium text-gray-400 mb-1">Nome completo</label>
+            <input value={form.full_name} onChange={(e)=>setForm({...form, full_name:e.target.value})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-xs text-gray-600">E-mail</label>
-            <input value={form.email} onChange={(e)=>setForm({...form, email:e.target.value})} className="border rounded px-2 py-1 w-full" />
+            <label className="block text-xs font-medium text-gray-400 mb-1">E-mail</label>
+            <input value={form.email} onChange={(e)=>setForm({...form, email:e.target.value})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
           </div>
           <div>
-            <label className="block text-xs text-gray-600">Perfil</label>
-            <select value={form.role} onChange={(e)=>setForm({...form, role:e.target.value as UserRole})} className="border rounded px-2 py-1 w-full">
+            <label className="block text-xs font-medium text-gray-400 mb-1">Perfil</label>
+            <select value={form.role} onChange={(e)=>setForm({...form, role:e.target.value as UserRole})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [&>option]:bg-slate-800">
               <option value="user">Usuário</option>
               <option value="corporate_manager">Gestor Corporativo</option>
               <option value="approver_manager">Aprovador Corporativo</option>
@@ -674,16 +670,16 @@ function EditInviteModal({ invite, companies, onClose, onSaved }:{ invite:Invita
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-600">Empresa</label>
-            <select value={form.company_id} onChange={(e)=>setForm({...form, company_id:e.target.value})} className="border rounded px-2 py-1 w-full">
+            <label className="block text-xs font-medium text-gray-400 mb-1">Empresa</label>
+            <select value={form.company_id} onChange={(e)=>setForm({...form, company_id:e.target.value})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [&>option]:bg-slate-800">
               <option value="">Selecione</option>
               {companies.map(c=> <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <button onClick={onClose} className="px-3 py-2 rounded border">Cancelar</button>
-          <button onClick={save} className="px-3 py-2 rounded bg-petroleo-600 text-white">Salvar</button>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 text-sm">Cancelar</button>
+          <button onClick={save} className="px-4 py-2 rounded-lg bg-sky-600 text-white hover:bg-sky-700 text-sm font-medium">Salvar</button>
         </div>
       </div>
     </div>
@@ -822,32 +818,37 @@ function BulkInviteModal({ onClose, companies, onCreateMany }:{ onClose:()=>void
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow p-6 w-full max-w-2xl">
-        <h3 className="text-lg font-semibold mb-4">Cadastrar Usuários em Lote</h3>
-        <p className="text-sm text-gray-600 mb-3">Baixe o modelo, preencha os dados e faça o upload (Excel/CSV). Perfis permitidos: usuário, gestor corporativo, aprovador corporativo.</p>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl p-6 w-full max-w-2xl text-white">
+        <h3 className="text-lg font-semibold mb-4 text-white">Cadastrar Usuários em Lote</h3>
+        <p className="text-sm text-gray-400 mb-3">Baixe o modelo, preencha os dados e faça o upload (Excel/CSV). Perfis permitidos: usuário, gestor corporativo, aprovador corporativo.</p>
         <div className="flex gap-3 mb-4">
-          <button onClick={downloadTemplate} className="px-3 py-2 rounded bg-petroleo-600 text-white">Baixar Modelo</button>
-          <input type="file" accept=".csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(e)=>{ const f = e.target.files?.[0]; if (f) onFile(f) }} />
+          <button onClick={downloadTemplate} className="px-3 py-2 rounded-lg bg-sky-600 text-white hover:bg-sky-700 text-sm font-medium">Baixar Modelo</button>
+          <input 
+            type="file" 
+            accept=".csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+            onChange={(e)=>{ const f = e.target.files?.[0]; if (f) onFile(f) }}
+            className="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20" 
+          />
         </div>
-        {error && <div className="text-red-600 text-sm mb-2">{error}</div>}
-        <div className="max-h-64 overflow-auto border rounded">
+        {error && <div className="text-red-400 text-sm mb-2">{error}</div>}
+        <div className="max-h-64 overflow-auto border border-white/10 rounded-lg bg-black/20">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-white/5">
               <tr>
-                <th className="px-3 py-2 text-left">Nome Completo</th>
-                <th className="px-3 py-2 text-left">E-mail</th>
-                <th className="px-3 py-2 text-left">Empresa</th>
-                <th className="px-3 py-2 text-left">Perfil</th>
+                <th className="px-3 py-2 text-left text-gray-300">Nome Completo</th>
+                <th className="px-3 py-2 text-left text-gray-300">E-mail</th>
+                <th className="px-3 py-2 text-left text-gray-300">Empresa</th>
+                <th className="px-3 py-2 text-left text-gray-300">Perfil</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-white/10">
               {parsed.map((r, i)=> (
-                <tr key={i} className="border-t">
-                  <td className="px-3 py-2">{r.fullName}</td>
-                  <td className="px-3 py-2">{r.email}</td>
-                  <td className="px-3 py-2">{companies.find(c=>c.id===r.companyId)?.name || '-'}</td>
-                  <td className="px-3 py-2">{getUserRoleLabel(r.role)}</td>
+                <tr key={i} className="border-t border-white/10">
+                  <td className="px-3 py-2 text-gray-200">{r.fullName}</td>
+                  <td className="px-3 py-2 text-gray-200">{r.email}</td>
+                  <td className="px-3 py-2 text-gray-200">{companies.find(c=>c.id===r.companyId)?.name || '-'}</td>
+                  <td className="px-3 py-2 text-gray-200">{getUserRoleLabel(r.role)}</td>
                 </tr>
               ))}
               {parsed.length===0 && (
@@ -857,8 +858,8 @@ function BulkInviteModal({ onClose, companies, onCreateMany }:{ onClose:()=>void
           </table>
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <button onClick={onClose} className="px-3 py-2 rounded border">Cancelar</button>
-          <button onClick={()=>onCreateMany(parsed)} disabled={!parsed.length} className="px-3 py-2 rounded bg-green-600 text-white">Criar Convites</button>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 text-sm">Cancelar</button>
+          <button onClick={()=>onCreateMany(parsed)} disabled={!parsed.length} className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium">Criar Convites</button>
         </div>
       </div>
     </div>
@@ -937,21 +938,21 @@ function EditUserModal({ user, companies, onClose, onSaved }:{ user:UserProfile,
   }, [user.role, user.id])
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow p-6 w-full max-w-lg">
-        <h3 className="text-lg font-semibold mb-4">Editar Usuário</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl p-6 w-full max-w-lg text-white">
+        <h3 className="text-lg font-semibold mb-4 text-white">Editar Usuário</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-xs text-gray-600">Nome completo</label>
-            <input value={form.full_name} onChange={(e)=>setForm({...form, full_name:e.target.value})} className="border rounded px-2 py-1 w-full" />
+            <label className="block text-xs font-medium text-gray-400 mb-1">Nome completo</label>
+            <input value={form.full_name} onChange={(e)=>setForm({...form, full_name:e.target.value})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-xs text-gray-600">E-mail</label>
-            <input value={form.email} onChange={(e)=>setForm({...form, email:e.target.value})} className="border rounded px-2 py-1 w-full" />
+            <label className="block text-xs font-medium text-gray-400 mb-1">E-mail</label>
+            <input value={form.email} onChange={(e)=>setForm({...form, email:e.target.value})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
           </div>
           <div>
-            <label className="block text-xs text-gray-600">Perfil</label>
-            <select value={form.role} onChange={(e)=>setForm({...form, role:e.target.value as UserRole})} className="border rounded px-2 py-1 w-full">
+            <label className="block text-xs font-medium text-gray-400 mb-1">Perfil</label>
+            <select value={form.role} onChange={(e)=>setForm({...form, role:e.target.value as UserRole})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [&>option]:bg-slate-800">
               <option value="user">Usuário</option>
               <option value="corporate_manager">Gestor Corporativo</option>
               <option value="approver_manager">Aprovador Corporativo</option>
@@ -960,18 +961,18 @@ function EditUserModal({ user, companies, onClose, onSaved }:{ user:UserProfile,
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-600">Empresa</label>
-            <select value={form.company_id} onChange={(e)=>setForm({...form, company_id:e.target.value})} className="border rounded px-2 py-1 w-full">
+            <label className="block text-xs font-medium text-gray-400 mb-1">Empresa</label>
+            <select value={form.company_id} onChange={(e)=>setForm({...form, company_id:e.target.value})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [&>option]:bg-slate-800">
               <option value="">Selecione</option>
               {companies.map(c=> <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           {form.role === 'crm_n1' && (
             <div className="md:col-span-2">
-              <label className="block text-xs text-gray-600">Empresas autorizadas (CRM - N1)</label>
-              <div className="border rounded px-2 py-2 max-h-40 overflow-auto">
+              <label className="block text-xs font-medium text-gray-400 mb-1">Empresas autorizadas (CRM - N1)</label>
+              <div className="border border-white/10 rounded-lg px-2 py-2 max-h-40 overflow-auto bg-black/20">
                 {companies.map((c) => (
-                  <label key={c.id} className="flex items-center gap-2 text-sm py-1">
+                  <label key={c.id} className="flex items-center gap-2 text-sm py-1 hover:bg-white/5 rounded px-1">
                     <input
                       type="checkbox"
                       checked={crmCompanies.includes(c.id)}
@@ -983,17 +984,18 @@ function EditUserModal({ user, companies, onClose, onSaved }:{ user:UserProfile,
                           return Array.from(set)
                         })
                       }}
+                      className="rounded border-gray-600 bg-slate-800 text-sky-500 focus:ring-sky-500"
                     />
-                    <span className="text-gray-800">{c.name}</span>
+                    <span className="text-gray-300">{c.name}</span>
                   </label>
                 ))}
               </div>
-              <p className="mt-1 text-[11px] text-gray-600">Selecione as empresas nas quais este usuário poderá abrir e gerir denúncias.</p>
+              <p className="mt-1 text-[11px] text-gray-500">Selecione as empresas nas quais este usuário poderá abrir e gerir denúncias.</p>
             </div>
           )}
           <div>
-            <label className="block text-xs text-gray-600">Departamento</label>
-            <select value={form.department} onChange={(e)=>setForm({...form, department:e.target.value})} className="border rounded px-2 py-1 w-full">
+            <label className="block text-xs font-medium text-gray-400 mb-1">Departamento</label>
+            <select value={form.department} onChange={(e)=>setForm({...form, department:e.target.value})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [&>option]:bg-slate-800">
               <option value="">Selecionar...</option>
               {showCurrentDept && (<option value={form.department}>{form.department}</option>)}
               {activeAreas.map(a=> (
@@ -1002,19 +1004,19 @@ function EditUserModal({ user, companies, onClose, onSaved }:{ user:UserProfile,
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-600">Celular/WhatsApp</label>
-            <input value={form.phone} onChange={(e)=>setForm({...form, phone:e.target.value})} className="border rounded px-2 py-1 w-full" />
+            <label className="block text-xs font-medium text-gray-400 mb-1">Celular/WhatsApp</label>
+            <input value={form.phone} onChange={(e)=>setForm({...form, phone:e.target.value})} className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
           </div>
           <div className="md:col-span-2 flex items-center gap-2">
-            <input id="active" type="checkbox" checked={form.is_active} onChange={(e)=>setForm({...form, is_active:e.target.checked})} />
-            <label htmlFor="active" className="text-xs text-gray-600">Usuário ativo</label>
+            <input id="active" type="checkbox" checked={form.is_active} onChange={(e)=>setForm({...form, is_active:e.target.checked})} className="rounded border-gray-600 bg-slate-800 text-sky-500 focus:ring-sky-500" />
+            <label htmlFor="active" className="text-xs font-medium text-gray-400">Usuário ativo</label>
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <button onClick={onClose} className="px-3 py-2 rounded border">Cancelar</button>
-          <button onClick={save} className="px-3 py-2 rounded bg-petroleo-600 text-white">Salvar</button>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 text-sm">Cancelar</button>
+          <button onClick={save} className="px-4 py-2 rounded-lg bg-sky-600 text-white hover:bg-sky-700 text-sm font-medium">Salvar</button>
         </div>
-        {saveError && <p className="mt-2 text-sm text-red-600">{saveError}</p>}
+        {saveError && <p className="mt-2 text-sm text-red-400">{saveError}</p>}
       </div>
     </div>
   )

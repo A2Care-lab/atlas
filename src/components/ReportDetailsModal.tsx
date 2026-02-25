@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Download, Send, Paperclip, MessageSquare, FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react'
+import { X, Download, Send, Paperclip, MessageSquare, FileText, AlertCircle, CheckCircle, Clock, Plus } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { Report, Attachment, Comment, ReportStatus, UserProfile, StatusHistory } from '../types/database'
 import { useAuth } from '../hooks/useAuth'
@@ -19,36 +19,36 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<ReportStatus, string> = {
-  received: 'bg-petroleo-100 text-petroleo-800',
-  under_analysis: 'bg-yellow-100 text-yellow-800',
-  under_investigation: 'bg-red-100 text-red-800',
-  waiting_info: 'bg-purple-100 text-purple-800',
-  corporate_approval: 'bg-blue-100 text-blue-800',
-  approved: 'bg-green-100 text-green-800',
-  rejected: 'bg-gray-100 text-gray-800'
+  received: 'bg-sky-500/20 text-sky-400 border border-sky-500/30',
+  under_analysis: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+  under_investigation: 'bg-red-500/20 text-red-400 border border-red-500/30',
+  waiting_info: 'bg-violet-500/20 text-violet-400 border border-violet-500/30',
+  corporate_approval: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+  approved: 'bg-emerald-600/20 text-emerald-500 border border-emerald-600/30',
+  rejected: 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
 }
 
 const RISK_COLORS: Record<string, string> = {
-  low: 'bg-green-100 text-green-800',
-  moderate: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-red-100 text-red-800',
-  critical: 'bg-red-600 text-white'
+  low: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+  moderate: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+  high: 'bg-red-500/20 text-red-400 border border-red-500/30',
+  critical: 'bg-rose-600/20 text-rose-500 border border-rose-600/30'
 }
 
 const ROLE_TEXT_COLORS: Record<UserProfile['role'], string> = {
-  admin: 'text-indigo-700',
-  corporate_manager: 'text-emerald-700',
-  approver_manager: 'text-blue-700',
-  crm_n1: 'text-teal-700',
-  user: 'text-gray-800'
+  admin: 'text-indigo-400',
+  corporate_manager: 'text-emerald-400',
+  approver_manager: 'text-blue-400',
+  crm_n1: 'text-teal-400',
+  user: 'text-gray-300'
 }
 
 const ROLE_BORDER_COLORS: Record<UserProfile['role'], string> = {
-  admin: 'border-indigo-600',
-  corporate_manager: 'border-emerald-600',
-  approver_manager: 'border-blue-600',
-  crm_n1: 'border-teal-600',
-  user: 'border-gray-400'
+  admin: 'border-indigo-500',
+  corporate_manager: 'border-emerald-500',
+  approver_manager: 'border-blue-500',
+  crm_n1: 'border-teal-500',
+  user: 'border-gray-500'
 }
 
 export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideStatusControls, hideInternalCommentToggle, hideCommentInput, disableAttachmentUpload, hideFinalStatusOptions }: Props) {
@@ -201,6 +201,8 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
       .from('reports')
       .update({ status: statusDraft })
       .eq('id', report.id)
+      .select()
+      
     if (!error) {
       setDisplayStatus(statusDraft)
       await supabase
@@ -372,12 +374,6 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
     }
   }, [history, isFinalized, report])
 
-  const userCompanySlaDays = useMemo(() => {
-    const u = typeof profile?.company?.sla_days === 'number' ? (profile?.company?.sla_days || 0) : 0
-    const r = typeof report?.company?.sla_days === 'number' ? (report?.company?.sla_days || 0) : 0
-    return u > 0 ? u : (r > 0 ? r : 0)
-  }, [profile, report])
-
   const renderSlaBadge = () => {
     if (!report) return null
     const slaDays = typeof report.company?.sla_days === 'number' ? (report.company?.sla_days || 0) : 0
@@ -387,21 +383,21 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
       const totalDays = Math.max(0, Math.ceil((finalizedAt.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)))
       const over = slaDays ? Math.max(0, totalDays - slaDays) : 0
       const within = slaDays ? totalDays <= slaDays : true
-      const color = within ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+      const color = within ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
       const label = `${totalDays} dia${totalDays === 1 ? '' : 's'}`
       const extra = slaDays ? (over > 0 ? `- Fora do SLA por ${over} dia${over === 1 ? '' : 's'}` : `- Dentro do SLA`) : ''
       return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>{label}{extra ? ` ${extra}` : ''}</span>
     }
 
     if (!slaDays) {
-      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">SLA não definido</span>
+      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700/50 text-gray-300 border border-gray-600">SLA não definido</span>
     }
     const deadline = new Date(created)
     deadline.setDate(deadline.getDate() + slaDays)
     const now = new Date()
     const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     const expired = diffDays < 0
-    const color = expired ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+    const color = expired ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
     const label = `${expired ? 'Vencido' : 'Vence em'} ${deadline.toLocaleDateString('pt-BR')}`
     const extra = `${expired ? 'há' : 'faltam'} ${Math.abs(diffDays)} dia${Math.abs(diffDays) === 1 ? '' : 's'}`
     return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>{label} — {extra}</span>
@@ -432,281 +428,381 @@ export function ReportDetailsModal({ report, open, onClose, hideRiskInfo, hideSt
 
   return createPortal(
     <div aria-modal="true" role="dialog" className="fixed inset-0 z-[1000]" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" />
       <div
-        className="fixed inset-0 flex items-start justify-center p-4"
+        className="fixed inset-0 flex items-center justify-center p-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-full max-w-[52rem] max-h-[74vh] overflow-y-auto bg-white rounded-lg shadow-xl border-2 border-petroleo-500">
-          <div className="flex items-center justify-between p-4 border-b border-gray-300">
+        <div className="w-full max-w-[52rem] max-h-[85vh] overflow-y-auto bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl flex flex-col transition-all transform scale-100">
+          <div className="flex items-center justify-between p-6 border-b border-white/10 bg-[#0f172a]/95 backdrop-blur-md sticky top-0 z-10">
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Detalhes da Denúncia</h2>
-              <div className="text-xs text-gray-700">
-                Protocolo: <span className="font-medium text-gray-900">{report.protocol}</span>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                Detalhes da Denúncia
+                {report.risk_level === 'critical' && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">
+                    Prioridade Crítica
+                  </span>
+                )}
+              </h2>
+              <div className="text-sm text-gray-400 mt-1 flex items-center gap-2">
+                <span className="font-mono bg-white/5 px-2 py-0.5 rounded text-gray-300 font-medium border border-white/5">{report.protocol}</span>
                 {report.company?.name && (
-                  <span className="ml-2 text-gray-800">— {report.company.name}</span>
+                  <>
+                    <span className="text-gray-600">•</span>
+                    <span className="text-gray-400">{report.company.name}</span>
+                  </>
                 )}
               </div>
             </div>
-            <button onClick={onClose} className="p-1 rounded hover:bg-gray-200">
-              <X className="h-4 w-4 text-gray-800" />
+            <button 
+              onClick={onClose} 
+              className="p-2 rounded-full hover:bg-white/10 transition-colors text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+            >
+              <X className="h-6 w-6" />
             </button>
           </div>
-          <div className="px-4 pt-4 pb-6 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="p-6 space-y-8">
+            {/* Cabeçalho de Status e Datas */}
+            <div className="bg-white/5 rounded-xl p-4 border border-white/10 shadow-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div>
-                    <div className="text-xs text-gray-700 whitespace-nowrap">Criado em</div>
-                    <div className="text-sm text-gray-900">{new Date(report.created_at).toLocaleString('pt-BR')}</div>
-                  </div>
-                  {isFinalized && finalizedAt && (
-                    <div>
-                      <div className="text-xs text-gray-700 whitespace-nowrap">Encerrado em</div>
-                      <div className="text-sm text-gray-900">{finalizedAt.toLocaleString('pt-BR')}</div>
-                    </div>
-                  )}
-                  {!hideRiskInfo && (
-                    <div>
-                      <div className="text-xs text-gray-700 whitespace-nowrap">Grau de Risco</div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${RISK_COLORS[report.risk_level]}`}>
-                        {getRiskLabel(report.risk_level)}
-                      </span>
-                    </div>
-                  )}
+                <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">Status Atual</div>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${STATUS_COLORS[displayStatus]}`}>
+                  {getIconForStatus(displayStatus)}
+                  <span className="ml-2">{getStatusLabel(displayStatus)}</span>
+                </span>
+              </div>
+              
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">Criado em</div>
+                <div className="text-sm font-medium text-white flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  {new Date(report.created_at).toLocaleString('pt-BR')}
                 </div>
               </div>
-              <div className="flex flex-wrap items-start gap-2 sm:gap-3">
+
+              {isFinalized && finalizedAt && (
                 <div className="space-y-1">
-                  <div className="text-xs text-gray-700 whitespace-nowrap">Status</div>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[displayStatus]}`}>
-                    {getIconForStatus(displayStatus)}
-                    <span className="ml-1">{getStatusLabel(displayStatus)}</span>
-                  </span>
+                  <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">Encerrado em</div>
+                  <div className="text-sm font-medium text-white flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-gray-500" />
+                    {finalizedAt.toLocaleString('pt-BR')}
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <div className="text-xs text-gray-700 whitespace-nowrap">{`SLA de Tratativa${userCompanySlaDays ? ` - ${userCompanySlaDays} dia${userCompanySlaDays === 1 ? '' : 's'}` : ''}`}</div>
-                  {renderSlaBadge()}
-                </div>
+              )}
+
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">SLA</div>
+                {renderSlaBadge()}
               </div>
             </div>
+
             {!hideStatusControls && canChangeStatus && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs text-gray-700">Alterar status</label>
-                  <select
-                    value={statusDraft}
-                    onChange={(e) => setStatusDraft(e.target.value as ReportStatus)}
-                    disabled={isFinalized}
-                    className={`mt-1 w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 ${isFinalized ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                  >
-                    {(hideFinalStatusOptions ? (['received','under_analysis','under_investigation','waiting_info','corporate_approval'] as ReportStatus[]) : (['received','under_analysis','under_investigation','waiting_info','corporate_approval','approved','rejected'] as ReportStatus[])).map((s) => (
-                      <option key={s} value={s}>{getStatusLabel(s)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs text-gray-700">Comentário de status (opcional)</label>
-                  <input
-                    value={statusComment}
-                    onChange={(e) => setStatusComment(e.target.value)}
-                    disabled={isFinalized}
-                    className={`mt-1 w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 ${isFinalized ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                    placeholder="Descreva a alteração"
-                  />
-                </div>
-            <div className="sm:col-span-3 flex justify-end">
-                  <button onClick={handleUpdateStatus} disabled={isFinalized} className={`inline-flex items-center px-3 py-2 rounded-md text-white text-sm ${isFinalized ? 'bg-gray-400 cursor-not-allowed' : 'bg-petroleo-600 hover:bg-petroleo-700'}`}>Atualizar Status</button>
-                </div>
-              </div>
-            )}
-            <div className="space-y-1">
-              <div className="text-xs text-gray-700">Título</div>
-              <div className="text-sm font-medium text-gray-900">{report.title}</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-xs text-gray-700">Descrição</div>
-              <div className="text-sm text-gray-900 whitespace-pre-line">{report.description}</div>
-            </div>
-            <div className="border border-gray-300 rounded-md p-3">
-              <div className="text-sm font-medium text-gray-900 mb-3">Informações do formulário</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <div className="text-xs text-gray-700">Identificação</div>
-                  <div className="text-sm text-gray-900">{report.is_anonymous ? 'Anônimo' : reporterName ? `Identificado — ${reporterName}` : 'Identificado'}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-700">Departamento</div>
-                  <div className="text-sm text-gray-900">{report.department || 'Não informado'}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-700">Tipo de situação</div>
-                  <div className="text-sm text-gray-900">{getSituationLabel(report.situation_type)}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-700">Risco imediato</div>
-                  <div className="text-sm text-gray-900">{report.has_immediate_risk ? 'Sim' : 'Não'}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-700">Liderança envolvida</div>
-                  <div className="text-sm text-gray-900">{report.involves_leadership ? 'Sim' : 'Não'}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-700">Escopo afetado</div>
-                  <div className="text-sm text-gray-900">{getScopeLabel(report.affected_scope)}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-700">Recorrência</div>
-                  <div className="text-sm text-gray-900">{getRecurrenceLabel(report.recurrence)}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-700">Retaliação</div>
-                  <div className="text-sm text-gray-900">{report.has_retaliation ? 'Sim' : 'Não'}</div>
-                </div>
-                {!hideRiskInfo && (
+              <div className="bg-sky-500/5 rounded-xl p-4 border border-sky-500/20">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                   <div>
-                    <div className="text-xs text-gray-700">Pontuação de risco</div>
-                    <div className="text-sm text-gray-900">{report.risk_score}</div>
-                  </div>
-                )}
-                {!hideRiskInfo && (
-                  <div className="sm:col-span-2">
-                    <div className="text-xs text-gray-700">Score Classificação de Riscos</div>
-                    <div className="mt-1 flex flex-wrap gap-2">
-                      {[
-                        { range: '0–29', level: 'low' },
-                        { range: '30–69', level: 'moderate' },
-                        { range: '70–109', level: 'high' },
-                        { range: '110+', level: 'critical' }
-                      ].map((item) => (
-                        <span key={item.range} className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${RISK_COLORS[item.level]}`}>
-                          <span className="mr-1">{item.range}</span>
-                          {getRiskLabel(item.level)}
-                        </span>
-                      ))}
+                    <label className="text-xs font-semibold text-sky-400 uppercase tracking-wider">Alterar status</label>
+                    <div className="mt-1 relative">
+                      <select
+                        value={statusDraft}
+                        onChange={(e) => setStatusDraft(e.target.value as ReportStatus)}
+                        disabled={isFinalized}
+                        className={`block w-full rounded-lg border-white/10 shadow-sm focus:border-sky-500 focus:ring-sky-500 text-sm py-2.5 text-white [&>option]:bg-slate-800 ${isFinalized ? 'bg-white/5 cursor-not-allowed text-gray-500' : 'bg-white/5'}`}
+                      >
+                        {(hideFinalStatusOptions ? (['received','under_analysis','under_investigation','waiting_info','corporate_approval'] as ReportStatus[]) : (['received','under_analysis','under_investigation','waiting_info','corporate_approval','approved','rejected'] as ReportStatus[])).map((s) => (
+                          <option key={s} value={s}>{getStatusLabel(s)}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
-                )}
-                {!hideRiskInfo && (
-                  <div className="sm:col-span-2">
-                    <div className="text-xs text-gray-700">Justificativa do risco</div>
-                    <div className="text-sm text-gray-900 whitespace-pre-line">{report.risk_justification || '—'}</div>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-2 text-gray-900"><Paperclip className="h-4 w-4" /><span className="text-sm font-medium">Anexos ({localAttachments.length})</span></div>
-              {canManage && (
-                <div className="mb-3 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="file"
-                      multiple
-                      disabled={!canAttachFiles}
-                      onChange={(e) => setPendingFiles(Array.from(e.target.files || []))}
-                    />
-                    {uploading && <span className="text-xs text-gray-700">Enviando...</span>}
-                  </div>
-                  {pendingFiles.length > 0 && (
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-xs text-gray-700">
-                        {pendingFiles.length} arquivo(s) selecionado(s)
-                      </div>
-                      <button
-                        onClick={() => handleUploadAttachments(pendingFiles)}
-                        disabled={!canAttachFiles}
-                        className={`inline-flex items-center px-2 py-1 rounded-md text-white text-xs ${!canAttachFiles ? 'bg-gray-400 cursor-not-allowed' : 'bg-petroleo-600 hover:bg-petroleo-700'}`}
-                      >
-                        Enviar Anexos
-                      </button>
+                  <div className="sm:col-span-2 flex gap-3">
+                    <div className="flex-1">
+                      <label className="text-xs font-semibold text-sky-400 uppercase tracking-wider">Comentário de status (opcional)</label>
+                      <input
+                        value={statusComment}
+                        onChange={(e) => setStatusComment(e.target.value)}
+                        disabled={isFinalized}
+                        className={`mt-1 block w-full rounded-lg border-white/10 shadow-sm focus:border-sky-500 focus:ring-sky-500 text-sm py-2.5 text-white placeholder-gray-500 ${isFinalized ? 'bg-white/5 cursor-not-allowed' : 'bg-white/5'}`}
+                        placeholder="Descreva o motivo da alteração..."
+                      />
                     </div>
-                  )}
-                </div>
-              )}
-              {canManage && !canAttachFiles && (
-                <div className="mb-3 text-xs text-gray-700">Inclusão de anexos desabilitada para denúncias Concluídas/Rejeitadas (apenas Admin).</div>
-              )}
-              {(localAttachments && localAttachments.length > 0) ? (
-                <ul className="divide-y divide-gray-300 border border-gray-300 rounded-md">
-                  {localAttachments.map((att) => (
-                    <li key={att.id} className="flex items-center justify-between px-3 py-2 text-sm">
-                      <div className="truncate">
-                        <div className="text-gray-900 truncate">{att.file_name}</div>
-                        <div className="text-xs text-gray-700">{(att.file_size / 1024).toFixed(1)} KB</div>
-                      </div>
-                      <a
-                        href={attachmentsUrls[att.id] || '#'}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-gray-400 text-gray-900 hover:bg-gray-100"
-                      >
-                        <Download className="h-4 w-4" />
-                        Download
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-sm text-gray-700">Nenhum anexo</div>
-              )}
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-2 text-gray-900"><MessageSquare className="h-4 w-4" /><span className="text-sm font-medium">Comentários ({filteredComments.length})</span></div>
-              {filteredComments.length > 0 ? (
-                <ul className="space-y-3">
-                  {filteredComments.map((c) => {
-                    const author = c.user || (c.user_id ? commentAuthors[c.user_id] : undefined)
-                    const roleKey = ((author?.role || c.author_role || 'user') as UserProfile['role'])
-                    const isInternal = !!c.is_internal
-                    const borderColor = isInternal ? 'border-gray-400' : ROLE_BORDER_COLORS[roleKey]
-                    const textColor = ROLE_TEXT_COLORS[roleKey]
-                    return (
-                      <li key={c.id} className={`p-3 rounded-md border border-gray-200 border-l-4 ${borderColor}`}>
-                        <div className="text-xs text-gray-700 flex items-center justify-between">
-                          <span className={`font-medium ${textColor}`}>{getRoleLabel(roleKey)}</span>
-                          <span className="text-petroleo-700">{new Date(c.created_at).toLocaleString('pt-BR')}</span>
-                        </div>
-                        <div className="mt-1 text-sm text-gray-900 whitespace-pre-line">{c.content}</div>
-                        {isInternal && (<div className="mt-1 text-[10px] inline-flex px-1.5 py-0.5 rounded bg-gray-200 text-gray-900">Interno</div>)}
-                      </li>
-                    )
-                  })}
-                </ul>
-              ) : (
-                <div className="text-sm text-gray-700">Nenhum comentário</div>
-              )}
-              {!hideCommentInput && (
-                <div className="mt-3 space-y-2">
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    rows={3}
-                    placeholder="Escreva um comentário"
-                    disabled={!canComment}
-                    className={`w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-petroleo-400 ${!canComment ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                  />
-                  {!hideInternalCommentToggle && canInternal && (
-                    <label className={`flex items-center gap-2 text-xs text-gray-900 ${!canComment ? 'opacity-60' : ''}`}>
-                      <input type="checkbox" disabled={!canComment} checked={internal} onChange={(e) => setInternal(e.target.checked)} />
-                      Comentário interno
-                    </label>
-                  )}
-                  {!canComment && (
-                    <div className="text-xs text-gray-700">Comentários desabilitados para denúncias Concluídas/Rejeitadas (apenas Admin).</div>
-                  )}
-                  <div className="flex justify-end">
-                    <button
-                      onClick={handleAddComment}
-                      disabled={!canComment}
-                      className={`inline-flex items-center px-3 py-2 rounded-md text-white text-sm ${!canComment ? 'bg-gray-400 cursor-not-allowed' : 'bg-petroleo-600 hover:bg-petroleo-700'}`}
+                    <button 
+                      onClick={handleUpdateStatus} 
+                      disabled={isFinalized} 
+                      className={`mb-[1px] inline-flex items-center px-4 py-2.5 rounded-lg text-white text-sm font-medium shadow-sm transition-all ${isFinalized ? 'bg-gray-600 cursor-not-allowed' : 'bg-sky-600 hover:bg-sky-700 active:bg-sky-800'}`}
                     >
-                      <Send className="h-4 w-4 mr-2" />
-                      Enviar Comentário
+                      Atualizar
                     </button>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white leading-tight">{report.title}</h3>
+                <div className="mt-3 text-sm text-gray-300 whitespace-pre-line leading-relaxed bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
+                  {report.description}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Card Informações */}
+              <div className="bg-white/5 rounded-2xl border border-white/10 shadow-lg overflow-hidden">
+                <div className="bg-white/5 px-4 py-3 border-b border-white/10 flex items-center gap-2">
+                  <div className="bg-white/10 p-1.5 rounded-md shadow-sm border border-white/5">
+                    <FileText className="h-4 w-4 text-sky-400" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-white">Detalhes do Formulário</h3>
+                </div>
+                <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
+                  <div>
+                    <div className="text-xs font-medium text-gray-400 mb-1">Identificação</div>
+                    <div className="text-sm font-medium text-white bg-white/5 px-3 py-2 rounded-lg border border-white/5 inline-block w-full">
+                      {report.is_anonymous ? 'Anônimo' : reporterName ? `Identificado — ${reporterName}` : 'Identificado'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-gray-400 mb-1">Departamento</div>
+                    <div className="text-sm font-medium text-white bg-white/5 px-3 py-2 rounded-lg border border-white/5 inline-block w-full">
+                      {report.department || 'Não informado'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-gray-400 mb-1">Tipo de situação</div>
+                    <div className="text-sm font-medium text-white">{getSituationLabel(report.situation_type)}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-gray-400 mb-1">Risco imediato</div>
+                    <div className="text-sm font-medium text-white flex items-center gap-2">
+                      {report.has_immediate_risk 
+                        ? <span className="text-red-400 flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Sim</span> 
+                        : <span className="text-emerald-400 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Não</span>}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-gray-400 mb-1">Liderança envolvida</div>
+                    <div className="text-sm font-medium text-white">{report.involves_leadership ? 'Sim' : 'Não'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-gray-400 mb-1">Escopo afetado</div>
+                    <div className="text-sm font-medium text-white">{getScopeLabel(report.affected_scope)}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-gray-400 mb-1">Recorrência</div>
+                    <div className="text-sm font-medium text-white">{getRecurrenceLabel(report.recurrence)}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-gray-400 mb-1">Retaliação</div>
+                    <div className="text-sm font-medium text-white">{report.has_retaliation ? 'Sim' : 'Não'}</div>
+                  </div>
+                  
+                  {!hideRiskInfo && (
+                    <div className="sm:col-span-2 pt-4 border-t border-white/10 mt-2">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-xs font-medium text-gray-400">Pontuação de risco</div>
+                        <div className="text-lg font-bold text-white">{report.risk_score}</div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 mb-2">Classificação</div>
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              { range: '0–29', level: 'low' },
+                              { range: '30–69', level: 'moderate' },
+                              { range: '70–109', level: 'high' },
+                              { range: '110+', level: 'critical' }
+                            ].map((item) => (
+                              <span 
+                                key={item.range} 
+                                className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${
+                                  getRiskLabel(report.risk_level) === getRiskLabel(item.level) 
+                                    ? RISK_COLORS[item.level] + ' ring-1 ring-inset ring-black/5 shadow-sm' 
+                                    : 'bg-white/5 text-gray-500 border-white/5'
+                                }`}
+                              >
+                                {item.range} {getRiskLabel(item.level)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 mb-1">Justificativa do risco</div>
+                          <div className="text-sm text-gray-300 bg-white/5 p-3 rounded-lg border border-white/10 italic">
+                            {report.risk_justification || 'Nenhuma justificativa fornecida.'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Coluna Direita: Anexos e Comentários */}
+              <div className="space-y-6">
+                {/* Anexos */}
+                <div className="bg-white/5 rounded-2xl border border-white/10 shadow-lg overflow-hidden">
+                  <div className="bg-white/5 px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-white/10 p-1.5 rounded-md shadow-sm border border-white/5">
+                        <Paperclip className="h-4 w-4 text-sky-400" />
+                      </div>
+                      <h3 className="text-sm font-semibold text-white">Anexos ({localAttachments.length})</h3>
+                    </div>
+                    {canManage && (
+                      <label className={`cursor-pointer inline-flex items-center p-1.5 rounded-lg transition-colors ${!canAttachFiles ? 'opacity-50 cursor-not-allowed bg-white/5' : 'hover:bg-white/10 text-sky-400'}`}>
+                        <Plus className="h-4 w-4" />
+                        <input
+                          type="file"
+                          multiple
+                          className="hidden"
+                          disabled={!canAttachFiles}
+                          onChange={(e) => setPendingFiles(Array.from(e.target.files || []))}
+                        />
+                      </label>
+                    )}
+                  </div>
+                  
+                  <div className="p-4">
+                    {uploading && (
+                      <div className="mb-3 text-xs text-sky-400 bg-sky-500/10 px-3 py-2 rounded-lg flex items-center gap-2 animate-pulse">
+                        <div className="w-3 h-3 border-2 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
+                        Enviando arquivos...
+                      </div>
+                    )}
+                    
+                    {pendingFiles.length > 0 && (
+                      <div className="mb-4 bg-sky-500/10 border border-sky-500/20 rounded-xl p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm text-sky-200 font-medium">{pendingFiles.length} arquivo(s) para enviar</span>
+                          <button
+                            onClick={() => handleUploadAttachments(pendingFiles)}
+                            disabled={!canAttachFiles}
+                            className="text-xs bg-sky-600 text-white px-3 py-1.5 rounded-lg hover:bg-sky-700 transition-colors shadow-sm"
+                          >
+                            Confirmar Envio
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {(localAttachments && localAttachments.length > 0) ? (
+                      <ul className="space-y-2">
+                        {localAttachments.map((att) => (
+                          <li key={att.id} className="group flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10 hover:border-sky-500/30 hover:bg-white/10 transition-all">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <div className="bg-white/10 p-2 rounded-lg group-hover:bg-sky-500/10 transition-colors">
+                                <FileText className="h-5 w-5 text-gray-400 group-hover:text-sky-400" />
+                              </div>
+                              <div className="truncate">
+                                <div className="text-sm font-medium text-gray-200 truncate">{att.file_name}</div>
+                                <div className="text-xs text-gray-500">{(att.file_size / 1024).toFixed(1)} KB</div>
+                              </div>
+                            </div>
+                            <a
+                              href={attachmentsUrls[att.id] || '#'}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-2 text-gray-500 hover:text-sky-400 hover:bg-white/10 rounded-lg transition-colors"
+                              title="Baixar arquivo"
+                            >
+                              <Download className="h-4 w-4" />
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-center py-8 bg-white/5 rounded-xl border border-dashed border-white/10">
+                        <div className="text-sm text-gray-500">Nenhum anexo disponível</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Comentários */}
+                <div className="bg-white/5 rounded-2xl border border-white/10 shadow-lg overflow-hidden flex flex-col h-[500px]">
+                  <div className="bg-white/5 px-4 py-3 border-b border-white/10 flex items-center gap-2">
+                    <div className="bg-white/10 p-1.5 rounded-md shadow-sm border border-white/5">
+                      <MessageSquare className="h-4 w-4 text-sky-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">Histórico de Comentários ({filteredComments.length})</h3>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black/20">
+                    {filteredComments.length > 0 ? (
+                      filteredComments.map((c) => {
+                        const author = c.user || (c.user_id ? commentAuthors[c.user_id] : undefined)
+                        const roleKey = ((author?.role || c.author_role || 'user') as UserProfile['role'])
+                        const isInternal = !!c.is_internal
+                        const borderColor = isInternal ? 'border-l-gray-500' : `border-l-[4px] ${ROLE_BORDER_COLORS[roleKey].replace('border-', 'border-l-')}`
+                        
+                        return (
+                          <div key={c.id} className={`bg-[#1e293b] p-4 rounded-xl shadow-sm border border-white/5 relative ${isInternal ? 'bg-gray-800' : ''}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-opacity-10 ${ROLE_TEXT_COLORS[roleKey].replace('text-', 'bg-')} ${ROLE_TEXT_COLORS[roleKey]}`}>
+                                  {getRoleLabel(roleKey)}
+                                </span>
+                                {isInternal && <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Interno</span>}
+                              </div>
+                              <span className="text-xs text-gray-500">{new Date(c.created_at).toLocaleString('pt-BR')}</span>
+                            </div>
+                            <div className="text-sm text-gray-300 whitespace-pre-line leading-relaxed pl-2 border-l-2 border-white/10">
+                              {c.content}
+                            </div>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-gray-600">
+                        <MessageSquare className="h-8 w-8 mb-2 opacity-20" />
+                        <span className="text-sm">Nenhum comentário ainda</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {!hideCommentInput && (
+                    <div className="p-4 bg-white/5 border-t border-white/10">
+                      <div className="space-y-3">
+                        <textarea
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          rows={2}
+                          placeholder={canComment ? "Escreva sua mensagem..." : "Comentários desativados"}
+                          disabled={!canComment}
+                          className={`w-full rounded-xl border-white/10 px-4 py-3 text-sm focus:border-sky-500 focus:ring-sky-500 resize-none text-white placeholder-gray-500 ${!canComment ? 'bg-white/5 cursor-not-allowed' : 'bg-white/5 focus:bg-white/10 transition-colors'}`}
+                        />
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            {!hideInternalCommentToggle && canInternal && (
+                              <label className={`flex items-center gap-2 text-xs font-medium text-gray-400 cursor-pointer hover:text-white transition-colors ${!canComment ? 'opacity-50' : ''}`}>
+                                <input 
+                                  type="checkbox" 
+                                  disabled={!canComment} 
+                                  checked={internal} 
+                                  onChange={(e) => setInternal(e.target.checked)}
+                                  className="rounded border-gray-600 bg-slate-800 text-sky-500 focus:ring-sky-500" 
+                                />
+                                Apenas interno
+                              </label>
+                            )}
+                          </div>
+                          <button
+                            onClick={handleAddComment}
+                            disabled={!canComment || !newComment.trim()}
+                            className={`inline-flex items-center px-4 py-2 rounded-lg text-white text-sm font-medium shadow-sm transition-all ${!canComment || !newComment.trim() ? 'bg-gray-700 cursor-not-allowed' : 'bg-sky-600 hover:bg-sky-700 hover:shadow-md active:transform active:scale-95'}`}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            Enviar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
           <MessageModal open={errorOpen} title="Falha no upload" message={errorMsg} variant="error" onClose={() => setErrorOpen(false)} />

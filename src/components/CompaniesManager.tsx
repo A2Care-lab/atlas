@@ -206,8 +206,8 @@ export default function CompaniesManager() {
 
   const getStatusColor = (status: string) => {
     return status === 'active' 
-      ? 'bg-green-100 text-green-800' 
-      : 'bg-red-100 text-red-800';
+      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+      : 'bg-red-500/20 text-red-400 border border-red-500/30';
   };
 
   const blockCompany = async (company: Company) => {
@@ -242,17 +242,17 @@ export default function CompaniesManager() {
     <div className="space-y-6">
       {/* Header actions */}
       <div className="flex justify-end">
-        <button onClick={openCreate} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-petroleo-600 hover:bg-petroleo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500">
+        <button onClick={openCreate} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors">
           <Plus className="h-4 w-4 mr-2" />
           Nova Empresa
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
+      <div className="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-lg">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center">
-            <Filter className="h-5 w-5 mr-2" />
+          <h3 className="text-lg font-medium text-white flex items-center">
+            <Filter className="h-5 w-5 mr-2 text-sky-400" />
             Filtros
           </h3>
           <ClearFiltersButton onClick={clearFilters} />
@@ -260,7 +260,7 @@ export default function CompaniesManager() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs font-medium text-gray-400 mb-2">
               Nome
             </label>
             <input
@@ -268,12 +268,12 @@ export default function CompaniesManager() {
               placeholder="Nome da empresa"
               value={filters.name}
               onChange={(e) => handleFilterChange('name', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 placeholder-gray-500"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs font-medium text-gray-400 mb-2">
               CNPJ
             </label>
             <input
@@ -281,18 +281,18 @@ export default function CompaniesManager() {
               placeholder="00.000.000/0001-00"
               value={filters.cnpj}
               onChange={(e) => handleFilterChange('cnpj', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 placeholder-gray-500"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs font-medium text-gray-400 mb-2">
               Status
             </label>
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [&>option]:bg-slate-800"
             >
               <option value="all">Todos</option>
               <option value="active">Ativo</option>
@@ -301,28 +301,28 @@ export default function CompaniesManager() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Calendar className="inline h-4 w-4 mr-1" />
+            <label className="block text-xs font-medium text-gray-400 mb-2">
+              <Calendar className="inline h-3 w-3 mr-1" />
               Data Inicial
             </label>
             <input
               type="date"
               value={filters.startDate}
               onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [color-scheme:dark]"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Calendar className="inline h-4 w-4 mr-1" />
+            <label className="block text-xs font-medium text-gray-400 mb-2">
+              <Calendar className="inline h-3 w-3 mr-1" />
               Data Final
             </label>
             <input
               type="date"
               value={filters.endDate}
               onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 [color-scheme:dark]"
             />
           </div>
         </div>
@@ -330,15 +330,15 @@ export default function CompaniesManager() {
 
       {/* Results count and page size */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-400">
           {filteredCompanies.length} empresa(s) encontrada(s)
         </p>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-700">Itens por página</span>
+          <span className="text-sm text-gray-400">Itens por página</span>
           <select
             value={pageSize}
             onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
-            className="px-2 py-1 border border-gray-300 rounded-md text-sm"
+            className="px-2 py-1 border border-white/10 bg-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500 [&>option]:bg-slate-800"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -349,78 +349,78 @@ export default function CompaniesManager() {
       </div>
 
       {/* Companies Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="bg-white/5 border border-white/10 rounded-2xl shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-white/10">
+            <thead className="bg-white/5">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Nome
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   CNPJ
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   E-mail
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   SLA
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Data de Criação
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-white/10">
               {paginatedCompanies.map((company) => (
-                <tr key={company.id} className="hover:bg-gray-50">
+                <tr key={company.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <Building2 className="h-5 w-5 text-gray-400 mr-3" />
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-gray-200">
                         {company.name}
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{formatCNPJ(company.cnpj)}</div>
+                    <div className="text-sm text-gray-200">{formatCNPJ(company.cnpj)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{company.email_domain || '-'}</div>
+                    <div className="text-sm text-gray-200">{company.email_domain || '-'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{(company.sla_days ?? 0)} dia(s)</div>
+                    <div className="text-sm text-gray-200">{(company.sla_days ?? 0)} dia(s)</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(company.status)}`}>
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(company.status)}`}>
                       {getStatusLabel(company.status)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-gray-400">
                       {format(new Date(company.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-petroleo-600 hover:text-petroleo-900" onClick={() => openEdit(company)}>
+                      <button className="p-1.5 rounded-lg bg-sky-600/20 text-sky-400 border border-sky-600/30 hover:bg-sky-600/30 transition-colors" onClick={() => openEdit(company)}>
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button className="text-red-600 hover:text-red-900">
+                      <button className="p-1.5 rounded-lg bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30 transition-colors">
                         <Trash2 className="h-4 w-4" />
                       </button>
                       {company.status === 'inactive' ? (
-                        <button className="text-green-600 hover:text-green-800" aria-label="Ativar empresa" title="Ativar empresa" onClick={() => activateCompany(company)}>
+                        <button className="p-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-600/30 hover:bg-emerald-600/30 transition-colors" aria-label="Ativar empresa" title="Ativar empresa" onClick={() => activateCompany(company)}>
                           <Power className="h-4 w-4" />
                         </button>
                       ) : (
-                        <button className="text-orange-600 hover:text-orange-800" aria-label="Bloquear empresa" title="Bloquear empresa" onClick={() => blockCompany(company)}>
+                        <button className="p-1.5 rounded-lg bg-amber-600/20 text-amber-400 border border-amber-600/30 hover:bg-amber-600/30 transition-colors" aria-label="Bloquear empresa" title="Bloquear empresa" onClick={() => blockCompany(company)}>
                           <Ban className="h-4 w-4" />
                         </button>
                       )}
@@ -434,9 +434,9 @@ export default function CompaniesManager() {
         
         {filteredCompanies.length === 0 && (
           <div className="text-center py-12">
-            <Building2 className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma empresa encontrada</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <Building2 className="mx-auto h-12 w-12 text-gray-500" />
+            <h3 className="mt-2 text-sm font-medium text-gray-200">Nenhuma empresa encontrada</h3>
+            <p className="mt-1 text-sm text-gray-400">
               Tente ajustar seus filtros de busca.
             </p>
           </div>
@@ -445,19 +445,19 @@ export default function CompaniesManager() {
 
       {/* Pagination controls */}
       {filteredCompanies.length > 0 && (
-        <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-4">
-          <p className="text-sm text-gray-600">Mostrando {startIndex + 1}-{Math.min(endIndex, filteredCompanies.length)} de {filteredCompanies.length}</p>
+        <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg p-4">
+          <p className="text-sm text-gray-400">Mostrando {startIndex + 1}-{Math.min(endIndex, filteredCompanies.length)} de {filteredCompanies.length}</p>
           <div className="flex items-center space-x-2">
             <button
-              className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50"
+              className="px-3 py-1 rounded-md border border-white/10 text-sm text-gray-300 disabled:opacity-50 hover:bg-white/5 transition-colors"
               disabled={page <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             >
               Anterior
             </button>
-            <span className="text-sm text-gray-700">Página {page} de {totalPages}</span>
+            <span className="text-sm text-gray-300">Página {page} de {totalPages}</span>
             <button
-              className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50"
+              className="px-3 py-1 rounded-md border border-white/10 text-sm text-gray-300 disabled:opacity-50 hover:bg-white/5 transition-colors"
               disabled={page >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             >
@@ -468,57 +468,57 @@ export default function CompaniesManager() {
       )}
 
       {isEditOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-lg rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Editar Empresa</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#0f172a] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl p-6 text-white">
+            <h3 className="text-lg font-semibold text-white mb-4">Editar Empresa</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+                <label className="block text-xs font-medium text-gray-400 mb-2">Nome</label>
                 <input
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+                  className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">CNPJ</label>
+                <label className="block text-xs font-medium text-gray-400 mb-2">CNPJ</label>
                 <input
                   type="text"
                   value={editForm.cnpj}
                   onChange={(e) => setEditForm(prev => ({ ...prev, cnpj: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+                  className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                <label className="block text-xs font-medium text-gray-400 mb-2">E-mail</label>
                 <input
                   type="text"
                   value={editForm.email_domain}
                   onChange={(e) => setEditForm(prev => ({ ...prev, email_domain: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+                  className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">SLA (dias)</label>
+                <label className="block text-xs font-medium text-gray-400 mb-2">SLA (dias)</label>
                 <input
                   type="number"
                   min={0}
                   value={editForm.sla_days}
                   onChange={(e) => setEditForm(prev => ({ ...prev, sla_days: Number(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+                  className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 />
               </div>
             </div>
             <div className="mt-6 flex justify-end space-x-3">
               <button
-                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 text-sm"
                 onClick={() => { setIsEditOpen(false); setEditingCompany(null); }}
               >
                 Cancelar
               </button>
               <button
-                className="px-4 py-2 rounded-md text-white bg-petroleo-600 hover:bg-petroleo-700"
+                className="px-4 py-2 rounded-lg text-white bg-sky-600 hover:bg-sky-700 text-sm font-medium"
                 onClick={saveEdit}
               >
                 Salvar
@@ -529,57 +529,57 @@ export default function CompaniesManager() {
       )}
 
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-2xl rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Nova Empresa</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#0f172a] border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl p-6 text-white">
+            <h3 className="text-lg font-semibold text-white mb-4">Nova Empresa</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+                <label className="block text-xs font-medium text-gray-400 mb-2">Nome</label>
                 <input
                   type="text"
                   value={createForm.name}
                   onChange={(e) => setCreateForm(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+                  className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">CNPJ</label>
+                <label className="block text-xs font-medium text-gray-400 mb-2">CNPJ</label>
                 <input
                   type="text"
                   value={createForm.cnpj}
                   onChange={(e) => setCreateForm(prev => ({ ...prev, cnpj: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+                  className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                <label className="block text-xs font-medium text-gray-400 mb-2">E-mail</label>
                 <input
                   type="text"
                   value={createForm.email_domain}
                   onChange={(e) => setCreateForm(prev => ({ ...prev, email_domain: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+                  className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">SLA (dias)</label>
+                <label className="block text-xs font-medium text-gray-400 mb-2">SLA (dias)</label>
                 <input
                   type="number"
                   min={0}
                   value={createForm.sla_days}
                   onChange={(e) => setCreateForm(prev => ({ ...prev, sla_days: Number(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-petroleo-500 focus:border-petroleo-500"
+                  className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 />
               </div>
             </div>
             <div className="mt-6 flex justify-end space-x-3">
               <button
-                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 text-sm"
                 onClick={() => setIsCreateOpen(false)}
               >
                 Cancelar
               </button>
               <button
-                className="px-4 py-2 rounded-md text-white bg-petroleo-600 hover:bg-petroleo-700"
+                className="px-4 py-2 rounded-lg text-white bg-sky-600 hover:bg-sky-700 text-sm font-medium"
                 onClick={async () => {
                   const cnpjDigits = onlyDigits(createForm.cnpj);
                   const emailDomain = (createForm.email_domain || '').includes('@')

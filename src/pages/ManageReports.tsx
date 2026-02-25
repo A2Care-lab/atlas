@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { Report, ReportStatus } from '../types/database';
-import { FileText, Eye, Filter, Search, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, Eye, Filter, Search, AlertTriangle, ChevronLeft, ChevronRight, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { ClearFiltersButton } from '../components/ClearFiltersButton';
 import { ReportDetailsModal } from '../components/ReportDetailsModal';
 
@@ -24,6 +24,23 @@ const RISK_OPTIONS = [
   { value: 'high', label: 'Alto' },
   { value: 'critical', label: 'Crítico' },
 ];
+
+const STATUS_COLORS: Record<ReportStatus, string> = {
+  received: 'bg-sky-500/20 text-sky-400 border border-sky-500/30',
+  under_analysis: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+  under_investigation: 'bg-red-500/20 text-red-400 border border-red-500/30',
+  waiting_info: 'bg-violet-500/20 text-violet-400 border border-violet-500/30',
+  corporate_approval: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+  approved: 'bg-emerald-600/20 text-emerald-500 border border-emerald-600/30',
+  rejected: 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+}
+
+const RISK_COLORS: Record<string, string> = {
+  low: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+  moderate: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+  high: 'bg-red-500/20 text-red-400 border border-red-500/30',
+  critical: 'bg-rose-600/20 text-rose-500 border border-rose-600/30'
+}
 
 export function ManageReports() {
   const { profile } = useAuth();
@@ -173,28 +190,22 @@ export function ManageReports() {
     return option?.label || risk;
   };
 
-  const getStatusColor = (status: ReportStatus): string => {
-    const colors = {
-      received: 'bg-petroleo-100 text-petroleo-800',
-      under_analysis: 'bg-yellow-100 text-yellow-800',
-      under_investigation: 'bg-red-100 text-red-800',
-      waiting_info: 'bg-purple-100 text-purple-800',
-      corporate_approval: 'bg-blue-100 text-blue-800',
-      approved: 'bg-green-100 text-green-800',
-      rejected: 'bg-gray-100 text-gray-800',
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getRiskColor = (risk: string): string => {
-    const colors = {
-      low: 'bg-green-100 text-green-800',
-      moderate: 'bg-yellow-100 text-yellow-800',
-      high: 'bg-red-100 text-red-800',
-      critical: 'bg-red-100 text-red-800',
-    };
-    return colors[risk as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-  };
+  const getIconForStatus = (status: ReportStatus) => {
+    switch (status) {
+      case 'received':
+      case 'under_analysis':
+        return <Clock className="h-3 w-3" />
+      case 'under_investigation':
+      case 'waiting_info':
+        return <AlertCircle className="h-3 w-3" />
+      case 'corporate_approval':
+        return <FileText className="h-3 w-3" />
+      case 'approved':
+        return <CheckCircle className="h-3 w-3" />
+      default:
+        return <FileText className="h-3 w-3" />
+    }
+  }
 
   const renderSlaBadge = (report: Report) => {
     const slaDays = typeof report.company?.sla_days === 'number' ? (report.company?.sla_days || 0) : 0;
@@ -211,12 +222,12 @@ export function ManageReports() {
         try { finalizedAt = new Date(report.updated_at); } catch { finalizedAt = undefined; }
       }
       if (!finalizedAt) {
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">SLA não definido</span>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700/50 text-gray-300 border border-gray-600">SLA não definido</span>;
       }
       const totalDays = Math.max(0, Math.ceil((finalizedAt.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)));
       const over = slaDays ? Math.max(0, totalDays - slaDays) : 0;
       const within = slaDays ? totalDays <= slaDays : true;
-      const color = within ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+      const color = within ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30';
       const label = `${totalDays} dia${totalDays === 1 ? '' : 's'}`;
       const extra = slaDays ? (over > 0 ? `- Fora do SLA por ${over} dia${over === 1 ? '' : 's'}` : `- Dentro do SLA`) : '';
       return (
@@ -226,7 +237,7 @@ export function ManageReports() {
 
     if (!slaDays) {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">SLA não definido</span>
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700/50 text-gray-300 border border-gray-600">SLA não definido</span>
       );
     }
     const deadline = new Date(created);
@@ -234,7 +245,7 @@ export function ManageReports() {
     const now = new Date();
     const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     const expired = diffDays < 0;
-    const color = expired ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+    const color = expired ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
     const label = `${expired ? 'Vencido' : 'Vence em'} ${deadline.toLocaleDateString('pt-BR')}`;
     const extra = `${expired ? 'há' : 'faltam'} ${Math.abs(diffDays)} dia${Math.abs(diffDays) === 1 ? '' : 's'}`;
     return (
@@ -245,7 +256,7 @@ export function ManageReports() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-petroleo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
       </div>
     );
   }
@@ -253,37 +264,37 @@ export function ManageReports() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-white">
           Painel de Gestão de Denúncias
         </h1>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-400">
             {filteredReports.length} de {reports.length} denúncias
           </span>
         </div>
       </div>
-      <p className="text-sm text-gray-700">
+      <p className="text-sm text-gray-400 -mt-4">
         Administre, analise e acompanhe todas as denúncias registradas na organização
       </p>
 
       {/* Filters */}
-      <div className="bg-white border border-petroleo-100 shadow-lg rounded-xl mb-6 p-4">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl mb-6 p-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <Filter className="h-4 w-4 text-petroleo-600 mr-2" />
-            <span className="text-sm font-semibold text-gray-800">Filtros</span>
+            <Filter className="h-4 w-4 text-sky-400 mr-2" />
+            <span className="text-sm font-semibold text-gray-200">Filtros</span>
           </div>
           <ClearFiltersButton onClick={() => { setSearchTerm(''); setStatusFilter('all'); setRiskFilter('all'); setSlaFilter('all'); }} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="relative md:col-span-2">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
             <input
               type="text"
               placeholder="Buscar por protocolo, título ou descrição..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-11 pr-3 py-3 border border-gray-300 rounded-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="pl-11 pr-3 py-2.5 border border-white/10 bg-white/5 rounded-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-white placeholder-gray-500"
             />
           </div>
 
@@ -291,7 +302,7 @@ export function ManageReports() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as ReportStatus | 'all')}
-              className="block w-full pl-3 pr-10 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="block w-full pl-3 pr-10 py-2.5 text-sm border border-white/10 bg-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-white [&>option]:bg-slate-800"
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -305,7 +316,7 @@ export function ManageReports() {
             <select
               value={riskFilter}
               onChange={(e) => setRiskFilter(e.target.value)}
-              className="block w-full pl-3 pr-10 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="block w-full pl-3 pr-10 py-2.5 text-sm border border-white/10 bg-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-white [&>option]:bg-slate-800"
             >
               {RISK_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -319,7 +330,7 @@ export function ManageReports() {
             <select
               value={slaFilter}
               onChange={(e) => setSlaFilter(e.target.value as 'all' | 'in_time' | 'overdue')}
-              className="block w-full pl-3 pr-10 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="block w-full pl-3 pr-10 py-2.5 text-sm border border-white/10 bg-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-white [&>option]:bg-slate-800"
             >
               <option value="all">Todos os SLA</option>
               <option value="in_time">Dentro do prazo</option>
@@ -330,90 +341,90 @@ export function ManageReports() {
       </div>
 
       {/* Reports List */}
-        <div className="bg-white shadow-xl sm:rounded-xl border border-gray-100">
+        <div className="space-y-4">
           {filteredReports.length === 0 ? (
-            <div className="text-center py-16 bg-petroleo-50/40">
-              <FileText className="mx-auto h-14 w-14 text-petroleo-500" />
-              <h3 className="mt-2 text-base md:text-lg font-semibold text-gray-900">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-16 text-center">
+              <FileText className="mx-auto h-14 w-14 text-gray-600" />
+              <h3 className="mt-2 text-lg font-semibold text-gray-200">
                 Nenhuma denúncia encontrada
               </h3>
-              <p className="mt-1 text-sm text-gray-600">
+              <p className="mt-1 text-sm text-gray-400">
                 Tente ajustar os filtros ou buscar por termos diferentes.
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-300">
+            <ul className="space-y-4">
             {filteredReports.slice((page - 1) * perPage, (page - 1) * perPage + perPage).map((report) => (
-              <li key={report.id}>
-                <div className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FileText className="h-5 w-5 text-petroleo-600 mr-3" />
+              <li key={report.id} className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl overflow-hidden hover:bg-white/10 hover:shadow-sky-500/10 hover:border-white/20 transition-all duration-200">
+                <div className="px-6 py-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start sm:items-center gap-4">
+                      <div className="p-2 bg-white/5 rounded-xl border border-white/10">
+                        <FileText className="h-6 w-6 text-sky-400" />
+                      </div>
                       <div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="font-semibold text-gray-900">Protocolo: {report.protocol}</span>
+                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                          <span className="font-bold text-white">Protocolo: {report.protocol}</span>
                           {report.company?.name && (
-                            <span className="text-gray-800">— {report.company.name}</span>
+                            <span className="text-gray-500 hidden sm:inline">—</span>
+                          )}
+                          {report.company?.name && (
+                            <span className="text-gray-400 font-medium">{report.company.name}</span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500">
-                          Criado em: {new Date(report.created_at).toLocaleDateString('pt-BR')}
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Criado em {new Date(report.created_at).toLocaleDateString('pt-BR')} às {new Date(report.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-500">SLA</span>
-                      {renderSlaBadge(report)}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {report.risk_level === 'high' || report.risk_level === 'critical' ? (
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                      ) : null}
-                      <span className="text-xs text-gray-500">Grau de Risco</span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRiskColor(report.risk_level)}`}>
-                        {getRiskLabel(report.risk_level)}
+
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      <div className="flex items-center gap-2">
+                        {renderSlaBadge(report)}
+                      </div>
+                      
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${RISK_COLORS[report.risk_level] || 'bg-gray-700 text-gray-300 border-gray-600'}`}>
+                        Risco {getRiskLabel(report.risk_level)}
                       </span>
-                      <span className="text-xs text-gray-500">Status</span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
-                        {getStatusLabel(report.status)}
+
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${STATUS_COLORS[report.status]}`}>
+                        {getIconForStatus(report.status)}
+                        <span className="ml-1.5">{getStatusLabel(report.status)}</span>
                       </span>
                     </div>
                   </div>
                   
-                  <div className="mt-3">
-                    <p className="text-sm font-semibold text-gray-900">
+                  <div className="mt-4 pl-0 sm:pl-[3.5rem]">
+                    <h3 className="text-base font-semibold text-gray-200 mb-1">
                       {report.title}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-700 line-clamp-2">
-                      {report.description.substring(0, 200)}...
+                    </h3>
+                    <p className="text-sm text-gray-400 line-clamp-2 leading-relaxed">
+                      {report.description}
                     </p>
                   </div>
                   
-                  <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <span className="mr-4">
+                  <div className="mt-4 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pl-0 sm:pl-[3.5rem]">
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 font-medium">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
                         {report.attachments?.length || 0} anexos
                       </span>
-                      <span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
                         {(() => {
                           const all = report.comments || [];
                           const count = profile?.role === 'user' ? all.filter((c) => !c.is_internal).length : all.length;
                           return count || 0;
                         })()} comentários
                       </span>
-                      {report.is_anonymous ? (
-                        <span className="ml-4 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          Anônima
-                        </span>
-                      ) : (
-                        <span className="ml-4 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          Identificada
-                        </span>
-                      )}
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
+                        {report.is_anonymous ? 'Anônima' : 'Identificada'}
+                      </span>
                     </div>
                     <button
                       onClick={() => { setSelectedReport(report); setDetailsOpen(true); }}
-                      className="inline-flex items-center px-3 py-2 border border-petroleo-300 text-sm leading-4 font-medium rounded-md text-petroleo-700 bg-white hover:bg-petroleo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500"
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-white/10 text-sm font-medium rounded-lg text-white bg-white/5 hover:bg-white/10 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors shadow-sm"
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Ver Detalhes
@@ -426,15 +437,15 @@ export function ManageReports() {
           )}
         </div>
         <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-700">
+          <div className="flex items-center gap-2 text-sm text-gray-400">
             <span>Resultados por página</span>
             <select
               value={perPage}
               onChange={(e) => setPerPage(Number(e.target.value))}
-              className="border border-gray-300 rounded-md px-2 py-1"
+              className="border border-white/10 bg-white/5 text-white rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-sky-500 [&>option]:bg-slate-800"
             >
               {[5,10,20,50].map((n) => (
-                <option key={n} value={n}>{n}</option>
+                <option key={n} value={n} className="bg-slate-800 text-white">{n}</option>
               ))}
             </select>
             <span>
@@ -445,15 +456,15 @@ export function ManageReports() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className={`inline-flex items-center px-3 py-2 rounded-md border text-sm ${page <= 1 ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              className={`inline-flex items-center px-3 py-2 rounded-md border text-sm transition-colors ${page <= 1 ? 'text-gray-600 border-white/5 cursor-not-allowed' : 'text-gray-300 border-white/10 hover:bg-white/5 hover:text-white'}`}
             >
               <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
             </button>
-            <span className="text-sm text-gray-700">Página {page} de {pageCount}</span>
+            <span className="text-sm text-gray-400">Página {page} de {pageCount}</span>
             <button
               onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
               disabled={page >= pageCount}
-              className={`inline-flex items-center px-3 py-2 rounded-md border text-sm ${page >= pageCount ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              className={`inline-flex items-center px-3 py-2 rounded-md border text-sm transition-colors ${page >= pageCount ? 'text-gray-600 border-white/5 cursor-not-allowed' : 'text-gray-300 border-white/10 hover:bg-white/5 hover:text-white'}`}
             >
               Próxima <ChevronRight className="h-4 w-4 ml-1" />
             </button>

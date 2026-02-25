@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, createHashRouter, RouterProvider } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { supabase } from './lib/supabase';
@@ -30,7 +30,6 @@ import Landing from './pages/Landing';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -152,163 +151,186 @@ function AppRoutes() {
     }
   }, [])
 
-  return (
-    <HashRouter>
-      <Routes>
-        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
-        <Route path="/landing" element={<Landing />} />
-        <Route path="/recover" element={<PasswordRecoveryRequest />} />
-        <Route path="/recover/:token" element={<PasswordRecoveryReset />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/invite" element={<Onboarding />} />
-        <Route path="/report/:token" element={<ReportForm />} />
-        <Route path="/logout" element={<Logout />} />
-        <Route path="/success" element={<ReportSuccess />} />
-        <Route path="/preview/email/denuncia-confirmacao" element={<PreviewEmailDenunciaConfirmacao />} />
-        <Route path="/preview/email/alteracao-senha" element={<PreviewEmailAlteracaoSenha />} />
-        <Route path="/preview/email/convite-usuario" element={<PreviewEmailConviteUsuario />} />
-        
-        <Route path="/" element={<Landing />} />
-        
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Layout>
-              <Dashboard />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/my-reports" element={
-          <ProtectedRoute>
-            <Layout>
-              <MyReports />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/new-report" element={
-          <ProtectedRoute>
-            <Layout>
-              <NewReport />
-            </Layout>
-          </ProtectedRoute>
-        } />
+  const router = createHashRouter([
+    { path: '/login', element: user ? <Navigate to="/dashboard" replace /> : <Login /> },
+    { path: '/landing', element: <Landing /> },
+    { path: '/recover', element: <PasswordRecoveryRequest /> },
+    { path: '/recover/:token', element: <PasswordRecoveryReset /> },
+    { path: '/onboarding', element: <Onboarding /> },
+    { path: '/invite', element: <Onboarding /> },
+    { path: '/report/:token', element: <ReportForm /> },
+    { path: '/logout', element: <Logout /> },
+    { path: '/success', element: <ReportSuccess /> },
+    { path: '/preview/email/denuncia-confirmacao', element: <PreviewEmailDenunciaConfirmacao /> },
+    { path: '/preview/email/alteracao-senha', element: <PreviewEmailAlteracaoSenha /> },
+    { path: '/preview/email/convite-usuario', element: <PreviewEmailConviteUsuario /> },
+    { path: '/', element: <Landing /> },
+    {
+      path: '/dashboard',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <Dashboard />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/my-reports',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <MyReports />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/new-report',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <NewReport />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/politica-nao-retaliacao',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <PoliticaNaoRetaliacaoPublicPage />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/manage-reports',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <ManageReports />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/corporate-approval',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <CorporateApproval />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/settings',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <Settings />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/privacy',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <PrivacyPolicy />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/terms',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <TermsOfUse />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/configuracoes/areas',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <CorporateAreasPage />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/configurações/areas',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <CorporateAreasPage />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/configuracoes/politica-nao-retaliacao',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <PoliticaNaoRetaliacaoPage />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/configurações/politica-nao-retaliacao',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <PoliticaNaoRetaliacaoPage />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/admin/configuracoes/assinaturas',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <AssinaturasManager />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/admin/configuracoes/assinaturas/nova',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <AssinaturaForm />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/admin/configuracoes/assinaturas/:id/editar',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <AssinaturaForm />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    { path: '*', element: <Navigate to="/landing" replace /> },
+  ], {
+    future: { v7_relativeSplatPath: true }
+  });
 
-        <Route path="/politica-nao-retaliacao" element={
-          <ProtectedRoute>
-            <Layout>
-              <PoliticaNaoRetaliacaoPublicPage />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/manage-reports" element={
-          <ProtectedRoute>
-            <Layout>
-              <ManageReports />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/corporate-approval" element={
-          <ProtectedRoute>
-            <Layout>
-              <CorporateApproval />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <Layout>
-              <Settings />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/privacy" element={
-          <ProtectedRoute>
-            <Layout>
-              <PrivacyPolicy />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/terms" element={
-          <ProtectedRoute>
-            <Layout>
-              <TermsOfUse />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/configuracoes/areas" element={
-          <ProtectedRoute>
-            <Layout>
-              <CorporateAreasPage />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        {/* Alias com acentuação para evitar redirecionamento pelo wildcard */}
-        <Route path="/configurações/areas" element={
-          <ProtectedRoute>
-            <Layout>
-              <CorporateAreasPage />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/configuracoes/politica-nao-retaliacao" element={
-          <ProtectedRoute>
-            <Layout>
-              <PoliticaNaoRetaliacaoPage />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        {/* Alias com acentuação para política */}
-        <Route path="/configurações/politica-nao-retaliacao" element={
-          <ProtectedRoute>
-            <Layout>
-              <PoliticaNaoRetaliacaoPage />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        {/* Rota para Assinaturas - apenas Admin */}
-        <Route path="/admin/configuracoes/assinaturas" element={
-          <ProtectedRoute>
-            <Layout>
-              <AssinaturasManager />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        {/* Rota para criar nova assinatura */}
-        <Route path="/admin/configuracoes/assinaturas/nova" element={
-          <ProtectedRoute>
-            <Layout>
-              <AssinaturaForm />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        {/* Rota para editar assinatura */}
-        <Route path="/admin/configuracoes/assinaturas/:id/editar" element={
-          <ProtectedRoute>
-            <Layout>
-              <AssinaturaForm />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        
-        
-        <Route path="*" element={<Navigate to="/landing" replace />} />
-      </Routes>
-    </HashRouter>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default function App() {

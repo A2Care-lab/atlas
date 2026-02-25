@@ -156,25 +156,28 @@ export function MyReports() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Minhas Ocorrências Registradas</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-white">Minhas Ocorrências Registradas</h1>
+          <p className="mt-1 text-sm text-gray-400">
+            Acompanhe aqui todas as denúncias que você abriu, com status e atualizações em tempo real
+          </p>
+        </div>
         {profile?.role === 'user' && (
           <button
             onClick={() => navigate('/new-report')}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-petroleo-600 hover:bg-petroleo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nova Denúncia
           </button>
         )}
       </div>
-      <p className="text-sm text-gray-700">
-        Acompanhe aqui todas as denúncias que você abriu, com status e atualizações em tempo real
-      </p>
-      <div className="bg-white border border-petroleo-100 shadow-lg rounded-xl mb-6 p-4">
-        <div className="flex items-center justify-between mb-3">
+
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl mb-6 p-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <Filter className="h-4 w-4 text-petroleo-600 mr-2" />
-            <span className="text-sm font-semibold text-gray-800">Filtros</span>
+            <Filter className="h-4 w-4 text-sky-400 mr-2" />
+            <span className="text-sm font-semibold text-gray-200">Filtros</span>
           </div>
           <ClearFiltersButton onClick={() => { setProtocolFilter(''); setStatusFilter(''); setStartDate(''); setEndDate(''); }} />
         </div>
@@ -184,15 +187,15 @@ export function MyReports() {
               type="text"
               value={protocolFilter}
               onChange={(e) => setProtocolFilter(e.target.value)}
-              placeholder="Busque pelo número do protocólo. Ex: DEN09432791"
-              className="pl-3 pr-3 py-3 border border-gray-300 rounded-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-petroleo-500 focus:border-petroleo-500"
+              placeholder="Busque pelo número do protocolo"
+              className="pl-3 pr-3 py-2.5 border border-white/10 rounded-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white/5 text-white placeholder-gray-500"
             />
           </div>
           <div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter((e.target.value || '') as ReportStatus | '')}
-              className="block w-full pl-3 pr-10 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="block w-full pl-3 pr-10 py-2.5 text-sm border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white/5 text-white [&>option]:bg-slate-800"
             >
               <option value="">Todos os Status</option>
               <option value="received">Recebida</option>
@@ -209,7 +212,7 @@ export function MyReports() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="block w-full pl-3 pr-3 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="block w-full pl-3 pr-3 py-2.5 text-sm border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white/5 text-white placeholder-gray-500 [color-scheme:dark]"
             />
           </div>
           <div>
@@ -217,7 +220,7 @@ export function MyReports() {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="block w-full pl-3 pr-3 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-petroleo-500 focus:border-petroleo-500"
+              className="block w-full pl-3 pr-3 py-2.5 text-sm border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white/5 text-white placeholder-gray-500 [color-scheme:dark]"
             />
           </div>
         </div>
@@ -225,15 +228,15 @@ export function MyReports() {
       </div>
 
       {reports.length === 0 ? (
-        <div className="text-center py-12">
-          <FileText className="mx-auto h-12 w-12 text-petroleo-600" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma denúncia encontrada</h3>
-          <p className="mt-1 text-sm text-gray-500">Você ainda não fez nenhuma denúncia.</p>
+        <div className="text-center py-12 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg">
+          <FileText className="mx-auto h-12 w-12 text-gray-500" />
+          <h3 className="mt-2 text-sm font-medium text-gray-200">Nenhuma denúncia encontrada</h3>
+          <p className="mt-1 text-sm text-gray-400">Você ainda não fez nenhuma denúncia.</p>
           {profile?.role === 'user' && (
             <div className="mt-6">
               <button
                 onClick={() => navigate('/new-report')}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-petroleo-600 hover:bg-petroleo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Criar Nova Denúncia
@@ -242,51 +245,50 @@ export function MyReports() {
           )}
         </div>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul className="divide-y divide-gray-300">
+        <div className="space-y-4">
             {reports.map((report) => (
-              <li key={report.id}>
-                <div className="px-6 py-4 flex items-center justify-between gap-2">
+              <div key={report.id} className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl overflow-hidden transition-all hover:bg-white/10 hover:shadow-sky-500/10 hover:border-white/20">
+                <div className="px-6 py-5 flex items-center justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <FileText className="h-5 w-5 text-petroleo-600 mr-3" />
+                        <FileText className="h-5 w-5 text-sky-400 mr-3" />
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-white">
                             Protocolo: {report.protocol}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-400">
                             Criado em: {new Date(report.created_at).toLocaleDateString('pt-BR')}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center md:space-x-4 space-x-2 pr-2">
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-500">Status</span>
+                          <span className="text-xs text-gray-400">Status</span>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[report.status]}`}>
                             {getIconForStatus(report.status)}
                             <span className="ml-1">{getStatusLabel(report.status)}</span>
                           </span>
                         </div>
                         <div className="hidden md:flex items-center space-x-2">
-                          <span className="text-xs text-gray-500">SLA</span>
+                          <span className="text-xs text-gray-400">SLA</span>
                           {renderSlaBadge(report)}
                         </div>
                       </div>
                     </div>
                     <div className="mt-2">
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-sm font-semibold text-gray-200">
                         {report.title}
                       </p>
-                      <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                      <p className="mt-1 text-sm text-gray-400 line-clamp-2">
                         {report.description.substring(0, 150)}...
                       </p>
                       <div className="mt-2 md:hidden flex items-center space-x-2">
-                        <span className="text-xs text-gray-500">SLA</span>
+                        <span className="text-xs text-gray-400">SLA</span>
                         {renderSlaBadge(report)}
                       </div>
                     </div>
-                    <div className="mt-2 flex items-center text-sm text-gray-500">
+                    <div className="mt-2 flex items-center text-sm text-gray-400">
                       <span className="mr-4">
                         {report.attachments?.length || 0} anexos
                       </span>
@@ -298,11 +300,11 @@ export function MyReports() {
                         })()} comentários
                       </span>
                       {report.is_anonymous ? (
-                        <span className="ml-4 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <span className="ml-4 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-700 text-gray-300">
                           Anônima
                         </span>
                       ) : (
-                        <span className="ml-4 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <span className="ml-4 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-700 text-gray-300">
                           Identificada
                         </span>
                       )}
@@ -311,16 +313,15 @@ export function MyReports() {
                   <div className="ml-2 md:ml-4 flex-shrink-0 pr-2">
                     <button
                       onClick={() => { setSelectedReport(report); setDetailsOpen(true); }}
-                    className="inline-flex items-center px-2.5 md:px-3 py-2 border border-petroleo-300 shadow-sm text-xs md:text-sm leading-4 font-medium rounded-md text-petroleo-700 bg-white hover:bg-petroleo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500"
+                      className="inline-flex items-center px-3 py-2 border border-white/20 shadow-sm text-sm font-medium rounded-lg text-white bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors"
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Ver Detalhes
                     </button>
                   </div>
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
         </div>
       )}
       <ReportDetailsModal report={selectedReport} open={detailsOpen} onClose={() => setDetailsOpen(false)} hideRiskInfo hideStatusControls hideInternalCommentToggle />
