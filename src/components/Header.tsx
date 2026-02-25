@@ -44,8 +44,8 @@ export function Header() {
   return (
     <header className={`
       fixed top-0 right-0 left-0 z-40
-      bg-gradient-to-r from-petroleo-700 via-petroleo-600 to-petroleo-700
-      border-b border-white/10 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-white/5
+      bg-slate-900/50 backdrop-blur-md
+      border-b border-white/10 shadow-lg
       ${isMobile ? 'h-20' : isCollapsed ? 'lg:left-20 lg:h-20' : 'lg:left-64 lg:h-20'}
       transition-all duration-300
     `}>

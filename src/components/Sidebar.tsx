@@ -119,7 +119,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <div className={`
         fixed top-0 left-0 h-full text-white z-50
-        bg-gradient-to-b from-slate-900 via-petroleo-900 to-slate-800 shadow-2xl
+        bg-slate-900/50 backdrop-blur-md border-r border-white/10 shadow-2xl
         transition-all duration-300 ease-in-out
         ${isMobile 
           ? `${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} ${sidebarMobileWidth}` 
