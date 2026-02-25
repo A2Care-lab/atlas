@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
+import { X, Upload } from 'lucide-react'
 import { UserProfile } from '../types/database'
 import { supabase } from '../lib/supabase'
 import { useCorporateAreas } from '../hooks/useCorporateAreas'
@@ -123,78 +123,85 @@ export function UserProfileModal({ profile, open, onClose, onSave, anchorRef }: 
       <div aria-modal="true" role="dialog" className="fixed inset-0 z-[1000]" onClick={onClose}>
         <div
         ref={containerRef}
-        className="fixed bg-white rounded-lg shadow-xl border-2 border-petroleo-600"
+        className="fixed bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-2xl border border-slate-700 text-white"
         style={{ top: layout.top, left: layout.left, width: layout.width }}
         onClick={(e) => e.stopPropagation()}
         >
         <div
-          className="absolute bg-white rotate-45 border-2 border-petroleo-600"
-          style={{ top: -8, left: layout.arrowLeft, width: 16, height: 16 }}
+          className="absolute bg-slate-900/95 backdrop-blur-sm rotate-45 border-t border-l border-slate-700"
+          style={{ top: -6, left: layout.arrowLeft, width: 12, height: 12 }}
         />
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-base font-semibold text-gray-900">Perfil do Usuário</h2>
-          <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">
-            <X className="h-4 w-4 text-gray-600" />
+        <div className="flex items-center justify-between p-4 border-b border-slate-700">
+          <h2 className="text-base font-semibold text-white">Perfil do Usuário</h2>
+          <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+            <X className="h-4 w-4" />
           </button>
         </div>
           <div className="p-4 space-y-4">
           <div className="flex flex-col items-center gap-2">
-            <div className="w-20 h-20 rounded-full bg-gray-100 border border-gray-300 overflow-hidden flex items-center justify-center">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-gray-500 text-sm">Avatar</span>
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full bg-slate-800 border-2 border-slate-600 overflow-hidden flex items-center justify-center shadow-lg">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-gray-500 text-sm font-medium">Avatar</span>
+                )}
+              </div>
+              {editing && (
+                <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                  <Upload className="h-6 w-6 text-white" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
+                </label>
               )}
             </div>
-            {editing && (
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
-                className="text-xs"
-              />
-            )}
+            {editing && avatarFile && <span className="text-xs text-emerald-400">Imagem selecionada</span>}
           </div>
+
           <div className="space-y-1">
-            <label className="text-xs text-gray-500">Nome</label>
+            <label className="text-xs text-gray-400 font-medium">Nome</label>
             <input
               type="text"
               name="full_name"
               value={form.full_name}
               onChange={handleChange}
               disabled={!editing}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-petroleo-300 disabled:bg-gray-50"
+              className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-gray-500">E-mail</label>
+            <label className="text-xs text-gray-400 font-medium">E-mail</label>
             <input
               type="email"
               value={profile?.email || ''}
               disabled
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-gray-50"
+              className="w-full rounded-md border border-slate-600 bg-slate-900/50 px-3 py-2 text-sm text-gray-400 cursor-not-allowed"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs text-gray-500">Celular/WhatsApp</label>
+              <label className="text-xs text-gray-400 font-medium">Celular/WhatsApp</label>
               <input
                 type="text"
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
                 disabled={!editing}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-petroleo-300 disabled:bg-gray-50"
+                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-gray-500">Departamento</label>
+              <label className="text-xs text-gray-400 font-medium">Departamento</label>
               <select
                 name="department"
                 value={form.department}
                 onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))}
                 disabled={!editing}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-petroleo-300 disabled:bg-gray-50"
+                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors [&>option]:bg-slate-800"
               >
                 <option value="">Selecionar...</option>
                 {areas.filter((a) => a.status === 'active').map((a) => (
@@ -204,19 +211,19 @@ export function UserProfileModal({ profile, open, onClose, onSave, anchorRef }: 
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-gray-500">Empresa</label>
+            <label className="text-xs text-gray-400 font-medium">Empresa</label>
             <input
               type="text"
               value={companyName || ''}
               disabled
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-gray-50"
+              className="w-full rounded-md border border-slate-600 bg-slate-900/50 px-3 py-2 text-sm text-gray-400 cursor-not-allowed"
             />
           </div>
-          <div className="text-xs text-gray-500">Função: <span className="font-medium text-gray-700">{getUserRoleLabel(profile?.role || '') || '—'}</span></div>
+          <div className="text-xs text-gray-500">Função: <span className="font-medium text-sky-400">{getUserRoleLabel(profile?.role || '') || '—'}</span></div>
         </div>
-          <div className="p-4 flex justify-end gap-2 border-t border-gray-200">
-            <button onClick={onClose} className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm">Fechar</button>
-            <button onClick={handlePrimary} className="px-3 py-2 rounded-md bg-petroleo-600 hover:bg-petroleo-700 text-white text-sm">
+          <div className="p-4 flex justify-end gap-2 border-t border-slate-700">
+            <button onClick={onClose} className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm transition-colors border border-slate-600">Fechar</button>
+            <button onClick={handlePrimary} className="px-3 py-2 rounded-md bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium shadow-lg shadow-sky-900/20 transition-all">
               {editing ? 'Salvar' : 'Editar'}
             </button>
           </div>
