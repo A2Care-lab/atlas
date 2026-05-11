@@ -1,0 +1,24 @@
+interface Props {
+  className?: string
+}
+
+export default function AtlasLogo({ className = '' }: Props) {
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      fill="currentColor"
+    >
+      <g>
+        <circle cx="40" cy="16" r="13" fill="none" stroke="currentColor" strokeWidth="2" />
+        <path d="M27 16h26M40 3v26M33 9c6 3 8 3 14 0M33 23c6-3 8-3 14 0" fill="none" stroke="currentColor" strokeWidth="2" />
+        <path d="M26 34c2-4 6-7 9-8 3-1 4 2 3 4-1 3-3 6-5 9l-3 5-8 1 4-6-3-3 3-2z" />
+        <path d="M30 54c8 0 18-3 26-6" stroke="currentColor" strokeWidth="2" fill="none" />
+        <rect x="24" y="44" width="8" height="6" rx="2" />
+        <circle cx="34" cy="28" r="3" />
+      </g>
+    </svg>
+  )
+}
+
