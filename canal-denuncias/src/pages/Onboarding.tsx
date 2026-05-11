@@ -41,6 +41,7 @@ export default function Onboarding() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [inviteLoading, setInviteLoading] = useState(false)
   const [inviteData, setInviteData] = useState<InviteInfo | null>(null)
+  const [successRedirectPath, setSuccessRedirectPath] = useState<string | null>(null)
   const passwordsMatch = Boolean(password) && password === confirm
   const readTypeFromHash = () => {
     const searchParams = new URLSearchParams(window.location.search || '')
@@ -220,6 +221,16 @@ export default function Onboarding() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!successRedirectPath) return
+
+    const timer = window.setTimeout(() => {
+      navigate(successRedirectPath, { replace: true })
+    }, 1800)
+
+    return () => window.clearTimeout(timer)
+  }, [navigate, successRedirectPath])
+
   if (loading || inviteLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -316,7 +327,7 @@ export default function Onboarding() {
         const loginEmail = (data as any)?.email || inviteData.email
         const { error: signInError } = await signIn(loginEmail, password)
         if (signInError) throw signInError
-        navigate('/')
+        setSuccessRedirectPath('/dashboard')
         return
       }
       let session = (await supabase.auth.getSession()).data.session
@@ -655,6 +666,34 @@ export default function Onboarding() {
           message={docError}
           variant="error"
           onClose={() => setDocError('')}
+        />
+        <MessageModal
+          open={!!successRedirectPath}
+          title="Cadastro concluído"
+          message={
+            <>
+              <p>Seu cadastro foi concluído com sucesso.</p>
+              <p className="mt-2 text-xs text-gray-400">Você será direcionado automaticamente para a tela inicial do sistema.</p>
+            </>
+          }
+          variant="success"
+          onClose={() => {
+            if (successRedirectPath) {
+              navigate(successRedirectPath, { replace: true })
+            }
+          }}
+          actions={
+            <button
+              onClick={() => {
+                if (successRedirectPath) {
+                  navigate(successRedirectPath, { replace: true })
+                }
+              }}
+              className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium text-sm shadow-sm"
+            >
+              Ir para o sistema
+            </button>
+          }
         />
       </div>
     </div>
