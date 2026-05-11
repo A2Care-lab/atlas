@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 import { Company, UserProfile, UserRole, Invitation } from '../types/database'
 import { getUserRoleLabel } from '../utils/labels'
@@ -10,6 +11,7 @@ import MessageModal from './MessageModal'
 
 const STATUS_ORDER = ['Ativo', 'Inativo', 'Pendente'] as const
 const ROLE_ORDER: UserRole[] = ['user', 'corporate_manager', 'approver_manager', 'crm_n1', 'admin']
+const USERS_TABLE_STORAGE_KEY = 'atlas:users-table-state:v1'
 
 interface Filters {
   name: string
@@ -20,14 +22,108 @@ interface Filters {
   status?: 'Todos' | 'Ativo' | 'Inativo' | 'Pendente'
 }
 
+interface UsersTablePersistedState {
+  filters: Filters
+  pageSize: number
+  currentPage: number
+}
+
+const DEFAULT_FILTERS: Filters = { name: '', email: '', status: 'Todos', start: '', end: '', companyId: '' }
+
+const readPersistedState = (search = ''): UsersTablePersistedState => {
+  const urlParams = new URLSearchParams(search)
+
+  const readStateFromParams = (): Partial<UsersTablePersistedState> => ({
+    filters: {
+      name: urlParams.get('users_name') || '',
+      email: urlParams.get('users_email') || '',
+      start: urlParams.get('users_start') || '',
+      end: urlParams.get('users_end') || '',
+      companyId: urlParams.get('users_company') || '',
+      status:
+        urlParams.get('users_status') === 'Ativo' ||
+        urlParams.get('users_status') === 'Inativo' ||
+        urlParams.get('users_status') === 'Pendente' ||
+        urlParams.get('users_status') === 'Todos'
+          ? (urlParams.get('users_status') as Filters['status'])
+          : undefined,
+    },
+    pageSize: Number(urlParams.get('users_page_size')) || undefined,
+    currentPage: Number(urlParams.get('users_page')) || undefined,
+  })
+
+  if (typeof window === 'undefined') {
+    const fromParams = readStateFromParams()
+    return {
+      filters: { ...DEFAULT_FILTERS, ...(fromParams.filters || {}) },
+      pageSize: [5, 10, 20, 50].includes(Number(fromParams.pageSize)) ? Number(fromParams.pageSize) : 10,
+      currentPage: Number(fromParams.currentPage) > 0 ? Number(fromParams.currentPage) : 1,
+    }
+  }
+
+  try {
+    const raw = window.localStorage.getItem(USERS_TABLE_STORAGE_KEY)
+    const fromParams = readStateFromParams()
+    if (!raw) {
+      return {
+        filters: { ...DEFAULT_FILTERS, ...(fromParams.filters || {}) },
+        pageSize: [5, 10, 20, 50].includes(Number(fromParams.pageSize)) ? Number(fromParams.pageSize) : 10,
+        currentPage: Number(fromParams.currentPage) > 0 ? Number(fromParams.currentPage) : 1,
+      }
+    }
+
+    const parsed = JSON.parse(raw) as Partial<UsersTablePersistedState>
+    const persistedFilters = parsed.filters || {}
+    const pageSize = [5, 10, 20, 50].includes(Number(fromParams.pageSize))
+      ? Number(fromParams.pageSize)
+      : ([5, 10, 20, 50].includes(Number(parsed.pageSize)) ? Number(parsed.pageSize) : 10)
+    const currentPage = Number(fromParams.currentPage) > 0
+      ? Number(fromParams.currentPage)
+      : (Number(parsed.currentPage) > 0 ? Number(parsed.currentPage) : 1)
+
+    return {
+      filters: {
+        name: urlParams.get('users_name') ?? (typeof persistedFilters.name === 'string' ? persistedFilters.name : ''),
+        email: urlParams.get('users_email') ?? (typeof persistedFilters.email === 'string' ? persistedFilters.email : ''),
+        start: urlParams.get('users_start') ?? (typeof persistedFilters.start === 'string' ? persistedFilters.start : ''),
+        end: urlParams.get('users_end') ?? (typeof persistedFilters.end === 'string' ? persistedFilters.end : ''),
+        companyId: urlParams.get('users_company') ?? (typeof persistedFilters.companyId === 'string' ? persistedFilters.companyId : ''),
+        status:
+          urlParams.get('users_status') === 'Ativo' ||
+          urlParams.get('users_status') === 'Inativo' ||
+          urlParams.get('users_status') === 'Pendente' ||
+          urlParams.get('users_status') === 'Todos'
+            ? (urlParams.get('users_status') as Filters['status'])
+            : (
+              persistedFilters.status === 'Ativo' ||
+              persistedFilters.status === 'Inativo' ||
+              persistedFilters.status === 'Pendente' ||
+              persistedFilters.status === 'Todos'
+                ? persistedFilters.status
+                : 'Todos'
+            ),
+      },
+      pageSize,
+      currentPage,
+    }
+  } catch {
+    return { filters: DEFAULT_FILTERS, pageSize: 10, currentPage: 1 }
+  }
+}
+
 export default function UsersTable() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const persistedState = readPersistedState(location.search)
+  const hasHydratedPaginationRef = useRef(false)
+  const pendingRestoredPageRef = useRef<number | null>(persistedState.currentPage > 1 ? persistedState.currentPage : null)
   const { profile, resetPassword } = useAuth()
   const [users, setUsers] = useState<UserProfile[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
   const [invites, setInvites] = useState<Invitation[]>([])
   const [lastInvitesByEmail, setLastInvitesByEmail] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
-  const [filters, setFilters] = useState<Filters>({ name: '', email: '', status: 'Todos' })
+  const [filters, setFilters] = useState<Filters>(persistedState.filters)
   const [inviteOpen, setInviteOpen] = useState(false)
   const [bulkOpen, setBulkOpen] = useState(false)
   const [editUser, setEditUser] = useState<UserProfile | null>(null)
@@ -36,8 +132,8 @@ export default function UsersTable() {
   const [msgTitle, setMsgTitle] = useState<string>('')
   const [msgText, setMsgText] = useState<string>('')
   const [msgVariant, setMsgVariant] = useState<'success'|'error'|'info'>('info')
-  const [pageSize, setPageSize] = useState(10)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(persistedState.pageSize)
+  const [currentPage, setCurrentPage] = useState(persistedState.currentPage)
 
   const canAdmin = profile?.role === 'admin'
 
@@ -47,6 +143,63 @@ export default function UsersTable() {
     loadInvites()
     loadInvitesLastMap()
   }, [profile])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    window.localStorage.setItem(
+      USERS_TABLE_STORAGE_KEY,
+      JSON.stringify({
+        filters,
+        pageSize,
+        currentPage,
+      } satisfies UsersTablePersistedState)
+    )
+  }, [filters, pageSize, currentPage])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    params.set('tab', 'users')
+
+    const syncParam = (key: string, value?: string, fallback?: string) => {
+      const finalValue = value ?? fallback ?? ''
+      if (finalValue) params.set(key, finalValue)
+      else params.delete(key)
+    }
+
+    syncParam('users_name', filters.name)
+    syncParam('users_email', filters.email)
+    syncParam('users_start', filters.start)
+    syncParam('users_end', filters.end)
+    syncParam('users_company', filters.companyId)
+    syncParam('users_status', filters.status && filters.status !== 'Todos' ? filters.status : '')
+    syncParam('users_page_size', pageSize !== 10 ? String(pageSize) : '')
+    syncParam('users_page', currentPage > 1 ? String(currentPage) : '')
+
+    const nextSearch = params.toString()
+    const currentSearch = location.search.startsWith('?') ? location.search.slice(1) : location.search
+
+    if (nextSearch !== currentSearch) {
+      navigate(`${location.pathname}?${nextSearch}`, { replace: true })
+    }
+  }, [currentPage, filters, location.pathname, location.search, navigate, pageSize])
+
+  useEffect(() => {
+    if (!profile) return
+
+    if (profile.role !== 'admin' && filters.companyId && filters.companyId !== profile.company_id) {
+      setFilters((current) => ({ ...current, companyId: profile.company_id || '' }))
+    }
+  }, [profile, filters.companyId])
+
+  useEffect(() => {
+    if (!companies.length || !filters.companyId) return
+
+    const companyExists = companies.some((company) => company.id === filters.companyId)
+    if (!companyExists) {
+      setFilters((current) => ({ ...current, companyId: '' }))
+    }
+  }, [companies, filters.companyId])
 
   const load = async () => {
     setLoading(true)
@@ -323,8 +476,13 @@ export default function UsersTable() {
   }, [users, invites, companies, filters, lastInvitesByEmail])
 
   useEffect(() => {
+    if (!hasHydratedPaginationRef.current) {
+      hasHydratedPaginationRef.current = true
+      return
+    }
+
     setCurrentPage(1)
-  }, [filters, users, invites])
+  }, [filters])
 
   const statusSummary = useMemo(() => {
     const counts = STATUS_ORDER.reduce<Record<(typeof STATUS_ORDER)[number], number>>((acc, status) => {
@@ -377,6 +535,16 @@ export default function UsersTable() {
   const endIndex = startIndex + pageSize
   const paginatedRows = combinedRows.slice(startIndex, endIndex)
 
+  useEffect(() => {
+    const restoredPage = pendingRestoredPageRef.current
+    if (!restoredPage) return
+    if (totalPages < restoredPage) return
+    if (currentPage !== restoredPage) {
+      setCurrentPage(restoredPage)
+    }
+    pendingRestoredPageRef.current = null
+  }, [currentPage, totalPages])
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -401,7 +569,7 @@ export default function UsersTable() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h18M6 8h12M9 12h6M12 16h0"/></svg>
             Filtros
           </h3>
-          <ClearFiltersButton onClick={()=>setFilters({ name:'', email:'', status:'Todos', start:'', end:'', companyId:'' })} />
+          <ClearFiltersButton onClick={()=>{ setFilters(DEFAULT_FILTERS); setCurrentPage(1) }} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           <div className="lg:col-span-2">

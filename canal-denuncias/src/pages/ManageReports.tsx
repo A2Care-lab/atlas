@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { Report, ReportStatus } from '../types/database';
-import { FileText, Eye, Filter, Search, AlertTriangle, ChevronLeft, ChevronRight, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileText, Eye, Filter, Search, AlertTriangle, ChevronLeft, ChevronRight, Clock, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import { ClearFiltersButton } from '../components/ClearFiltersButton';
 import { ReportDetailsModal } from '../components/ReportDetailsModal';
+import MessageModal from '../components/MessageModal';
 
 const STATUS_OPTIONS: { value: ReportStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Todos os Status' },
@@ -47,14 +48,18 @@ export function ManageReports() {
   const [reports, setReports] = useState<Report[]>([]);
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReportStatus | 'all'>('all');
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [pendingDeleteReport, setPendingDeleteReport] = useState<Report | null>(null);
+  const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
   const [perPage, setPerPage] = useState<number>(10);
   const [page, setPage] = useState<number>(1);
   const [slaFilter, setSlaFilter] = useState<'all' | 'in_time' | 'overdue'>('all');
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     loadReports();
@@ -78,6 +83,7 @@ export function ManageReports() {
     if (!profile) return;
 
     try {
+      setPageError('');
       let companyIds: string[] | null = null
       if (profile.role === 'crm_n1') {
         try {
@@ -119,6 +125,49 @@ export function ManageReports() {
       console.error('Error loading reports:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteReport = async (report: Report) => {
+    if (!isAdmin) return;
+
+    setPageError('');
+    setDeletingReportId(report.id);
+
+    try {
+      const attachmentPaths = (report.attachments || [])
+        .map((attachment) => attachment.file_path)
+        .filter(Boolean);
+
+      if (attachmentPaths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from('reports')
+          .remove(attachmentPaths);
+
+        if (storageError) {
+          console.warn('Falha ao remover anexos da denúncia no storage', storageError);
+        }
+      }
+
+      const { error } = await supabase
+        .from('reports')
+        .delete()
+        .eq('id', report.id);
+
+      if (error) throw error;
+
+      setReports((current) => current.filter((item) => item.id !== report.id));
+      setPendingDeleteReport(null);
+
+      if (selectedReport?.id === report.id) {
+        setSelectedReport(null);
+        setDetailsOpen(false);
+      }
+    } catch (deleteError) {
+      console.error('Erro ao excluir denúncia', deleteError);
+      setPageError('Nao foi possivel excluir a denuncia.');
+    } finally {
+      setDeletingReportId(null);
     }
   };
 
@@ -277,6 +326,12 @@ export function ManageReports() {
         Administre, analise e acompanhe todas as denúncias registradas na organização
       </p>
 
+      {pageError && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {pageError}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl mb-6 p-6">
         <div className="flex items-center justify-between mb-4">
@@ -422,13 +477,28 @@ export function ManageReports() {
                         {report.is_anonymous ? 'Anônima' : 'Identificada'}
                       </span>
                     </div>
-                    <button
-                      onClick={() => { setSelectedReport(report); setDetailsOpen(true); }}
-                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-white/10 text-sm font-medium rounded-lg text-white bg-white/5 hover:bg-white/10 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors shadow-sm"
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Detalhes
-                    </button>
+                    <div className="flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            setPageError('');
+                            setPendingDeleteReport(report);
+                          }}
+                          disabled={deletingReportId === report.id}
+                          className="inline-flex items-center justify-center px-4 py-2 border border-red-500/30 text-sm font-medium rounded-lg text-red-300 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/40 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {deletingReportId === report.id ? 'Excluindo...' : 'Excluir'}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { setSelectedReport(report); setDetailsOpen(true); }}
+                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-white/10 text-sm font-medium rounded-lg text-white bg-white/5 hover:bg-white/10 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors shadow-sm"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver Detalhes
+                      </button>
+                    </div>
                   </div>
                 </div>
               </li>
@@ -476,6 +546,50 @@ export function ManageReports() {
         onClose={() => setDetailsOpen(false)}
         hideFinalStatusOptions
         hideStatusControls={profile?.role === 'crm_n1'}
+      />
+      <MessageModal
+        open={!!pendingDeleteReport}
+        title="Confirmar exclusão"
+        variant="error"
+        message={
+          pendingDeleteReport ? (
+            <>
+              <p>
+                Tem certeza que deseja excluir a denúncia <strong>{pendingDeleteReport.protocol}</strong>?
+              </p>
+              <p className="mt-2 text-xs text-gray-400">
+                Essa ação remove a denúncia e seus registros relacionados. Somente administradores podem realizar essa operação.
+              </p>
+            </>
+          ) : null
+        }
+        onClose={() => {
+          if (!deletingReportId) {
+            setPendingDeleteReport(null);
+          }
+        }}
+        actions={
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPendingDeleteReport(null)}
+              disabled={!!deletingReportId}
+              className="px-4 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => {
+                if (pendingDeleteReport) {
+                  void handleDeleteReport(pendingDeleteReport);
+                }
+              }}
+              disabled={!pendingDeleteReport || !!deletingReportId}
+              className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium text-sm shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {deletingReportId ? 'Excluindo...' : 'Excluir denúncia'}
+            </button>
+          </div>
+        }
       />
     </div>
   );
