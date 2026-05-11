@@ -8,6 +8,9 @@ import { useAuth } from '../hooks/useAuth'
 import { useCorporateAreas } from '../hooks/useCorporateAreas'
 import MessageModal from './MessageModal'
 
+const STATUS_ORDER = ['Ativo', 'Inativo', 'Pendente'] as const
+const ROLE_ORDER: UserRole[] = ['user', 'corporate_manager', 'approver_manager', 'crm_n1', 'admin']
+
 interface Filters {
   name: string
   email: string
@@ -231,7 +234,9 @@ export default function UsersTable() {
 
       setInviteOpen(false)
       setMsgTitle('Convite criado')
-      setMsgText(fnData && (fnData as any).fallback_link ? `Mailer do Supabase falhou; link gerado:\n${(fnData as any).fallback_link}` : 'Convite criado e e-mail enviado.')
+      setMsgText(fnData && ((fnData as any).invite_link || (fnData as any).fallback_link) && (fnData as any).sent_by === 'no_resend_api_key'
+        ? `Convite criado. Link gerado:\n${(fnData as any).invite_link || (fnData as any).fallback_link}`
+        : 'Convite criado e e-mail enviado.')
       setMsgVariant('success')
       setMsgOpen(true)
       await loadInvitesLastMap()
@@ -266,7 +271,9 @@ export default function UsersTable() {
       await loadInvites()
       await loadInvitesLastMap()
       setMsgTitle('Convite reenviado')
-      setMsgText(fnData && (fnData as any).fallback_link ? `Mailer do Supabase falhou; link gerado:\n${(fnData as any).fallback_link}` : 'E-mail de convite reenviado com sucesso.')
+      setMsgText(fnData && ((fnData as any).invite_link || (fnData as any).fallback_link) && (fnData as any).sent_by === 'no_resend_api_key'
+        ? `Convite reenviado. Link gerado:\n${(fnData as any).invite_link || (fnData as any).fallback_link}`
+        : 'E-mail de convite reenviado com sucesso.')
       setMsgVariant('success')
       setMsgOpen(true)
     } catch (e: any) {
@@ -277,7 +284,6 @@ export default function UsersTable() {
     }
   }
 
-  const filteredUsers = useMemo(() => users, [users])
   const combinedRows = useMemo(() => {
     const userRows = users.map(u => ({
       kind: 'user' as const,
@@ -319,6 +325,51 @@ export default function UsersTable() {
   useEffect(() => {
     setCurrentPage(1)
   }, [filters, users, invites])
+
+  const statusSummary = useMemo(() => {
+    const counts = STATUS_ORDER.reduce<Record<(typeof STATUS_ORDER)[number], number>>((acc, status) => {
+      acc[status] = 0
+      return acc
+    }, { Ativo: 0, Inativo: 0, Pendente: 0 })
+
+    for (const row of combinedRows) {
+      counts[row.status as (typeof STATUS_ORDER)[number]] += 1
+    }
+
+    return STATUS_ORDER.map((status) => ({
+      label: status,
+      value: counts[status],
+      tone:
+        status === 'Ativo'
+          ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10'
+          : status === 'Pendente'
+            ? 'text-amber-400 border-amber-500/20 bg-amber-500/10'
+            : 'text-red-400 border-red-500/20 bg-red-500/10',
+    }))
+  }, [combinedRows])
+
+  const roleSummary = useMemo(() => {
+    const counts = ROLE_ORDER.reduce<Record<UserRole, number>>((acc, role) => {
+      acc[role] = 0
+      return acc
+    }, {
+      admin: 0,
+      approver_manager: 0,
+      corporate_manager: 0,
+      crm_n1: 0,
+      user: 0,
+    })
+
+    for (const row of combinedRows) {
+      counts[row.role] += 1
+    }
+
+    return ROLE_ORDER.map((role) => ({
+      role,
+      label: getUserRoleLabel(role),
+      value: counts[role],
+    }))
+  }, [combinedRows])
 
   const totalPages = Math.max(1, Math.ceil(combinedRows.length / pageSize))
   const page = Math.min(currentPage, totalPages)
@@ -388,8 +439,41 @@ export default function UsersTable() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-400">{combinedRows.length} registro(s)</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+        <div className="bg-sky-500/10 border border-sky-500/20 rounded-2xl p-4 shadow-lg">
+          <p className="text-xs uppercase tracking-[0.2em] text-sky-300/80">Total</p>
+          <p className="mt-3 text-3xl font-semibold text-white">{combinedRows.length}</p>
+          <p className="mt-1 text-sm text-gray-400">Registros conforme os filtros</p>
+        </div>
+
+        {statusSummary.map((item) => (
+          <div key={item.label} className={`border rounded-2xl p-4 shadow-lg ${item.tone}`}>
+            <p className="text-xs uppercase tracking-[0.2em] text-gray-300/80">Status</p>
+            <p className="mt-3 text-3xl font-semibold text-white">{item.value}</p>
+            <p className="mt-1 text-sm">{item.label}</p>
+          </div>
+        ))}
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 shadow-lg md:col-span-2 xl:col-span-5">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-violet-300/80">Perfis</p>
+              <p className="text-sm text-gray-400">Distribuicao dos registros filtrados por perfil</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+            {roleSummary.map((item) => (
+              <div key={item.role} className="rounded-xl border border-white/10 bg-black/10 px-4 py-3">
+                <p className="text-xs text-gray-400">{item.label}</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-400">Itens por página</span>
           <select
@@ -505,7 +589,7 @@ export default function UsersTable() {
                 )}
               </tr>
             ))}
-            {filteredUsers.length === 0 && (
+            {combinedRows.length === 0 && (
               <tr><td className="px-4 py-8 text-center text-sm text-gray-500" colSpan={canAdmin?8:7}>{loading?'Carregando...':'Nenhum usuário ou convite pendente'}</td></tr>
             )}
           </tbody>

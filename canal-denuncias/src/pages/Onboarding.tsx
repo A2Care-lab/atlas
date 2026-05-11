@@ -8,8 +8,17 @@ import MessageModal from '../components/MessageModal'
 import { formatDate } from '../utils/format'
 import { supabase } from '../lib/supabase'
 
+type InviteInfo = {
+  email: string
+  full_name?: string | null
+  role?: string | null
+  company_id?: string | null
+  company_name?: string | null
+  expires_at?: string | null
+}
+
 export default function Onboarding() {
-  const { user, loading, updatePassword, updateProfile } = useAuth()
+  const { user, loading, updatePassword, signIn } = useAuth()
   const [type, setType] = useState<'invite'|'recovery'>('invite')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -28,6 +37,8 @@ export default function Onboarding() {
   const [docError, setDocError] = useState<string>('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [inviteData, setInviteData] = useState<InviteInfo | null>(null)
   const isStrong = (p: string) => {
     if (!p || p.length < 6) return false
     const lower = /[a-z]/.test(p)
@@ -82,6 +93,9 @@ export default function Onboarding() {
       hashTokenParams.get('code') ||
       undefined
     const rawType =
+      searchParams.get('auth_type') ||
+      routeParams.get('auth_type') ||
+      hashTokenParams.get('auth_type') ||
       searchParams.get('type') ||
       routeParams.get('type') ||
       hashTokenParams.get('type') ||
@@ -94,6 +108,18 @@ export default function Onboarding() {
       rawType,
       hasAuthPayload: Boolean(accessToken || refreshToken || tokenHash || code),
     }
+  }
+  const readInviteToken = () => {
+    const searchParams = new URLSearchParams(window.location.search || '')
+    const h = window.location.hash || ''
+    let routeQuery = h.includes('?') ? h.substring(h.indexOf('?') + 1) : ''
+    if (routeQuery.includes('#')) routeQuery = routeQuery.split('#')[0]
+    const routeParams = new URLSearchParams(routeQuery)
+    return (
+      searchParams.get('invite_token') ||
+      routeParams.get('invite_token') ||
+      undefined
+    )
   }
   const bootstrapSessionFromUrl = async () => {
     const { accessToken, refreshToken, tokenHash, code, rawType, hasAuthPayload } = readAuthParams()
@@ -135,6 +161,20 @@ export default function Onboarding() {
     }
     return null
   }
+  const resolveInvite = async (token: string) => {
+    const { data, error } = await supabase.functions.invoke('user-invite', {
+      body: {
+        action: 'resolve',
+        token,
+      }
+    })
+    if (error) throw error
+    const invite = (data as any)?.invite
+    if (!invite?.email) {
+      throw new Error('Link de convite invalido, expirado ou ja utilizado. Solicite um novo convite.')
+    }
+    setInviteData(invite)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -143,7 +183,18 @@ export default function Onboarding() {
     void (async () => {
       try {
         setError('')
-        await bootstrapSessionFromUrl()
+        const nextType = readTypeFromHash()
+        if (nextType === 'invite') {
+          const inviteToken = readInviteToken()
+          if (!inviteToken) {
+            throw new Error('Link de convite invalido, expirado ou ja utilizado. Solicite um novo convite.')
+          }
+          setInviteLoading(true)
+          await resolveInvite(inviteToken)
+        } else {
+          setInviteData(null)
+          await bootstrapSessionFromUrl()
+        }
       } catch (e: any) {
         if (!cancelled) {
           const message = String(e?.message || '')
@@ -152,6 +203,10 @@ export default function Onboarding() {
               ? 'Link de convite invalido, expirado ou ja utilizado. Solicite um novo convite.'
               : (message || 'Falha ao validar o link de convite.')
           )
+        }
+      } finally {
+        if (!cancelled) {
+          setInviteLoading(false)
         }
       }
       try {
@@ -170,7 +225,7 @@ export default function Onboarding() {
     }
   }, [])
 
-  if (loading) {
+  if (loading || inviteLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-petroleo-600"></div>
@@ -185,6 +240,90 @@ export default function Onboarding() {
     setError('')
     setIsSubmitting(true)
     try {
+      if (type === 'invite') {
+        const inviteToken = readInviteToken()
+        if (!inviteToken) {
+          throw new Error('Link de convite invalido, expirado ou ja utilizado. Solicite um novo convite.')
+        }
+        if (!inviteData?.email) {
+          throw new Error('Nao foi possivel carregar os dados do convite. Solicite um novo convite.')
+        }
+        if (password && password.length >= 6 && isStrong(password)) {
+          if (password !== confirm) {
+            throw new Error('As senhas não coincidem')
+          }
+        } else {
+          throw new Error('A senha deve ter no mínimo 6 caracteres, com letras maiúsculas, minúsculas, números e símbolos.')
+        }
+        if (!agree) {
+          throw new Error('E necessario aceitar as politicas e termos para concluir o cadastro.')
+        }
+        const getPrivacyVersion = async (): Promise<string> => {
+          if (privacyVersion) return privacyVersion
+          try {
+            const { data: fnData, error: fnError } = await supabase.functions.invoke('legaldesk_privacy_policy', { body: { type: 'Política de Privacidade', system_name: 'A2Care' } })
+            if (!fnError && fnData) {
+              const doc = Array.isArray(fnData) ? fnData[0] : fnData
+              return doc?.version || ''
+            }
+            const { data: altData, error: altErr } = await supabase.functions.invoke('legalsdesk_privacy_policy', { body: { type: 'Política de Privacidade', system_name: 'A2Care' } })
+            if (!altErr && altData) {
+              const doc = Array.isArray(altData) ? altData[0] : altData
+              return doc?.version || ''
+            }
+          } catch {}
+          return ''
+        }
+        const getTermsVersion = async (): Promise<string> => {
+          if (termsVersion) return termsVersion
+          try {
+            const { data: fnData, error: fnError } = await supabase.functions.invoke('legaldesk_terms_of_use', { body: { type: 'Termos de Uso', system_name: 'ATLAS' } })
+            if (!fnError && fnData) {
+              const doc = Array.isArray(fnData) ? fnData[0] : fnData
+              return doc?.version || ''
+            }
+          } catch {}
+          return ''
+        }
+        const getNonRetaliationVersion = async (): Promise<string> => {
+          if (nonRetaliationVersion) return nonRetaliationVersion
+          try {
+            const { data, error } = await supabase
+              .from('politica_nao_retaliacao_versions')
+              .select('*')
+              .order('updated_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+            if (!error && data) {
+              const doc: any = data
+              return doc?.version_code || ''
+            }
+          } catch {}
+          return ''
+        }
+        const [pv, tv, nrv] = await Promise.all([
+          getPrivacyVersion(),
+          getTermsVersion(),
+          getNonRetaliationVersion(),
+        ])
+        const { data, error } = await supabase.functions.invoke('user-invite', {
+          body: {
+            action: 'accept',
+            token: inviteToken,
+            password,
+            agree: true,
+            privacyVersion: pv,
+            termsVersion: tv,
+            nonRetaliationVersion: nrv,
+          }
+        })
+        if (error) throw error
+        const loginEmail = (data as any)?.email || inviteData.email
+        const { error: signInError } = await signIn(loginEmail, password)
+        if (signInError) throw signInError
+        navigate('/')
+        return
+      }
       let session = (await supabase.auth.getSession()).data.session
       if (!session) {
         session = await bootstrapSessionFromUrl()
@@ -422,7 +561,7 @@ export default function Onboarding() {
           </div>
           <h1 className="text-2xl font-bold text-white whitespace-nowrap">{type === 'recovery' ? 'Redefinir senha' : 'Boas vindas ao ATLAS - Integridade Corporativa.'}</h1>
           <p className="mt-2 text-sm text-gray-400">{type === 'recovery' ? 'Defina uma nova senha para sua conta' : 'Para concluir seu cadastro, crie uma senha e aceite nossas políticas e termos.'}</p>
-          <p className="mt-1 text-xs text-gray-500 font-mono bg-white/5 inline-block px-2 py-1 rounded border border-white/5">{user?.email}</p>
+          <p className="mt-1 text-xs text-gray-500 font-mono bg-white/5 inline-block px-2 py-1 rounded border border-white/5">{type === 'invite' ? inviteData?.email : user?.email}</p>
         </div>
 
         <form className="space-y-4" onSubmit={submit}>
