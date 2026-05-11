@@ -73,7 +73,7 @@ const readPersistedState = (search = ''): UsersTablePersistedState => {
     }
 
     const parsed = JSON.parse(raw) as Partial<UsersTablePersistedState>
-    const persistedFilters = parsed.filters || {}
+    const persistedFilters: Partial<Filters> = parsed.filters || {}
     const pageSize = [5, 10, 20, 50].includes(Number(fromParams.pageSize))
       ? Number(fromParams.pageSize)
       : ([5, 10, 20, 50].includes(Number(parsed.pageSize)) ? Number(parsed.pageSize) : 10)
