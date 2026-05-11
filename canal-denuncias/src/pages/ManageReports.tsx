@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { Report, ReportStatus } from '../types/database';
+import { normalizeReportCollection } from '../lib/reportCollections';
 import { FileText, Eye, Filter, Search, AlertTriangle, ChevronLeft, ChevronRight, Clock, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import { ClearFiltersButton } from '../components/ClearFiltersButton';
 import { ReportDetailsModal } from '../components/ReportDetailsModal';
 import MessageModal from '../components/MessageModal';
+import { deleteReportsWithAttachments } from '../utils/reportDeletion';
 
 const STATUS_OPTIONS: { value: ReportStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Todos os Status' },
@@ -54,8 +56,9 @@ export function ManageReports() {
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [pendingDeleteReport, setPendingDeleteReport] = useState<Report | null>(null);
-  const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
+  const [pendingDeleteReports, setPendingDeleteReports] = useState<Report[]>([]);
+  const [deletingReportIds, setDeletingReportIds] = useState<string[]>([]);
+  const [selectedReportIds, setSelectedReportIds] = useState<string[]>([]);
   const [perPage, setPerPage] = useState<number>(10);
   const [page, setPage] = useState<number>(1);
   const [slaFilter, setSlaFilter] = useState<'all' | 'in_time' | 'overdue'>('all');
@@ -78,6 +81,11 @@ export function ManageReports() {
     if (page > pageCount) setPage(pageCount);
     if (page < 1) setPage(1);
   }, [filteredReports, perPage, pageCount, page]);
+
+  useEffect(() => {
+    const visibleIds = new Set(filteredReports.map((report) => report.id));
+    setSelectedReportIds((current) => current.filter((id) => visibleIds.has(id)));
+  }, [filteredReports]);
 
   const loadReports = async () => {
     if (!profile) return;
@@ -106,7 +114,8 @@ export function ManageReports() {
           status_history(*),
           company:companies(id,name,sla_days)
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false });
 
       // Filtrar por empresa
       if (profile.role !== 'admin') {
@@ -120,7 +129,7 @@ export function ManageReports() {
       const { data, error } = await query;
 
       if (error) throw error;
-      setReports(data || []);
+      setReports(normalizeReportCollection(data));
     } catch (error) {
       console.error('Error loading reports:', error);
     } finally {
@@ -128,46 +137,30 @@ export function ManageReports() {
     }
   };
 
-  const handleDeleteReport = async (report: Report) => {
-    if (!isAdmin) return;
+  const handleDeleteReports = async (reportsToDelete: Report[]) => {
+    if (!isAdmin || reportsToDelete.length === 0) return;
 
     setPageError('');
-    setDeletingReportId(report.id);
+    const ids = reportsToDelete.map((report) => report.id);
+    const idSet = new Set(ids);
+    setDeletingReportIds(ids);
 
     try {
-      const attachmentPaths = (report.attachments || [])
-        .map((attachment) => attachment.file_path)
-        .filter(Boolean);
+      await deleteReportsWithAttachments(reportsToDelete);
 
-      if (attachmentPaths.length > 0) {
-        const { error: storageError } = await supabase.storage
-          .from('reports')
-          .remove(attachmentPaths);
+      setReports((current) => current.filter((item) => !idSet.has(item.id)));
+      setSelectedReportIds((current) => current.filter((id) => !idSet.has(id)));
+      setPendingDeleteReports([]);
 
-        if (storageError) {
-          console.warn('Falha ao remover anexos da denúncia no storage', storageError);
-        }
-      }
-
-      const { error } = await supabase
-        .from('reports')
-        .delete()
-        .eq('id', report.id);
-
-      if (error) throw error;
-
-      setReports((current) => current.filter((item) => item.id !== report.id));
-      setPendingDeleteReport(null);
-
-      if (selectedReport?.id === report.id) {
+      if (selectedReport?.id && idSet.has(selectedReport.id)) {
         setSelectedReport(null);
         setDetailsOpen(false);
       }
     } catch (deleteError) {
       console.error('Erro ao excluir denúncia', deleteError);
-      setPageError('Nao foi possivel excluir a denuncia.');
+      setPageError(reportsToDelete.length > 1 ? 'Nao foi possivel excluir as denuncias selecionadas.' : 'Nao foi possivel excluir a denuncia.');
     } finally {
-      setDeletingReportId(null);
+      setDeletingReportIds([]);
     }
   };
 
@@ -310,6 +303,27 @@ export function ManageReports() {
     );
   }
 
+  const currentPageReports = filteredReports.slice((page - 1) * perPage, (page - 1) * perPage + perPage);
+  const currentPageReportIds = currentPageReports.map((report) => report.id);
+  const allCurrentPageSelected = currentPageReports.length > 0 && currentPageReportIds.every((id) => selectedReportIds.includes(id));
+  const selectedReports = reports.filter((report) => selectedReportIds.includes(report.id));
+
+  const toggleReportSelection = (reportId: string) => {
+    setSelectedReportIds((current) =>
+      current.includes(reportId)
+        ? current.filter((id) => id !== reportId)
+        : [...current, reportId]
+    );
+  };
+
+  const toggleCurrentPageSelection = () => {
+    setSelectedReportIds((current) =>
+      allCurrentPageSelected
+        ? current.filter((id) => !currentPageReportIds.includes(id))
+        : Array.from(new Set([...current, ...currentPageReportIds]))
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -395,6 +409,47 @@ export function ManageReports() {
         </div>
       </div>
 
+      {isAdmin && filteredReports.length > 0 && (
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={toggleCurrentPageSelection}
+                type="button"
+                className="inline-flex items-center justify-center px-4 py-2 border border-sky-500/30 text-sm font-medium rounded-lg text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 hover:border-sky-500/40 transition-colors shadow-sm"
+              >
+                {allCurrentPageSelected ? 'Desmarcar página' : 'Selecionar página'}
+              </button>
+              <span className="text-sm text-gray-300">
+                {selectedReportIds.length} denúncia{selectedReportIds.length === 1 ? '' : 's'} selecionada{selectedReportIds.length === 1 ? '' : 's'}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setSelectedReportIds([])}
+                type="button"
+                disabled={selectedReportIds.length === 0 || deletingReportIds.length > 0}
+                className="inline-flex items-center justify-center px-4 py-2 border border-white/10 text-sm font-medium rounded-lg text-gray-200 bg-white/5 hover:bg-white/10 hover:border-white/20 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                Limpar seleção
+              </button>
+              <button
+                onClick={() => {
+                  setPageError('');
+                  setPendingDeleteReports(selectedReports);
+                }}
+                type="button"
+                disabled={selectedReportIds.length === 0 || deletingReportIds.length > 0}
+                className="inline-flex items-center justify-center px-4 py-2 border border-red-500/30 text-sm font-medium rounded-lg text-red-300 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/40 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir selecionadas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Reports List */}
         <div className="space-y-4">
           {filteredReports.length === 0 ? (
@@ -409,11 +464,22 @@ export function ManageReports() {
             </div>
           ) : (
             <ul className="space-y-4">
-            {filteredReports.slice((page - 1) * perPage, (page - 1) * perPage + perPage).map((report) => (
+            {currentPageReports.map((report) => (
               <li key={report.id} className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl overflow-hidden hover:bg-white/10 hover:shadow-sky-500/10 hover:border-white/20 transition-all duration-200">
                 <div className="px-6 py-5">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-start sm:items-center gap-4">
+                      {isAdmin && (
+                        <label className="mt-1 sm:mt-0 flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedReportIds.includes(report.id)}
+                            onChange={() => toggleReportSelection(report.id)}
+                            disabled={deletingReportIds.length > 0}
+                            className="h-4 w-4 rounded border-white/20 bg-slate-900 text-sky-500 focus:ring-sky-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                          />
+                        </label>
+                      )}
                       <div className="p-2 bg-white/5 rounded-xl border border-white/10">
                         <FileText className="h-6 w-6 text-sky-400" />
                       </div>
@@ -482,13 +548,13 @@ export function ManageReports() {
                         <button
                           onClick={() => {
                             setPageError('');
-                            setPendingDeleteReport(report);
+                            setPendingDeleteReports([report]);
                           }}
-                          disabled={deletingReportId === report.id}
+                          disabled={deletingReportIds.includes(report.id)}
                           className="inline-flex items-center justify-center px-4 py-2 border border-red-500/30 text-sm font-medium rounded-lg text-red-300 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/40 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          {deletingReportId === report.id ? 'Excluindo...' : 'Excluir'}
+                          {deletingReportIds.includes(report.id) ? 'Excluindo...' : 'Excluir'}
                         </button>
                       )}
                       <button
@@ -548,14 +614,22 @@ export function ManageReports() {
         hideStatusControls={profile?.role === 'crm_n1'}
       />
       <MessageModal
-        open={!!pendingDeleteReport}
+        open={pendingDeleteReports.length > 0}
         title="Confirmar exclusão"
         variant="error"
         message={
-          pendingDeleteReport ? (
+          pendingDeleteReports.length > 0 ? (
             <>
               <p>
-                Tem certeza que deseja excluir a denúncia <strong>{pendingDeleteReport.protocol}</strong>?
+                {pendingDeleteReports.length === 1 ? (
+                  <>
+                    Tem certeza que deseja excluir a denúncia <strong>{pendingDeleteReports[0].protocol}</strong>?
+                  </>
+                ) : (
+                  <>
+                    Tem certeza que deseja excluir <strong>{pendingDeleteReports.length} denúncias selecionadas</strong>?
+                  </>
+                )}
               </p>
               <p className="mt-2 text-xs text-gray-400">
                 Essa ação remove a denúncia e seus registros relacionados. Somente administradores podem realizar essa operação.
@@ -564,29 +638,29 @@ export function ManageReports() {
           ) : null
         }
         onClose={() => {
-          if (!deletingReportId) {
-            setPendingDeleteReport(null);
+          if (deletingReportIds.length === 0) {
+            setPendingDeleteReports([]);
           }
         }}
         actions={
           <div className="flex gap-2">
             <button
-              onClick={() => setPendingDeleteReport(null)}
-              disabled={!!deletingReportId}
+              onClick={() => setPendingDeleteReports([])}
+              disabled={deletingReportIds.length > 0}
               className="px-4 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Cancelar
             </button>
             <button
               onClick={() => {
-                if (pendingDeleteReport) {
-                  void handleDeleteReport(pendingDeleteReport);
+                if (pendingDeleteReports.length > 0) {
+                  void handleDeleteReports(pendingDeleteReports);
                 }
               }}
-              disabled={!pendingDeleteReport || !!deletingReportId}
+              disabled={pendingDeleteReports.length === 0 || deletingReportIds.length > 0}
               className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium text-sm shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {deletingReportId ? 'Excluindo...' : 'Excluir denúncia'}
+              {deletingReportIds.length > 0 ? 'Excluindo...' : pendingDeleteReports.length > 1 ? 'Excluir denúncias' : 'Excluir denúncia'}
             </button>
           </div>
         }

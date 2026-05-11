@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { normalizeReportCollection } from '../lib/reportCollections';
 import { Report, ReportStatus } from '../types/database';
 import { FileText, Eye, Plus, AlertCircle, CheckCircle, Clock, Filter } from 'lucide-react';
 import { ClearFiltersButton } from '../components/ClearFiltersButton';
@@ -52,7 +53,8 @@ export function MyReports() {
           comments(*),
           company:companies(id,name,sla_days)
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false });
 
       // Sempre filtrar pelas denúncias abertas pelo usuário logado
       query = query.eq('user_id', profile.id);
@@ -76,7 +78,7 @@ export function MyReports() {
       const { data, error } = await query;
 
       if (error) throw error;
-      setReports(data || []);
+      setReports(normalizeReportCollection(data));
     } catch (error) {
       console.error('Error loading reports:', error);
     } finally {

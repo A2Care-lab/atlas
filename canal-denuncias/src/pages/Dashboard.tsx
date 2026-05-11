@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { normalizeReportCollection } from '../lib/reportCollections';
 import { Report, ReportStatus, RiskLevel, Company } from '../types/database';
 import { 
   FileText, 
@@ -86,7 +87,8 @@ export function Dashboard() {
           company:companies(id,sla_days),
           comments(*)
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false });
 
       // Filtrar por empresa e permissões
       if (isUser) {
@@ -104,7 +106,7 @@ export function Dashboard() {
       if (error) {
         setReports([]);
       } else {
-        setReports((data as any) || []);
+        setReports(normalizeReportCollection((data as any) || []));
       }
     } finally {
       setLoading(false);

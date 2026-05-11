@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { Report, ReportStatus } from '../types/database';
-import { FileText, Eye, CheckCircle, XCircle, AlertTriangle, Filter, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, Eye, CheckCircle, XCircle, AlertTriangle, Filter, Search, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import MessageModal from '../components/MessageModal';
 import { ReportDetailsModal } from '../components/ReportDetailsModal';
 import ApproveReportModal from '../components/ApproveReportModal';
 import { ClearFiltersButton } from '../components/ClearFiltersButton';
 import { getSituationTypeLabel } from '../utils/labels';
+import { deleteReportsWithAttachments } from '../utils/reportDeletion';
 
 export function CorporateApproval() {
   const { profile } = useAuth();
@@ -21,6 +22,9 @@ export function CorporateApproval() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [approveOpen, setApproveOpen] = useState(false);
   const [approveAction, setApproveAction] = useState<'approve'|'reject'>('approve');
+  const [pendingDeleteReports, setPendingDeleteReports] = useState<Report[]>([]);
+  const [deletingReportIds, setDeletingReportIds] = useState<string[]>([]);
+  const [selectedReportIds, setSelectedReportIds] = useState<string[]>([]);
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReportStatus | 'all'>('all');
@@ -28,6 +32,7 @@ export function CorporateApproval() {
   const [slaFilter, setSlaFilter] = useState<'all' | 'in_time' | 'overdue'>('all');
   const [perPage, setPerPage] = useState<number>(10);
   const [page, setPage] = useState<number>(1);
+  const isAdmin = profile?.role === 'admin';
 
   const STATUS_OPTIONS: { value: ReportStatus | 'all'; label: string }[] = [
     { value: 'all', label: 'Todos os Status' },
@@ -65,6 +70,11 @@ export function CorporateApproval() {
     if (page > pageCount) setPage(pageCount);
     if (page < 1) setPage(1);
   }, [filteredReports, perPage, pageCount, page]);
+
+  useEffect(() => {
+    const visibleIds = new Set(filteredReports.map((report) => report.id));
+    setSelectedReportIds((current) => current.filter((id) => visibleIds.has(id)));
+  }, [filteredReports]);
 
   const loadReports = async () => {
     if (!profile) return;
@@ -138,6 +148,33 @@ export function CorporateApproval() {
     setApproveOpen(true);
   };
 
+  const handleDeleteReports = async (reportsToDelete: Report[]) => {
+    if (!isAdmin || reportsToDelete.length === 0) return;
+
+    const ids = reportsToDelete.map((report) => report.id);
+    const idSet = new Set(ids);
+    setDeletingReportIds(ids);
+
+    try {
+      await deleteReportsWithAttachments(reportsToDelete);
+      setReports((current) => current.filter((report) => !idSet.has(report.id)));
+      setSelectedReportIds((current) => current.filter((id) => !idSet.has(id)));
+      setPendingDeleteReports([]);
+
+      if (selectedReport?.id && idSet.has(selectedReport.id)) {
+        setSelectedReport(null);
+        setDetailsOpen(false);
+        setApproveOpen(false);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir denúncias na aprovação corporativa', error);
+      setErrorMsg(reportsToDelete.length > 1 ? 'Nao foi possivel excluir as denuncias selecionadas.' : 'Nao foi possivel excluir a denuncia selecionada.');
+      setErrorOpen(true);
+    } finally {
+      setDeletingReportIds([]);
+    }
+  };
+
   const getStatusLabel = (status: ReportStatus): string => {
     const option = STATUS_OPTIONS.find(opt => opt.value === status);
     return option?.label || status;
@@ -204,6 +241,27 @@ export function CorporateApproval() {
       </div>
     );
   }
+
+  const currentPageReports = filteredReports.slice((page - 1) * perPage, (page - 1) * perPage + perPage);
+  const currentPageReportIds = currentPageReports.map((report) => report.id);
+  const allCurrentPageSelected = currentPageReports.length > 0 && currentPageReportIds.every((id) => selectedReportIds.includes(id));
+  const selectedReports = reports.filter((report) => selectedReportIds.includes(report.id));
+
+  const toggleReportSelection = (reportId: string) => {
+    setSelectedReportIds((current) =>
+      current.includes(reportId)
+        ? current.filter((id) => id !== reportId)
+        : [...current, reportId]
+    );
+  };
+
+  const toggleCurrentPageSelection = () => {
+    setSelectedReportIds((current) =>
+      allCurrentPageSelected
+        ? current.filter((id) => !currentPageReportIds.includes(id))
+        : Array.from(new Set([...current, ...currentPageReportIds]))
+    );
+  };
 
   return (
     <>
@@ -284,6 +342,44 @@ export function CorporateApproval() {
         </div>
       </div>
 
+      {isAdmin && filteredReports.length > 0 && (
+        <div className="bg-white border border-petroleo-100 shadow-lg rounded-xl p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={toggleCurrentPageSelection}
+                type="button"
+                className="inline-flex items-center justify-center px-4 py-2 border border-petroleo-200 text-sm font-medium rounded-lg text-petroleo-700 bg-petroleo-50 hover:bg-petroleo-100 transition-colors shadow-sm"
+              >
+                {allCurrentPageSelected ? 'Desmarcar página' : 'Selecionar página'}
+              </button>
+              <span className="text-sm text-gray-700">
+                {selectedReportIds.length} denúncia{selectedReportIds.length === 1 ? '' : 's'} selecionada{selectedReportIds.length === 1 ? '' : 's'}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setSelectedReportIds([])}
+                type="button"
+                disabled={selectedReportIds.length === 0 || deletingReportIds.length > 0}
+                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                Limpar seleção
+              </button>
+              <button
+                onClick={() => setPendingDeleteReports(selectedReports)}
+                type="button"
+                disabled={selectedReportIds.length === 0 || deletingReportIds.length > 0}
+                className="inline-flex items-center justify-center px-4 py-2 border border-red-300 text-sm font-medium rounded-lg text-red-700 bg-red-50 hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir selecionadas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {filteredReports.length === 0 ? (
         <div className="text-center py-12">
           <CheckCircle className="mx-auto h-12 w-12 text-green-400" />
@@ -296,11 +392,22 @@ export function CorporateApproval() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredReports.slice((page - 1) * perPage, (page - 1) * perPage + perPage).map((report) => (
+          {currentPageReports.map((report) => (
             <div key={report.id} className="bg-white shadow rounded-lg overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
+                    {isAdmin && (
+                      <label className="mr-3 flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedReportIds.includes(report.id)}
+                          onChange={() => toggleReportSelection(report.id)}
+                          disabled={deletingReportIds.length > 0}
+                          className="h-4 w-4 rounded border-gray-300 text-petroleo-600 focus:ring-petroleo-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                        />
+                      </label>
+                    )}
                     <FileText className="h-6 w-6 text-gray-400 mr-3" />
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">
@@ -452,6 +559,58 @@ export function CorporateApproval() {
       action={approveAction}
       onClose={() => setApproveOpen(false)}
       onCompleted={async () => { setApproveOpen(false); await loadReports(); }}
+    />
+    <MessageModal
+      open={pendingDeleteReports.length > 0}
+      title="Confirmar exclusão"
+      variant="error"
+      message={
+        pendingDeleteReports.length > 0 ? (
+          <>
+            <p>
+              {pendingDeleteReports.length === 1 ? (
+                <>
+                  Tem certeza que deseja excluir a denúncia <strong>{pendingDeleteReports[0].protocol}</strong>?
+                </>
+              ) : (
+                <>
+                  Tem certeza que deseja excluir <strong>{pendingDeleteReports.length} denúncias selecionadas</strong>?
+                </>
+              )}
+            </p>
+            <p className="mt-2 text-xs text-gray-500">
+              Essa ação remove as denúncias e seus registros relacionados. Somente administradores podem realizar essa operação.
+            </p>
+          </>
+        ) : null
+      }
+      onClose={() => {
+        if (deletingReportIds.length === 0) {
+          setPendingDeleteReports([]);
+        }
+      }}
+      actions={
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPendingDeleteReports([])}
+            disabled={deletingReportIds.length > 0}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => {
+              if (pendingDeleteReports.length > 0) {
+                void handleDeleteReports(pendingDeleteReports);
+              }
+            }}
+            disabled={pendingDeleteReports.length === 0 || deletingReportIds.length > 0}
+            className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium text-sm shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {deletingReportIds.length > 0 ? 'Excluindo...' : pendingDeleteReports.length > 1 ? 'Excluir denúncias' : 'Excluir denúncia'}
+          </button>
+        </div>
+      }
     />
     <MessageModal open={errorOpen} title="Falha na atualização" message={errorMsg} variant="error" onClose={()=>setErrorOpen(false)} />
     </>

@@ -1,5 +1,5 @@
 import { useAuth } from '../hooks/useAuth';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, RefreshCw, User } from 'lucide-react';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { useState, useEffect, useRef } from 'react';
 import { Brand } from './Brand';
@@ -56,7 +56,15 @@ export function Header() {
         {/* Logo oculto no mobile para evitar o quadrado branco */}
 
         {/* Saudação alinhada à esquerda (desktop e mobile) */}
-        <div className="flex-1 flex items-center justify-start">
+        <div className="flex-1 flex items-center justify-start gap-3">
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+            title="Atualizar página"
+            aria-label="Atualizar página"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
           <span className="text-white text-base sm:text-lg md:text-xl font-semibold truncate max-w-[70%]">
             {greeting}
           </span>
