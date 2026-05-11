@@ -1,4 +1,4 @@
-const CACHE_NAME = 'atlas-cd-v3';
+const CACHE_NAME = 'atlas-cd-v4';
 const PRECACHE_URLS = [
   '/manifest.json',
   '/atlas-icon.svg'
@@ -31,13 +31,20 @@ self.addEventListener('activate', (event) => {
 // Network-first for app shell and assets; fallback to cache when offline
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+  const url = new URL(req.url);
+
+  // Nunca intercepte mutações nem APIs externas; isso evita quebrar POST/PUT/PATCH/DELETE.
+  if (req.method !== 'GET' || url.origin !== self.location.origin) {
+    return;
+  }
+
   event.respondWith(
     (async () => {
       try {
         const networkResp = await fetch(req);
         try {
           const cache = await caches.open(CACHE_NAME);
-          cache.put(req, networkResp.clone());
+          await cache.put(req, networkResp.clone());
         } catch (_) {}
         return networkResp;
       } catch (_) {
