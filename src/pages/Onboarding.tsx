@@ -68,17 +68,28 @@ export default function Onboarding() {
   }
   const tryVerifyTokenFromUrl = async () => {
     const searchParams = new URLSearchParams(window.location.search || '')
-    const token_q = searchParams.get('token') || undefined
+    const token_q = searchParams.get('token') || searchParams.get('token_hash') || undefined
     const code_q = searchParams.get('code') || undefined
+    const type_q = searchParams.get('type') || undefined
     const h = window.location.hash || ''
     const qStr = h.includes('?') ? h.substring(h.indexOf('?') + 1) : ''
     const hashParams = new URLSearchParams(qStr)
-    const token_h = hashParams.get('token') || undefined
+    const token_h = hashParams.get('token') || hashParams.get('token_hash') || undefined
     const code_h = hashParams.get('code') || undefined
+    const type_h = hashParams.get('type') || undefined
     const token = token_q || token_h
     const code = code_q || code_h
+    const rawType = (type_q || type_h || (type === 'recovery' ? 'recovery' : 'invite')).toLowerCase()
+    const verifyType: 'recovery' | 'invite' | 'magiclink' | 'signup' =
+      rawType === 'recovery'
+        ? 'recovery'
+        : rawType === 'magiclink'
+          ? 'magiclink'
+          : rawType === 'signup'
+            ? 'signup'
+            : 'invite'
     if (token) {
-      const { data } = await supabase.auth.verifyOtp({ type: 'recovery', token_hash: token } as any)
+      const { data } = await supabase.auth.verifyOtp({ type: verifyType, token_hash: token } as any)
       const s = data?.session
       if (s?.access_token && s?.refresh_token) {
         await supabase.auth.setSession({ access_token: s.access_token, refresh_token: s.refresh_token })

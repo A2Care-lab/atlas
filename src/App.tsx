@@ -106,14 +106,31 @@ function AppRoutes() {
         window.location.hash = '#/login'
       })
     }
-    const token = (new URLSearchParams(window.location.search || '')).get('token') || (new URLSearchParams(frag)).get('token') || ''
+    const hashQuery = (() => {
+      const h = window.location.hash || ''
+      if (!h.includes('?')) return ''
+      let q = h.substring(h.indexOf('?') + 1)
+      if (q.includes('#')) q = q.split('#')[0]
+      return q
+    })()
+    const token = (new URLSearchParams(window.location.search || '')).get('token')
+      || (new URLSearchParams(window.location.search || '')).get('token_hash')
+      || (new URLSearchParams(hashQuery)).get('token')
+      || (new URLSearchParams(hashQuery)).get('token_hash')
+      || (new URLSearchParams(frag)).get('token')
+      || ''
     const code = (new URLSearchParams(window.location.search || '')).get('code') || (new URLSearchParams(frag)).get('code') || ''
-    const typeParam = (new URLSearchParams(window.location.search || '')).get('type') || (new URLSearchParams(frag)).get('type') || ''
+    const typeParam = (new URLSearchParams(window.location.search || '')).get('type')
+      || (new URLSearchParams(hashQuery)).get('type')
+      || (new URLSearchParams(frag)).get('type')
+      || ''
     if (!access_token && token) {
       (async () => {
         try {
           const t = (typeParam || '').toLowerCase()
-          const verifyType = t === 'magiclink' ? 'magiclink' : (t === 'recovery' ? 'recovery' : 'signup')
+          const verifyType = t === 'magiclink'
+            ? 'magiclink'
+            : (t === 'recovery' ? 'recovery' : (t === 'invite' ? 'invite' : 'signup'))
           const { data } = await supabase.auth.verifyOtp({ type: verifyType as any, token_hash: token } as any)
           const s = data?.session
           if (s?.access_token && s?.refresh_token) {
