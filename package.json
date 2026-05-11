@@ -1,4 +1,8 @@
 {
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix canal-denuncias run build -- --outDir ../dist"
+  },
   "dependencies": {
     "exceljs": "^4.4.0",
     "react-router-dom": "^7.11.0"
