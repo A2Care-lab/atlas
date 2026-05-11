@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "npm --prefix canal-denuncias run build -- --outDir ../dist"
+    "build": "npm --prefix canal-denuncias ci && npm --prefix canal-denuncias run build -- --outDir ../dist"
   },
   "dependencies": {
     "exceljs": "^4.4.0",
