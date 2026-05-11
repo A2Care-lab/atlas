@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { isPasswordStrong, MIN_PASSWORD_LENGTH } from '../utils/passwordRequirements';
 
 interface RecoveryState {
   loading: boolean;
@@ -95,20 +96,14 @@ export function usePasswordRecovery() {
     
     try {
       // Validate passwords
-      if (newPassword.length < 8) {
-        throw new Error('Senha deve ter pelo menos 8 caracteres');
-      }
-
       if (newPassword !== confirmPassword) {
         throw new Error('As senhas não conferem');
       }
 
-      // Validate password strength
-      const hasLetters = /[a-zA-Z]/.test(newPassword);
-      const hasNumbers = /\d/.test(newPassword);
-      
-      if (!hasLetters || !hasNumbers) {
-        throw new Error('Senha deve conter letras e números');
+      if (!isPasswordStrong(newPassword)) {
+        throw new Error(
+          `A senha deve ter no minimo ${MIN_PASSWORD_LENGTH} caracteres, com letras maiusculas, minusculas, numeros e simbolos`
+        );
       }
 
       // Get token from database

@@ -74,12 +74,14 @@ function AppRoutes() {
         const preQs = new URLSearchParams(window.location.search || '')
         let preGo = preQs.get('go') || ''
         const preType = preQs.get('type') || ''
+        const preAuthType = preQs.get('auth_type') || ''
         try { preGo = decodeURIComponent(preGo) } catch {}
         try { preGo = decodeURIComponent(preGo) } catch {}
         const hasTokenFragment = /^#access_token=/.test(window.location.hash) || /(^#token=|[?&]token=)/.test(window.location.hash)
         if (preType && preGo && !/^#\/onboarding/.test(window.location.hash) && !hasTokenFragment) {
           const prePath = preGo.startsWith('/') ? preGo : `/${preGo}`
-          window.location.hash = `${prePath}?type=${preType}`
+          const preAuthSuffix = preAuthType ? `&auth_type=${preAuthType}` : ''
+          window.location.hash = `${prePath}?type=${preType}${preAuthSuffix}`
         }
       } catch {}
 
@@ -100,8 +102,13 @@ function AppRoutes() {
           const hp = new URLSearchParams(qStr)
           type = hp.get('type') || ''
         }
+        const authType = qs.get('auth_type') || ''
         const path = go ? (go.startsWith('/') ? go : `/${go}`) : '/onboarding'
-        window.location.hash = `${path}${type ? `?type=${type}` : ''}`
+        const hashParams = new URLSearchParams()
+        if (type) hashParams.set('type', type)
+        if (authType) hashParams.set('auth_type', authType)
+        const hashSuffix = hashParams.toString()
+        window.location.hash = `${path}${hashSuffix ? `?${hashSuffix}` : ''}`
       }).catch(() => {
         window.location.hash = '#/login'
       })
@@ -124,10 +131,14 @@ function AppRoutes() {
       || (new URLSearchParams(hashQuery)).get('type')
       || (new URLSearchParams(frag)).get('type')
       || ''
+    const authTypeParam = (new URLSearchParams(window.location.search || '')).get('auth_type')
+      || (new URLSearchParams(hashQuery)).get('auth_type')
+      || (new URLSearchParams(frag)).get('auth_type')
+      || ''
     if (!access_token && token) {
       (async () => {
         try {
-          const t = (typeParam || '').toLowerCase()
+          const t = (authTypeParam || typeParam || '').toLowerCase()
           const verifyType = t === 'magiclink'
             ? 'magiclink'
             : (t === 'recovery' ? 'recovery' : (t === 'invite' ? 'invite' : 'signup'))
@@ -139,10 +150,15 @@ function AppRoutes() {
           const qs = new URLSearchParams(window.location.search || '')
           let go = qs.get('go') || ''
           const type = qs.get('type') || ''
+          const authType = qs.get('auth_type') || ''
           try { go = decodeURIComponent(go) } catch {}
           try { go = decodeURIComponent(go) } catch {}
           const path = (go && go.startsWith('/')) ? go : '/onboarding'
-          window.location.hash = `${path}${type ? `?type=${type}` : ''}`
+          const hashParams = new URLSearchParams()
+          if (type) hashParams.set('type', type)
+          if (authType) hashParams.set('auth_type', authType)
+          const hashSuffix = hashParams.toString()
+          window.location.hash = `${path}${hashSuffix ? `?${hashSuffix}` : ''}`
         } catch {
           window.location.hash = '#/login'
         }
@@ -158,10 +174,15 @@ function AppRoutes() {
           const qs = new URLSearchParams(window.location.search || '')
           let go = qs.get('go') || ''
           const type = qs.get('type') || ''
+          const authType = qs.get('auth_type') || ''
           try { go = decodeURIComponent(go) } catch {}
           try { go = decodeURIComponent(go) } catch {}
           const path = (go && go.startsWith('/')) ? go : '/onboarding'
-          window.location.hash = `${path}${type ? `?type=${type}` : ''}`
+          const hashParams = new URLSearchParams()
+          if (type) hashParams.set('type', type)
+          if (authType) hashParams.set('auth_type', authType)
+          const hashSuffix = hashParams.toString()
+          window.location.hash = `${path}${hashSuffix ? `?${hashSuffix}` : ''}`
         } catch {
           window.location.hash = '#/login'
         }

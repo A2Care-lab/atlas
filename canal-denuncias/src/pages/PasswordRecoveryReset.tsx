@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
 import AtlasLogo from '../components/AtlasLogo';
 import { Eye, EyeOff, Lock, CheckCircle, Loader2 } from 'lucide-react';
+import PasswordRequirements from '../components/PasswordRequirements';
+import { getPasswordStrength, isPasswordStrong } from '../utils/passwordRequirements';
 
 export default function PasswordRecoveryReset() {
   const { token } = useParams<{ token: string }>();
@@ -36,13 +38,10 @@ export default function PasswordRecoveryReset() {
 
   // Calculate password strength
   useEffect(() => {
-    let strength = 0;
-    if (newPassword.length >= 8) strength += 25;
-    if (/[a-z]/.test(newPassword)) strength += 25;
-    if (/[A-Z]/.test(newPassword)) strength += 25;
-    if (/\d/.test(newPassword)) strength += 25;
-    setPasswordStrength(strength);
+    setPasswordStrength(getPasswordStrength(newPassword).percentage);
   }, [newPassword]);
+
+  const passwordsMatch = Boolean(newPassword) && newPassword === confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,6 +190,8 @@ export default function PasswordRecoveryReset() {
                   </div>
                 </div>
               )}
+
+              <PasswordRequirements password={newPassword} variant="light" className="mt-4" />
             </div>
 
             {/* Confirmar Senha */}
@@ -229,25 +230,15 @@ export default function PasswordRecoveryReset() {
 
             {/* Password Requirements */}
             <div className="text-xs text-gray-600 space-y-1">
-              <p className="font-medium">Requisitos da senha:</p>
-              <ul className="space-y-1">
-                <li className={`flex items-center ${newPassword.length >= 8 ? 'text-green-600' : 'text-gray-500'}`}>
-                  <CheckCircle className={`h-3 w-3 mr-2 ${newPassword.length >= 8 ? 'text-green-600' : 'text-gray-300'}`} />
-                  Mínimo 8 caracteres
-                </li>
-                <li className={`flex items-center ${/[a-zA-Z]/.test(newPassword) ? 'text-green-600' : 'text-gray-500'}`}>
-                  <CheckCircle className={`h-3 w-3 mr-2 ${/[a-zA-Z]/.test(newPassword) ? 'text-green-600' : 'text-gray-300'}`} />
-                  Letras
-                </li>
-                <li className={`flex items-center ${/\d/.test(newPassword) ? 'text-green-600' : 'text-gray-500'}`}>
-                  <CheckCircle className={`h-3 w-3 mr-2 ${/\d/.test(newPassword) ? 'text-green-600' : 'text-gray-300'}`} />
-                  Números
-                </li>
-                <li className={`flex items-center ${newPassword === confirmPassword && newPassword ? 'text-green-600' : 'text-gray-500'}`}>
-                  <CheckCircle className={`h-3 w-3 mr-2 ${newPassword === confirmPassword && newPassword ? 'text-green-600' : 'text-gray-300'}`} />
-                  Senhas coincidem
-                </li>
-              </ul>
+              <p className="font-medium">Confirmação:</p>
+              <div className={`flex items-center rounded-lg border px-3 py-2 transition-all ${
+                passwordsMatch
+                  ? 'border-green-200 bg-green-50 text-green-600 shadow-sm shadow-green-100'
+                  : 'border-gray-200 bg-gray-50 text-gray-500'
+              }`}>
+                <CheckCircle className={`h-3 w-3 mr-2 ${passwordsMatch ? 'text-green-600' : 'text-gray-300'}`} />
+                {passwordsMatch ? 'As senhas coincidem' : 'Repita a mesma senha para confirmar'}
+              </div>
             </div>
 
             {resetState.error && (
@@ -268,7 +259,13 @@ export default function PasswordRecoveryReset() {
             <div>
               <button
                 type="submit"
-                disabled={resetState.loading || !newPassword || !confirmPassword || newPassword !== confirmPassword || passwordStrength < 50}
+                disabled={
+                  resetState.loading ||
+                  !newPassword ||
+                  !confirmPassword ||
+                  !passwordsMatch ||
+                  !isPasswordStrong(newPassword)
+                }
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-petroleo-600 hover:bg-petroleo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-petroleo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {resetState.loading ? (

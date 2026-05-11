@@ -1,4 +1,4 @@
-import { Users, Building, Building2, ScrollText, FileText, CreditCard, MessageCircle } from 'lucide-react';
+import { Users, Building, Building2, ScrollText, FileText, CreditCard, MessageCircle, Code2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -7,7 +7,7 @@ export default function SettingsTabs() {
   const navigate = useNavigate();
   const { profile } = useAuth();
 
-  const getActiveTab = (): 'users' | 'companies' | 'corporate' | 'policy' | 'terms' | 'assinaturas' | 'whatsapp' => {
+  const getActiveTab = (): 'users' | 'companies' | 'corporate' | 'policy' | 'terms' | 'assinaturas' | 'whatsapp' | 'templates' => {
     const path = location.pathname.toLowerCase();
     if (path.includes('/configuracoes/areas') || path.includes('/configurações/areas')) {
       return 'corporate';
@@ -19,13 +19,14 @@ export default function SettingsTabs() {
       return 'assinaturas';
     }
     const params = new URLSearchParams(location.search);
-    const tab = (params.get('tab') as 'users' | 'companies' | 'corporate' | 'policy' | 'terms' | 'assinaturas' | 'whatsapp' | null) ?? 'users';
+    const tab = (params.get('tab') as 'users' | 'companies' | 'corporate' | 'policy' | 'terms' | 'assinaturas' | 'whatsapp' | 'templates' | null) ?? 'users';
     return tab === 'companies' ? 'companies' : 
            tab === 'corporate' ? 'corporate' : 
            tab === 'policy' ? 'policy' : 
            tab === 'terms' ? 'terms' : 
            tab === 'assinaturas' ? 'assinaturas' : 
-           tab === 'whatsapp' ? 'whatsapp' : 'users';
+           tab === 'whatsapp' ? 'whatsapp' :
+           tab === 'templates' ? 'templates' : 'users';
   };
 
   const activeTab = getActiveTab();
@@ -42,6 +43,7 @@ export default function SettingsTabs() {
         { id: 'policy' as const, name: 'Política Não Retaliação', icon: ScrollText, onClick: () => navigate('/configuracoes/politica-nao-retaliacao') },
         ...(profile?.role === 'admin' ? [{ id: 'terms' as const, name: 'Termos', icon: FileText, onClick: () => navigate('/settings?tab=terms') }] : []),
         ...(profile?.role === 'admin' ? [{ id: 'whatsapp' as const, name: 'WhatsApp', icon: MessageCircle, onClick: () => navigate('/settings?tab=whatsapp') }] : []),
+        ...(profile?.role === 'admin' ? [{ id: 'templates' as const, name: 'Templates', icon: Code2, onClick: () => navigate('/settings?tab=templates') }] : []),
         ...(profile?.role === 'admin' ? [{ id: 'assinaturas' as const, name: 'Assinaturas', icon: CreditCard, onClick: () => navigate('/settings?tab=assinaturas') }] : []),
       ];
 

@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { HtmlModal } from '../components/HtmlModal'
 import AtlasLogo from '../components/AtlasLogo'
-import { Eye, EyeOff } from 'lucide-react'
+import { CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import MessageModal from '../components/MessageModal'
 import { formatDate } from '../utils/format'
 import { supabase } from '../lib/supabase'
+import PasswordRequirements from '../components/PasswordRequirements'
+import { isPasswordStrong } from '../utils/passwordRequirements'
 
 type InviteInfo = {
   email: string
@@ -39,14 +41,7 @@ export default function Onboarding() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [inviteLoading, setInviteLoading] = useState(false)
   const [inviteData, setInviteData] = useState<InviteInfo | null>(null)
-  const isStrong = (p: string) => {
-    if (!p || p.length < 6) return false
-    const lower = /[a-z]/.test(p)
-    const upper = /[A-Z]/.test(p)
-    const digit = /\d/.test(p)
-    const symbol = /[^A-Za-z0-9]/.test(p)
-    return lower && upper && digit && symbol
-  }
+  const passwordsMatch = Boolean(password) && password === confirm
   const readTypeFromHash = () => {
     const searchParams = new URLSearchParams(window.location.search || '')
     const typeParam = searchParams.get('type')
@@ -248,12 +243,12 @@ export default function Onboarding() {
         if (!inviteData?.email) {
           throw new Error('Nao foi possivel carregar os dados do convite. Solicite um novo convite.')
         }
-        if (password && password.length >= 6 && isStrong(password)) {
+        if (password && isPasswordStrong(password)) {
           if (password !== confirm) {
             throw new Error('As senhas não coincidem')
           }
         } else {
-          throw new Error('A senha deve ter no mínimo 6 caracteres, com letras maiúsculas, minúsculas, números e símbolos.')
+          throw new Error('A senha deve ter no minimo 6 caracteres, com letras maiusculas, minusculas, numeros e simbolos.')
         }
         if (!agree) {
           throw new Error('E necessario aceitar as politicas e termos para concluir o cadastro.')
@@ -332,14 +327,14 @@ export default function Onboarding() {
       if (!session && requireSession) {
         throw new Error('Sessão ausente. Abra o link de convite enviado por e-mail para concluir o cadastro e definir sua senha. Se estiver em desenvolvimento, garanta que o domínio esteja configurado nas URLs de redirecionamento do Supabase.')
       }
-      if (password && password.length >= 6 && isStrong(password)) {
+      if (password && isPasswordStrong(password)) {
         if (password !== confirm) {
           throw new Error('As senhas não coincidem')
         }
         const { error: pwErr } = await updatePassword(password)
         if (pwErr) throw pwErr
       } else {
-        throw new Error('A senha deve ter no mínimo 6 caracteres, com letras maiúsculas, minúsculas, números e símbolos.')
+        throw new Error('A senha deve ter no minimo 6 caracteres, com letras maiusculas, minusculas, numeros e simbolos.')
       }
       if (!session?.user) { throw new Error('Sessão ausente') }
       const now = new Date().toISOString()
@@ -579,7 +574,7 @@ export default function Onboarding() {
                 {showPassword ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}
               </button>
             </div>
-            <p className="mt-1.5 text-xs text-gray-400">Mínimo 6 caracteres. Deve conter letras maiúsculas, minúsculas, números e símbolos.</p>
+            <PasswordRequirements password={password} className="mt-3" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-300">Confirmar senha</label>
@@ -595,8 +590,16 @@ export default function Onboarding() {
                 {showConfirm ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}
               </button>
             </div>
+            {passwordsMatch && (
+              <p className="mt-2 flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2 text-xs font-medium text-green-400 shadow-sm shadow-green-500/10">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                As senhas coincidem.
+              </p>
+            )}
             {!!confirm && confirm !== password && (
-              <p className="mt-1.5 text-xs text-red-400">As senhas não coincidem.</p>
+              <p className="mt-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-400">
+                As senhas não coincidem.
+              </p>
             )}
           </div>
           {type !== 'recovery' && (
@@ -627,7 +630,12 @@ export default function Onboarding() {
           )}
           <button 
             type="submit" 
-            disabled={isSubmitting || (type !== 'recovery' && !agree) || (!confirm || confirm !== password)} 
+            disabled={
+              isSubmitting ||
+              (type !== 'recovery' && !agree) ||
+              !isPasswordStrong(password) ||
+              !passwordsMatch
+            }
             className="w-full py-3 px-4 rounded-lg bg-petroleo-600 text-white font-medium hover:bg-petroleo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-petroleo-900/20 hover:shadow-petroleo-500/20 mt-4"
           >
             {isSubmitting ? (type === 'recovery' ? 'Alterando...' : 'Salvando...') : (type === 'recovery' ? 'Alterar senha' : 'Concluir cadastro')}

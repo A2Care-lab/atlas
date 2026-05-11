@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Users, Building, Building2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import UsersTable from '../components/UsersTable';
 import CompaniesManager from '../components/CompaniesManager';
 import TermsAcceptances from '../components/TermsAcceptances';
 import AssinaturasManager from '../components/AssinaturasManager';
 import WhatsAppManager from '../components/WhatsAppManager';
+import TemplatesManager from '../components/TemplatesManager';
 import { useAuth } from '../hooks/useAuth';
 import SettingsTabs from '../components/SettingsTabs';
 import SettingsHeader from '../components/SettingsHeader';
@@ -14,7 +14,7 @@ export function Settings() {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useAuth();
-  const getInitialTab = (): 'users' | 'corporate' | 'companies' | 'terms' | 'assinaturas' | 'whatsapp' => {
+  const getInitialTab = (): 'users' | 'corporate' | 'companies' | 'terms' | 'assinaturas' | 'whatsapp' | 'templates' => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
     const isCorp = profile?.role === 'corporate_manager' || profile?.role === 'approver_manager';
@@ -24,9 +24,10 @@ export function Settings() {
     if (tab === 'terms') return 'terms';
     if (tab === 'assinaturas') return 'assinaturas';
     if (tab === 'whatsapp') return 'whatsapp';
+    if (tab === 'templates') return 'templates';
     return 'users';
   };
-  const [activeTab, setActiveTab] = useState<'users' | 'corporate' | 'companies' | 'terms' | 'assinaturas' | 'whatsapp'>(getInitialTab());
+  const [activeTab, setActiveTab] = useState<'users' | 'corporate' | 'companies' | 'terms' | 'assinaturas' | 'whatsapp' | 'templates'>(getInitialTab());
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -41,6 +42,7 @@ export function Settings() {
     else if (tab === 'terms') setActiveTab(profile?.role === 'admin' ? 'terms' : 'users');
     else if (tab === 'assinaturas') setActiveTab(profile?.role === 'admin' ? 'assinaturas' : 'users');
     else if (tab === 'whatsapp') setActiveTab(profile?.role === 'admin' ? 'whatsapp' : 'users');
+    else if (tab === 'templates') setActiveTab(profile?.role === 'admin' ? 'templates' : 'users');
     else setActiveTab('users');
   }, [location.search, profile?.role]);
 
@@ -104,6 +106,12 @@ export function Settings() {
         {activeTab === 'whatsapp' && profile?.role === 'admin' && (
           <div className="p-6">
             <WhatsAppManager />
+          </div>
+        )}
+
+        {activeTab === 'templates' && profile?.role === 'admin' && (
+          <div className="p-6">
+            <TemplatesManager />
           </div>
         )}
 
