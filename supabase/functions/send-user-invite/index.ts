@@ -173,7 +173,11 @@ serve(async (req) => {
     });
   }
 
-  const { email, nome, empresa, perfil, redirect_to } = body;
+  const email = String(body.email || "").trim().toLowerCase();
+  const nome = body.nome;
+  const empresa = body.empresa;
+  const perfil = body.perfil;
+  const redirect_to = body.redirect_to;
   console.log("send-user-invite: payload", { email, nome, empresa, perfil, redirect_to });
 
   if (!email) {
@@ -190,26 +194,52 @@ serve(async (req) => {
   const baseAppUrl = isProd
     ? (APP_URL || "https://atlas.a2care.com.br")
     : (APP_URL || "http://localhost:5173");
-  const redirectTarget = `${baseAppUrl}/?go=/invite&type=invite`;
-  console.log("send-user-invite: redirect", { ENVIRONMENT_RAW, ENVIRONMENT, baseAppUrl, redirectTarget });
+  const inviteRedirectTarget = `${baseAppUrl}/?go=/invite&type=invite`;
+  const recoveryRedirectTarget = `${baseAppUrl}/?go=/invite&type=recovery`;
+  console.log("send-user-invite: redirect", { ENVIRONMENT_RAW, ENVIRONMENT, baseAppUrl, inviteRedirectTarget, recoveryRedirectTarget });
 
   try {
-    const createRes = await admin.auth.admin.createUser({
-      email,
-      email_confirm: false,
-      user_metadata: { full_name: nome || "", company: empresa || "", role: perfil || "" },
-    } as any);
-    if (createRes.error) {
-      console.log("send-user-invite: createUser error (can be ok if exists)", createRes.error?.message);
-    }
-    const linkRes = await admin.auth.admin.generateLink({
+    let linkType: "invite" | "recovery" = "invite";
+    let redirectTarget = inviteRedirectTarget;
+    let linkRes = await admin.auth.admin.generateLink({
       type: "invite",
       email,
       options: { redirectTo: redirectTarget },
     } as any);
     if (linkRes.error) {
+      const inviteMessage = String(linkRes.error?.message || "");
+      const userMissing = /not found|no user|user.*does not exist/i.test(inviteMessage);
+      const userAlreadyExists = /already been registered|already exists|duplicate|conflict|users_email_partial_key/i.test(inviteMessage);
+      if (userMissing) {
+        const createRes = await admin.auth.admin.createUser({
+          email,
+          email_confirm: false,
+          user_metadata: { full_name: nome || "", company: empresa || "", role: perfil || "" },
+        } as any);
+        if (createRes.error) {
+          console.error("send-user-invite: createUser fallback error", createRes.error);
+          return new Response(JSON.stringify({ stage: "create_user_failed", error: String(createRes.error?.message || "") }), {
+            status: 500,
+            headers: { ...corsHeaders, "content-type": "application/json" },
+          });
+        }
+        linkRes = await admin.auth.admin.generateLink({
+          type: "invite",
+          email,
+          options: { redirectTo: redirectTarget },
+        } as any);
+      } else if (userAlreadyExists) {
+        linkType = "recovery";
+        redirectTarget = recoveryRedirectTarget;
+        linkRes = await admin.auth.admin.generateLink({
+          type: "recovery",
+          email,
+        } as any);
+      }
+    }
+    if (linkRes.error) {
       console.error("send-user-invite: generateLink error", linkRes.error);
-      return new Response(JSON.stringify({ stage: "generate_link_failed", error: String(linkRes.error?.message || "") }), {
+      return new Response(JSON.stringify({ stage: "generate_link_failed", link_type: linkType, error: String(linkRes.error?.message || "") }), {
         status: 500,
         headers: { ...corsHeaders, "content-type": "application/json" },
       });
@@ -222,13 +252,26 @@ serve(async (req) => {
 
     const templateHtml = INVITE_TEMPLATE_HTML;
 
-    const props = (linkRes.data as any)?.properties || {};
-    const hashedToken = props?.hashed_token || "";
-    const actionLinkRaw = (linkRes.data as any)?.action_link || "";
-    const fallbackLink = hashedToken
-      ? `${baseAppUrl}/?go=/invite&type=invite&token=${encodeURIComponent(hashedToken)}`
-      : redirectTarget;
-    const actionLink = actionLinkRaw || fallbackLink;
+    const linkData = (linkRes.data as any) || {};
+    const props = linkData?.properties || {};
+    const actionLinkRaw = linkData?.action_link || linkData?.email_otp_link || "";
+    let hashedToken =
+      linkData?.hashed_token ||
+      props?.hashed_token ||
+      "";
+    if (!hashedToken && actionLinkRaw) {
+      try {
+        const parsed = new URL(actionLinkRaw);
+        hashedToken =
+          parsed.searchParams.get("token_hash") ||
+          parsed.searchParams.get("token") ||
+          "";
+      } catch (_) {}
+    }
+    const directAppLink = hashedToken
+      ? `${baseAppUrl}/?go=/invite&type=${linkType}&token_hash=${encodeURIComponent(hashedToken)}`
+      : "";
+    const actionLink = directAppLink || actionLinkRaw || redirectTarget;
     const render = (html: string, vars: Record<string, string>) => html.replace(/\{\{\s*([\.\w-]+)\s*\}\}/g, (_, k) => (vars as any)[k] ?? "");
     const nameVars = {
       full_name: nome || "",
@@ -244,7 +287,7 @@ serve(async (req) => {
     } catch (_) {}
 
     if (!RESEND_API_KEY) {
-      return new Response(JSON.stringify({ ok: true, sent_by: "no_resend_api_key", invite_link: actionLink, hashed_token: hashedToken || null }), {
+      return new Response(JSON.stringify({ ok: true, sent_by: "no_resend_api_key", link_type: linkType, invite_link: actionLink, hashed_token: hashedToken || null }), {
         status: 200,
         headers: { ...corsHeaders, "content-type": "application/json" },
       });
@@ -257,13 +300,13 @@ serve(async (req) => {
     });
     if (!emailRes.ok) {
       const txt = await emailRes.text();
-      return new Response(JSON.stringify({ stage: "resend_failed", status: emailRes.status, error: txt, fallback_link: actionLink }), {
+      return new Response(JSON.stringify({ stage: "resend_failed", link_type: linkType, status: emailRes.status, error: txt, fallback_link: actionLink }), {
         status: 500,
         headers: { ...corsHeaders, "content-type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, sent_by: "resend", invite_link: actionLink, hashed_token: hashedToken || null }), {
+    return new Response(JSON.stringify({ ok: true, sent_by: "resend", link_type: linkType, invite_link: actionLink, hashed_token: hashedToken || null }), {
       status: 200,
       headers: { ...corsHeaders, "content-type": "application/json" },
     });
