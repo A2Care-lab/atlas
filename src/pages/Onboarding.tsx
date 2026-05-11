@@ -159,35 +159,38 @@ export default function Onboarding() {
       } else {
         throw new Error('A senha deve ter no mínimo 6 caracteres, com letras maiúsculas, minúsculas, números e símbolos.')
       }
-      if (type !== 'recovery') {
-        if (!session?.user) { throw new Error('Sessão ausente') }
-        const now = new Date().toISOString()
-        const email = session.user.email || ''
-        const inv = await supabase
-          .from('invitations')
-          .select('id, role, company_id')
-          .eq('email', email)
-          .is('accepted_at', null)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-        const invited = (!inv.error && inv.data) ? (inv.data as any) : null
-        if (invited) {
-          const changes: any = { role: invited.role, company_id: invited.company_id, is_active: true }
-          if (agree) { changes.accepted_terms = true; changes.terms_accepted_at = now }
-          await supabase
-            .from('user_profiles')
-            .update(changes)
-            .eq('id', session.user.id)
-          try {
-            await supabase.auth.updateUser({ data: { role: invited.role, company_id: invited.company_id } } as any)
-          } catch (_) {}
+      if (!session?.user) { throw new Error('Sessão ausente') }
+      const now = new Date().toISOString()
+      const email = session.user.email || ''
+      const inv = await supabase
+        .from('invitations')
+        .select('id, role, company_id')
+        .eq('email', email)
+        .is('accepted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      const invited = (!inv.error && inv.data) ? (inv.data as any) : null
+
+      if (invited) {
+        const changes: any = { role: invited.role, company_id: invited.company_id, is_active: true }
+        if (agree) { changes.accepted_terms = true; changes.terms_accepted_at = now }
+        await supabase
+          .from('user_profiles')
+          .update(changes)
+          .eq('id', session.user.id)
+        try {
+          await supabase.auth.updateUser({ data: { role: invited.role, company_id: invited.company_id } } as any)
+        } catch (_) {}
+        if (agree) {
           await supabase
             .from('invitations')
             .update({ accepted_at: now })
             .eq('id', invited.id)
         }
+      }
 
+      if (type !== 'recovery' || invited) {
         if (agree) {
           let companyName = ''
           let companyId = invited?.company_id as string | undefined
