@@ -12,21 +12,28 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
+    <script type="module">
       if ('serviceWorker' in navigator) {
-        if (location.hostname === 'localhost') {
-          // Em dev, garanta que nenhum SW antigo esteja controlando a página
+        const qs = new URLSearchParams(location.search || '')
+        const disableSw = qs.get('no-sw') === '1'
+        const isLoopbackHost =
+          location.hostname === 'localhost' ||
+          location.hostname === '127.0.0.1' ||
+          location.hostname === '[::1]'
+        const shouldDisableSw = import.meta.env.DEV || isLoopbackHost || disableSw
+
+        if (shouldDisableSw) {
           navigator.serviceWorker.getRegistrations()
-            .then((regs) => regs.forEach((r) => r.unregister()))
-            .catch(() => {});
+            .then((regs) => Promise.allSettled(regs.map((r) => r.unregister())))
+            .catch(() => {})
+
           if (window.caches) {
-            caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
+            caches.keys()
+              .then((keys) => Promise.allSettled(keys.map((k) => caches.delete(k))))
+              .catch(() => {})
           }
         } else {
-          const qs = new URLSearchParams(location.search || '')
-          const disableSw = qs.get('no-sw') === '1'
           window.addEventListener('load', () => {
-            if (disableSw) return
             navigator.serviceWorker.register('/sw.js')
               .then((registration) => {
                 console.log('SW registered: ', registration);

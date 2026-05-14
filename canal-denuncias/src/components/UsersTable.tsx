@@ -159,6 +159,12 @@ export default function UsersTable() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
+    const currentTab = params.get('tab')
+
+    if (currentTab && currentTab !== 'users') {
+      return
+    }
+
     params.set('tab', 'users')
 
     const syncParam = (key: string, value?: string, fallback?: string) => {

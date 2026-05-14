@@ -59,7 +59,7 @@ export function Layout({ children }: LayoutProps) {
       <Sidebar />
       <Header />
       <main
-        className={`pt-16 transition-all duration-300 ${
+        className={`pt-20 transition-all duration-300 ${
           isMobile ? 'pl-0' : isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
         }`}
       >
