@@ -9,15 +9,17 @@ import TemplatesManager from '../components/TemplatesManager';
 import { useAuth } from '../hooks/useAuth';
 import SettingsTabs from '../components/SettingsTabs';
 import SettingsHeader from '../components/SettingsHeader';
+import { isAdminRole, isCorporateManagerRole } from '../utils/roles';
 
 export function Settings() {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useAuth();
+  const isAdmin = isAdminRole(profile?.role);
+  const isCorp = isCorporateManagerRole(profile?.role);
   const getInitialTab = (): 'users' | 'corporate' | 'companies' | 'terms' | 'assinaturas' | 'whatsapp' | 'templates' => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
-    const isCorp = profile?.role === 'corporate_manager' || profile?.role === 'approver_manager';
     if (isCorp) return 'assinaturas';
     if (tab === 'companies') return 'companies';
     if (tab === 'corporate') return 'corporate';
@@ -32,19 +34,18 @@ export function Settings() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
-    const isCorp = profile?.role === 'corporate_manager' || profile?.role === 'approver_manager';
     if (isCorp) {
       setActiveTab('assinaturas');
       return;
     }
     if (tab === 'companies') setActiveTab('companies');
     else if (tab === 'corporate') setActiveTab('corporate');
-    else if (tab === 'terms') setActiveTab(profile?.role === 'admin' ? 'terms' : 'users');
-    else if (tab === 'assinaturas') setActiveTab(profile?.role === 'admin' ? 'assinaturas' : 'users');
-    else if (tab === 'whatsapp') setActiveTab(profile?.role === 'admin' ? 'whatsapp' : 'users');
-    else if (tab === 'templates') setActiveTab(profile?.role === 'admin' ? 'templates' : 'users');
+    else if (tab === 'terms') setActiveTab(isAdmin ? 'terms' : 'users');
+    else if (tab === 'assinaturas') setActiveTab(isAdmin ? 'assinaturas' : 'users');
+    else if (tab === 'whatsapp') setActiveTab(isAdmin ? 'whatsapp' : 'users');
+    else if (tab === 'templates') setActiveTab(isAdmin ? 'templates' : 'users');
     else setActiveTab('users');
-  }, [location.search, profile?.role]);
+  }, [isAdmin, isCorp, location.search]);
 
   return (
     <div className="space-y-6">
@@ -89,7 +90,7 @@ export function Settings() {
           </div>
         )}
 
-        {activeTab === 'terms' && profile?.role === 'admin' && (
+        {activeTab === 'terms' && isAdmin && (
           <div className="p-6">
             <h2 className="text-lg font-medium text-white mb-2">Aceites de Termos</h2>
             <p className="text-gray-400 mb-6">Consulte os registros de aceite com versões dos documentos.</p>
@@ -97,19 +98,19 @@ export function Settings() {
           </div>
         )}
 
-        {activeTab === 'assinaturas' && (profile?.role === 'admin' || profile?.role === 'corporate_manager' || profile?.role === 'approver_manager') && (
+        {activeTab === 'assinaturas' && (isAdmin || isCorp) && (
           <div className="p-6">
             <AssinaturasManager />
           </div>
         )}
 
-        {activeTab === 'whatsapp' && profile?.role === 'admin' && (
+        {activeTab === 'whatsapp' && isAdmin && (
           <div className="p-6">
             <WhatsAppManager />
           </div>
         )}
 
-        {activeTab === 'templates' && profile?.role === 'admin' && (
+        {activeTab === 'templates' && isAdmin && (
           <div className="p-6">
             <TemplatesManager />
           </div>

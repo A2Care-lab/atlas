@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { ClearFiltersButton } from './ClearFiltersButton';
+import { isAdminRole, isCorporateManagerRole } from '../utils/roles';
 
 interface Assinatura {
   id: string;
@@ -24,6 +25,8 @@ interface Assinatura {
 export default function AssinaturasManager() {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = isAdminRole(profile?.role);
+  const isCorp = isCorporateManagerRole(profile?.role);
   const [assinaturas, setAssinaturas] = useState<Assinatura[]>([]);
   const [filteredAssinaturas, setFilteredAssinaturas] = useState<Assinatura[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +65,7 @@ export default function AssinaturasManager() {
         .order('created_at', { ascending: false });
 
       // Se não for admin, filtrar apenas a empresa do usuário (se aplicável)
-      if (profile?.role !== 'admin' && profile?.company_id) {
+      if (!isAdmin && profile?.company_id) {
         query = query.eq('company_id', profile.company_id);
       }
 
@@ -182,13 +185,13 @@ export default function AssinaturasManager() {
             <div>
               <h3 className="text-lg font-medium text-white">Gestão de Assinaturas</h3>
               <p className="text-sm text-gray-400">
-                {profile?.role === 'corporate_manager' || profile?.role === 'approver_manager'
+                {isCorp
                   ? 'Acompanhe a assinatura e consumo da sua empresa.'
                   : 'Gerencie os contratos e limites de uso das empresas.'}
               </p>
             </div>
           </div>
-          {profile?.role === 'admin' && (
+          {isAdmin && (
             <button
               onClick={abrirNovaAssinatura}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors"
@@ -200,7 +203,7 @@ export default function AssinaturasManager() {
         </div>
 
         {/* Card de Consumo de IA para visão corporativa (uma empresa) */}
-        {(profile?.role === 'corporate_manager' || profile?.role === 'approver_manager') && filteredAssinaturas.length > 0 && (
+        {isCorp && filteredAssinaturas.length > 0 && (
           (() => {
             const a = filteredAssinaturas[0];
             const uso = aiUsage[a.company_id] || { ai_limite: a.ai_monthly_limit || 0, ai_consumidas: 0 };
@@ -311,7 +314,7 @@ export default function AssinaturasManager() {
                   <td colSpan={7} className="px-6 py-12 text-center">
                     <Building className="mx-auto h-12 w-12 text-gray-600" />
                     <h3 className="mt-2 text-sm font-medium text-gray-300">Nenhuma assinatura encontrada</h3>
-                    {profile?.role === 'admin' && (
+                    {isAdmin && (
                       <p className="mt-1 text-sm text-gray-500">Comece criando uma nova assinatura.</p>
                     )}
                   </td>
@@ -370,7 +373,7 @@ export default function AssinaturasManager() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        {profile?.role === 'admin' && (
+                        {isAdmin && (
                           <>
                             <button
                               onClick={() => editarAssinatura(assinatura.id)}

@@ -1,6 +1,7 @@
 import { Users, Building, Building2, ScrollText, FileText, CreditCard, MessageCircle, Code2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { isAdminRole, isCorporateManagerRole } from '../utils/roles';
 
 export default function SettingsTabs() {
   const location = useLocation();
@@ -31,7 +32,8 @@ export default function SettingsTabs() {
 
   const activeTab = getActiveTab();
 
-  const isCorp = profile?.role === 'corporate_manager' || profile?.role === 'approver_manager';
+  const isCorp = isCorporateManagerRole(profile?.role);
+  const isAdmin = isAdminRole(profile?.role);
   const tabs = isCorp
     ? [
         { id: 'assinaturas' as const, name: 'Minha Assinatura', icon: CreditCard, onClick: () => navigate('/settings?tab=assinaturas') },
@@ -41,10 +43,10 @@ export default function SettingsTabs() {
         { id: 'companies' as const, name: 'Empresas & SLA', icon: Building2, onClick: () => navigate('/settings?tab=companies') },
         { id: 'corporate' as const, name: 'Áreas Corporativas', icon: Building, onClick: () => navigate('/configuracoes/areas') },
         { id: 'policy' as const, name: 'Política Não Retaliação', icon: ScrollText, onClick: () => navigate('/configuracoes/politica-nao-retaliacao') },
-        ...(profile?.role === 'admin' ? [{ id: 'terms' as const, name: 'Termos', icon: FileText, onClick: () => navigate('/settings?tab=terms') }] : []),
-        ...(profile?.role === 'admin' ? [{ id: 'whatsapp' as const, name: 'WhatsApp', icon: MessageCircle, onClick: () => navigate('/settings?tab=whatsapp') }] : []),
-        ...(profile?.role === 'admin' ? [{ id: 'templates' as const, name: 'Templates', icon: Code2, onClick: () => navigate('/settings?tab=templates') }] : []),
-        ...(profile?.role === 'admin' ? [{ id: 'assinaturas' as const, name: 'Assinaturas', icon: CreditCard, onClick: () => navigate('/settings?tab=assinaturas') }] : []),
+        ...(isAdmin ? [{ id: 'terms' as const, name: 'Termos', icon: FileText, onClick: () => navigate('/settings?tab=terms') }] : []),
+        ...(isAdmin ? [{ id: 'whatsapp' as const, name: 'WhatsApp', icon: MessageCircle, onClick: () => navigate('/settings?tab=whatsapp') }] : []),
+        ...(isAdmin ? [{ id: 'templates' as const, name: 'Templates', icon: Code2, onClick: () => navigate('/settings?tab=templates') }] : []),
+        ...(isAdmin ? [{ id: 'assinaturas' as const, name: 'Assinaturas', icon: CreditCard, onClick: () => navigate('/settings?tab=assinaturas') }] : []),
       ];
 
   return (
